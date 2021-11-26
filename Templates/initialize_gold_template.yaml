@@ -1,0 +1,88 @@
+GS2TemplateFormatVersion: "2019-05-01"
+Description: GS2-Inventory initialize template Version 2010-06-26
+
+Globals:
+  Alias:
+    InventoryNamespaceName: gold
+    InventoryModelName: gold
+    ItemModelName: gold,
+    LimitOfCount: 99999999,
+    EnableDebugAcquireGoldAction: True,
+    IdentifierAcquireGoldPolicyName: inventory-acquire-gold,
+    IdentifierAcquireGoldUserName: inventory-acquire-gold
+    
+Resources:
+  IdentifierAcquireGoldPolicy:
+    Type: GS2::Identifier::SecurityPolicy
+    Properties:
+      Name: ${IdentifierAcquireGoldPolicyName}
+      Policy:
+        Version: 2016-04-01
+        Statements:
+        - Effect: Allow
+          Actions:
+          - Gs2Inventory:AcquireItemSetByUserId
+          Resources:
+          - '*'
+  IdentifierAcquireGoldUserAttachPolicy:
+    DependsOn:
+    - IdentifierAcquireGoldPolicy
+    - IdentifierAcquireGoldUser
+    Type: GS2::Identifier::AttachSecurityPolicy
+    Properties:
+      SecurityPolicyId:
+        '!GetAttr': IdentifierAcquireGoldPolicy.Item.SecurityPolicyId
+      UserName: ${IdentifierAcquireGoldUserName}
+  InventorySettings:
+    DependsOn:
+    - InventoryNamespace
+    Type: GS2::Inventory::CurrentItemModelMaster
+    Properties:
+      Settings:
+        version: 2019-02-05
+        inventoryModels:
+        - itemModels:
+          - allowMultipleStacks: false
+            name: ${ItemModelName}
+            stackingLimit: ${LimitOfCount}
+            sortValue: 0
+          name: ${InventoryModelName}
+          initialCapacity: 1
+          maxCapacity: 1
+      NamespaceName: ${InventoryNamespaceName}
+  IdentifierAcquireGoldUser:
+    Type: GS2::Identifier::User
+    Properties:
+      Name: ${IdentifierAcquireGoldUserName}
+  IdentifierAcquireGoldIdentifier:
+    DependsOn:
+    - IdentifierAcquireGoldUser
+    Type: GS2::Identifier::Identifier
+    Properties:
+      UserName: ${IdentifierAcquireGoldUserName}
+  InventoryNamespace:
+    Type: GS2::Inventory::Namespace
+    Properties:
+      Name: ${InventoryNamespaceName}
+Outputs:
+  IdentifierAcquireGoldUserName: ${IdentifierAcquireGoldUserName}
+  ItemModelName: ${ItemModelName}
+  IdentifierAcquireGoldPolicyName: ${IdentifierAcquireGoldPolicyName}
+  IdentifierAcquireGoldClientSecret:
+    '!GetAttr': IdentifierAcquireGoldIdentifier.ClientSecret
+  IdentifierAcquireGoldClientId:
+    '!GetAttr': IdentifierAcquireGoldIdentifier.Item.ClientId
+  LimitOfCount: ${LimitOfCount}
+  InventoryModelName: ${InventoryModelName}
+  EnableDebugAcquireGoldAction: ${EnableDebugAcquireGoldAction}
+  InventoryNamespaceName: ${InventoryNamespaceName}
+Globals:
+  Alias:
+    IdentifierAcquireGoldUserName: inventory-acquire-gold
+    ItemModelName: gold
+    IdentifierAcquireGoldPolicyName: inventory-acquire-gold
+    LimitOfCount: '99999999'
+    InventoryModelName: gold
+    EnableDebugAcquireGoldAction: 'True'
+    InventoryNamespaceName: gold
+Description: GS2-Inventory initialize template Version 2010-06-26
