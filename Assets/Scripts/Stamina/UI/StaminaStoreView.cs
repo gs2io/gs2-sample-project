@@ -1,8 +1,6 @@
 using System;
-using System.Xml.Schema;
 using Gs2.Unity.Gs2Stamina.Model;
 using TMPro;
-using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;

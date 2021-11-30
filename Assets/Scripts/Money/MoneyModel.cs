@@ -237,7 +237,7 @@ namespace Gs2.Sample.Money
         {
             string receipt = null;
             {
-#if UNITY_PURCHASING
+#if GS2_ENABLE_PURCHASING
                 AsyncResult<PurchaseParameters> result = null;
                 yield return new IAPUtil().Buy(
                     r => { result = r; },
