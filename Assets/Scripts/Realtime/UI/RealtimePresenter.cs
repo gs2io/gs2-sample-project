@@ -44,15 +44,6 @@ namespace Gs2.Sample.Realtime
         private bool[] _handType = new bool[3];
         private RPSState _rpsState = RPSState.Select;
         
-        /// <summary>
-        /// Gs2Client
-        /// </summary>
-        private Gs2Client _gs2Client;
-        /// <summary>
-        /// Gs2GameSession
-        /// </summary>
-        private Gs2GameSession _session;
-        
         public enum State
         {
             Initialize,
@@ -252,24 +243,11 @@ namespace Gs2.Sample.Realtime
                     case State.Error:
                     case State.Disconnected:
                     case State.Leave:
-                        Finalize();
                         _view.OnDisableEvent();
                         break;
                 }
             }
             _realtimeState = _state;
-        }
-        
-        private void Validate()
-        {
-            if (_gs2Client == null)
-            {
-                _gs2Client = GameManager.Instance.Cllient;
-            }
-            if (_session == null)
-            {
-                _session = GameManager.Instance.Session;
-            }
         }
         
         /// <summary>
@@ -280,13 +258,7 @@ namespace Gs2.Sample.Realtime
         {
             UIManager.Instance.AddLog("Initialize");
             
-            Validate();
-            
             SetState(State.GetRoom);
-        }
-        
-        public void Finalize()
-        {
         }
         
         void JoinPlayerHandler(Gs2.Gs2Realtime.Message.Player player)
@@ -321,8 +293,6 @@ namespace Gs2.Sample.Realtime
         {
             UIManager.Instance.AddLog("RealtimePresenter::GetRoom");
             
-            Validate();
-            
             if (!string.IsNullOrEmpty(_realtimeModel.room.IpAddress))
             {
                 _realtimeModel.room = new EzRoom
@@ -343,7 +313,7 @@ namespace Gs2.Sample.Realtime
                 AsyncResult<EzGetRoomResult> result = null;
                 yield return _realtimeModel.GetRoom(
                     r => { result = r; },
-                    _gs2Client.Client,
+                    GameManager.Instance.Cllient.Client,
                     _realtimeSetting.realtimeNamespaceName,
                     _realtimeSetting.onGetRoom,
                     _realtimeSetting.onError
@@ -406,7 +376,7 @@ namespace Gs2.Sample.Realtime
             UIManager.Instance.AddLog("RealtimePresenter::ConnectRoom");
             
             var realtimeSession = new RelayRealtimeSession(
-                _session.Session.AccessToken.Token,
+                GameManager.Instance.Session.Session.AccessToken.Token,
                 ipAddress,
                 port,
                 encryptionKey,
@@ -510,6 +480,8 @@ namespace Gs2.Sample.Realtime
             StartCoroutine(
                 _realtimeModel.realtimeSession.Close()
             );
+            
+            _realtimeModel.Clear();
         }
         
         /// <summary>

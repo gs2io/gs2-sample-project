@@ -70,7 +70,7 @@ namespace Gs2.Sample.Gold
             _goldSetting.onGetInventoryModel.AddListener(OnGetInventoryModel);
         
             yield return _goldModel.GetInventoryModel(
-                _gs2Client.Client,
+                GameManager.Instance.Cllient.Client,
                 _goldSetting.inventoryNamespaceName,
                 _goldSetting.inventoryModelName,
                 _goldSetting.onGetInventoryModel,
@@ -80,12 +80,6 @@ namespace Gs2.Sample.Gold
             yield return Refresh();
         }
 
-        public void Finalize()
-        {
-            _gs2Client = null;
-            _session = null;
-        }
-        
         private IEnumerator Refresh()
         {
             void RefreshInventoryAction(
@@ -110,7 +104,7 @@ namespace Gs2.Sample.Gold
             _goldSetting.onGetInventory.AddListener(RefreshInventoryAction);
             
             yield return _goldModel.GetInventory(
-                _gs2Client.Client,
+                GameManager.Instance.Cllient.Client,
                 _session.Session,
                 _goldSetting.inventoryNamespaceName,
                 _goldModel.InventoryModel.Name,
@@ -132,7 +126,7 @@ namespace Gs2.Sample.Gold
         } 
         
         /// <summary>
-        /// ゴールドを増やすリクエスト
+        /// ゴールドを増やす リクエスト
         /// </summary>
         /// <param name="acquireValue"></param>
         public void OnClickGold_AcquireButton(int acquireValue)
@@ -153,7 +147,7 @@ namespace Gs2.Sample.Gold
         } 
         
         /// <summary>
-        /// ゴールドを増やすリザルト
+        /// ゴールドを増やす リザルト
         /// </summary>
         /// <param name="inventory"></param>
         /// <param name="itemSets"></param>
@@ -188,15 +182,15 @@ namespace Gs2.Sample.Gold
         }
         
         /// <summary>
-        /// ゴールドを減らすリクエスト
+        /// ゴールドを減らす リクエスト
         /// </summary>
         /// <param name="consumeValue"></param>
         public void OnClickGold_ConsumeButton(int consumeValue)
         {
             StartCoroutine(
                 _goldModel.Consume(
-                    _gs2Client.Client,
-                    _session.Session,
+                    GameManager.Instance.Cllient.Client,
+                    GameManager.Instance.Session.Session,
                     _goldSetting.inventoryNamespaceName,
                     _goldSetting.inventoryModelName,
                     _goldSetting.itemModelName,
@@ -206,11 +200,9 @@ namespace Gs2.Sample.Gold
                 )
             );
         }
-        
-
 
         /// <summary>
-        /// ゴールドを減らすリザルト
+        /// ゴールドを減らす リザルト
         /// </summary>
         /// <param name="inventory"></param>
         /// <param name="itemSets"></param>
@@ -250,7 +242,7 @@ namespace Gs2.Sample.Gold
         {
             return (task, taskResult) =>
             {
-                UIManager.Instance.AddLog("Gold_GetTaskCompleteAction");
+                UIManager.Instance.AddLog("GoldPresenter::GetTaskCompleteAction");
 
                 if (task.Action == "Gs2Inventory:ConsumeItemSetByUserId")
                 {
@@ -265,7 +257,7 @@ namespace Gs2.Sample.Gold
         {
             return (sheet, sheetResult) =>
             {
-                UIManager.Instance.AddLog("Gold_GetSheetCompleteAction");
+                UIManager.Instance.AddLog("GoldPresenter::GetSheetCompleteAction");
 
                 if (sheet.Action == "Gs2Inventory:AcquireItemSetByUserId")
                 {

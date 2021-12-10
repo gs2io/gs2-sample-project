@@ -1,8 +1,12 @@
 ﻿using System.Collections;
 using Gs2.Sample.Core.Runtime;
+using Gs2.Unity.Gs2Distributor.Result;
+using Gs2.Unity.Gs2JobQueue.Model;
 using Gs2.Unity.Gs2Money.Model;
+using Gs2.Unity.Util;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Events;
 
 namespace Gs2.Sample.Money
 {
@@ -53,12 +57,6 @@ namespace Gs2.Sample.Money
             yield return Refresh();
         }
         
-        public void Finalize()
-        {
-            _gs2Client = null;
-            _session = null;
-        }
-
         public void OnUpdateWallet()
         {
             StartCoroutine(
@@ -80,12 +78,50 @@ namespace Gs2.Sample.Money
             _moneySetting.onGetWallet.AddListener(RefreshMoneyAction);
             
             yield return _moneyModel.GetWallet(
-                _gs2Client.Client,
-                _session.Session,
+                GameManager.Instance.Cllient.Client,
+                GameManager.Instance.Session.Session,
                 _moneySetting.moneyNamespaceName,
                 _moneySetting.onGetWallet,
                 _moneySetting.onError
             );
+        }
+        
+        public UnityAction<EzJob, EzJobResultBody> GetJobQueueAction()
+        {
+            return (job, jobResult) =>
+            {
+                Debug.Log("MoneyPresenter::GetJobQueueAction");
+            };
+        }
+
+        public UnityAction<EzStampTask, EzRunStampTaskResult> GetTaskCompleteAction()
+        {
+            return (task, taskResult) =>
+            {
+                Debug.Log("MoneyPresenter::StateMachineOnDoneStampTask");
+
+                if (task.Action == "Gs2Money:WithdrawByUserId")
+                {
+                    StartCoroutine(
+                        Refresh()
+                    );
+                }
+            };
+        }
+
+        public UnityAction<EzStampSheet, EzRunStampSheetResult> GetSheetCompleteAction()
+        {
+            return (sheet, sheetResult) =>
+            {
+                Debug.Log("MoneyPresenter::StateMachineOnCompleteStampSheet");
+
+                if (sheet.Action == "Gs2Money:DepositByUserId")
+                {
+                    StartCoroutine(
+                        Refresh()
+                    );
+                }
+            };
         }
     }
 }

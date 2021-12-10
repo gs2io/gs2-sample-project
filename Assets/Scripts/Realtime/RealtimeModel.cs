@@ -19,6 +19,13 @@ namespace Gs2.Sample.Realtime
         public EzRoom room;
         
         public RelayRealtimeSession realtimeSession;
+
+        public void Clear()
+        {
+            gatheringId = string.Empty;
+            room = null;
+            realtimeSession = null;
+        }
         
         /// <summary>
         /// GS2-Matchmaking のギャザリング情報から GS2-Realtime のルーム情報を取得

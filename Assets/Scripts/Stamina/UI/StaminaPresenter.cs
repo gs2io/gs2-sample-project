@@ -75,7 +75,7 @@ namespace Gs2.Sample.Stamina
             _staminaSetting.onGetStaminaModel.AddListener(OnGetStaminaModel);
         
             yield return GetStaminaModel(
-                _gs2Client.Client,
+                GameManager.Instance.Cllient.Client,
                 _staminaSetting.staminaNamespaceName,
                 _staminaSetting.staminaModelName,
                 _staminaSetting.onGetStaminaModel,
@@ -83,12 +83,6 @@ namespace Gs2.Sample.Stamina
             );
 
             yield return Refresh();
-        }
-        
-        public void Finalize()
-        {
-            _gs2Client = null;
-            _session = null;
         }
         
         /// <summary>
@@ -155,8 +149,8 @@ namespace Gs2.Sample.Stamina
             
             StartCoroutine(
                 ConsumeStamina(
-                    _gs2Client.Client,
-                    _session.Session,
+                    GameManager.Instance.Cllient.Client,
+                    GameManager.Instance.Session.Session,
                     _staminaSetting.staminaNamespaceName,
                     _staminaModel.staminaModel,
                     consumeValue,
@@ -282,61 +276,28 @@ namespace Gs2.Sample.Stamina
 
             _staminaSetting.onGetStamina.AddListener(RefreshStaminaAction);
             
-            yield return GetStamina(
-                _staminaModel.staminaModel,
+            AsyncResult<EzGetStaminaResult> result = null;
+            yield return _staminaModel.GetStamina(
+                r => result = r,
+                _gs2Client.Client,
+                _session.Session,
+                _staminaSetting.staminaNamespaceName,
+                _staminaSetting.staminaName,
                 _staminaSetting.onGetStamina,
                 _staminaSetting.onError
             );
-        }
-        
-        /// <summary>
-        /// 現在のスタミナの取得
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="staminaNamespaceName"></param>
-        /// <param name="staminaModel"></param>
-        /// <param name="onGetStamina"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
-        public IEnumerator GetStamina(
-            EzStaminaModel staminaModel,
-            GetStaminaEvent onGetStamina,
-            Gs2.Unity.Util.ErrorEvent onError
-        )
-        {
-            Validate();
-            
-            AsyncResult<EzGetStaminaResult> result = null;
-            yield return _gs2Client.Client.Stamina.GetStamina(
-                r =>
-                {
-                    result = r;
-                },
-                _session.Session,
-                _staminaSetting.staminaNamespaceName,
-                _staminaSetting.staminaName
-            );
-            
-            if (result.Error != null)
-            {
-                onError.Invoke(
-                    result.Error
-                );
-                yield break;
-            }
 
-            _staminaModel.stamina = result.Result.Item;
-            
-            _staminaView.SetStamina(_staminaModel.stamina);
-            
-            onGetStamina.Invoke(staminaModel, _staminaModel.stamina);
+            if (result.Error == null)
+            {
+                _staminaView.SetStamina(_staminaModel.stamina);
+            }
         }
         
         public UnityAction<EzStampTask, EzRunStampTaskResult> GetTaskCompleteAction()
         {
             return (task, taskResult) =>
             {
-                UIManager.Instance.AddLog("GetTaskCompleteAction");
+                UIManager.Instance.AddLog("StaminaPresenter::GetTaskCompleteAction");
 
                 if (task.Action == "Gs2Stamina:ConsumeStaminaByUserId")
                 {
@@ -352,7 +313,7 @@ namespace Gs2.Sample.Stamina
         {
             return (sheet, sheetResult) =>
             {
-                UIManager.Instance.AddLog("GetSheetCompleteAction");
+                UIManager.Instance.AddLog("StaminaPresenter::GetSheetCompleteAction");
                 
                 if (sheet.Action == "Gs2Stamina:RecoverStaminaByUserId")
                 {

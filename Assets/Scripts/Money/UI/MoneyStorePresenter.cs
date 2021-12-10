@@ -1,20 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using Gs2.Core;
-using Gs2.Core.Exception;
-using Gs2.Gs2Limit.Request;
-using Gs2.Gs2Money.Request;
-using Gs2.Sample.Core;
 using Gs2.Sample.Core.Runtime;
-using Gs2.Unity.Gs2Limit.Result;
-using Gs2.Unity.Gs2Showcase.Model;
-using Gs2.Unity.Gs2Showcase.Result;
-using Gs2.Unity.Util;
-using Gs2.Util.LitJson;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.Events;
 
 namespace Gs2.Sample.Money
 {
@@ -26,15 +14,6 @@ namespace Gs2.Sample.Money
         [SerializeField] private MoneyStoreView _moneyStoreView;
 
         [SerializeField] private MoneyPresenter _moneyPresenter;
-        
-        /// <summary>
-        /// Gs2Client
-        /// </summary>
-        private Gs2Client _gs2Client;
-        /// <summary>
-        /// Gs2GameSession
-        /// </summary>
-        private Gs2GameSession _session;
         
         public enum State
         {
@@ -56,18 +35,6 @@ namespace Gs2.Sample.Money
         /// </summary>
         private State _moneyStoreState = State.MainMenu;
 
-        private void Validate()
-        {
-            if (_gs2Client == null)
-            {
-                _gs2Client = GameManager.Instance.Cllient;
-            }
-            if (_session == null)
-            {
-                _session = GameManager.Instance.Session;
-            }
-        }
-        
         private void Start()
         {
             Assert.IsNotNull(_moneySetting);
@@ -116,6 +83,40 @@ namespace Gs2.Sample.Money
         }
 
         /// <summary>
+        /// 課金通貨商品ストアを開く
+        /// </summary>
+        public void ClickToOpenMoneyStore()
+        {
+            SetState(State.GetProductsProcessing);
+            
+            StartCoroutine(
+                _moneyModel.GetListProducts(
+                    r =>
+                    {
+                        _moneyModel.products = r.Result;
+
+                        if (r.Error == null)
+                        {
+                            OnGetProducts(_moneyModel.products);
+                            
+                            SetState(State.OpenMoneyStore);
+                        }
+                        else
+                        {
+                            SetState(State.GetProductsFailed);
+                        }
+                    },
+                    GameManager.Instance.Cllient.Client,
+                    GameManager.Instance.Session.Session,
+                    _moneySetting.showcaseNamespaceName,
+                    _moneySetting.showcaseName,
+                    _moneySetting.onGetProducts,
+                    _moneySetting.onError
+                )
+            );
+        }
+        
+        /// <summary>
         /// 商品リストの初期化
         /// </summary>
         /// <param name="products"></param>
@@ -151,46 +152,13 @@ namespace Gs2.Sample.Money
             }
         }
 
-        public void ClickToOpenMoneyStore()
-        {
-            Validate();
-            
-            SetState(State.GetProductsProcessing);
-            
-            StartCoroutine(
-                _moneyModel.GetListProducts(
-                    r =>
-                    {
-                        _moneyModel.products = r.Result;
-
-                        if (r.Error == null)
-                        {
-                            OnGetProducts(_moneyModel.products);
-                            
-                            SetState(State.OpenMoneyStore);
-                        }
-                        else
-                        {
-                            SetState(State.GetProductsFailed);
-                        }
-                    },
-                    _gs2Client.Client,
-                    _session.Session,
-                    _moneySetting.showcaseNamespaceName,
-                    _moneySetting.showcaseName,
-                    _moneySetting.onGetProducts,
-                    _moneySetting.onError
-                )
-            );
-        }
-
-
-
         /// <summary>
         /// 購入する
         /// </summary>
         public void ClickToBuy(Product product)
         {
+            UIManager.Instance.AddLog("MoneyStorePresenter::ClickToBuy");
+            
             _moneyModel.selectedProduct = product;
             SetState(State.BuyProcessing);
 
@@ -205,8 +173,6 @@ namespace Gs2.Sample.Money
         /// <returns></returns>
         private IEnumerator BuyTask()
         {
-            Validate();
-            
             yield return _moneyModel.Buy(
                 r =>
                 {
@@ -214,8 +180,8 @@ namespace Gs2.Sample.Money
                         ? State.BuySucceed
                         : State.BuyFailed);
                 },
-                _gs2Client.Client,
-                _session.Session,
+                GameManager.Instance.Cllient.Client,
+                GameManager.Instance.Session.Session,
                 _moneySetting.showcaseNamespaceName,
                 _moneySetting.showcaseName,
                 _moneySetting.distributorNamespaceName,
@@ -226,8 +192,6 @@ namespace Gs2.Sample.Money
 
             _moneySetting.onBuy.Invoke(_moneyModel.selectedProduct);
         }
-        
-
 
         public void ClickToClose()
         {

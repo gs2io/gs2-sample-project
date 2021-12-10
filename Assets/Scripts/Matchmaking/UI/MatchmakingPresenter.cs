@@ -26,16 +26,6 @@ namespace Gs2.Sample.Matchmaking
         [SerializeField] private MatchmakingView _matchmakingView;
         [SerializeField] private JoinGatheringView _joinGatheringView;
         
-        /// <summary>
-        /// Gs2Client
-        /// </summary>
-        private Gs2Client _gs2Client;
-        /// <summary>
-        /// Gs2GameSession
-        /// </summary>
-        private Gs2GameSession _session;
-        
-        
         public enum State
         {
             MainMenu,
@@ -149,28 +139,14 @@ namespace Gs2.Sample.Matchmaking
             );
         }
 
-        private void Validate()
-        {
-            if (_gs2Client == null)
-            {
-                _gs2Client = GameManager.Instance.Cllient;
-            }
-            if (_session == null)
-            {
-                _session = GameManager.Instance.Session;
-            }
-        }
-
         public void Initialize()
         {
-            Validate();
-            
-            _gs2Client.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
+            GameManager.Instance.Cllient.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
         }
         
-        public void Finalize()
+        public void OnClose()
         {
-            _gs2Client.Profile.Gs2Session.OnNotificationMessage -= PushNotificationHandler;
+            GameManager.Instance.Cllient.Profile.Gs2Session.OnNotificationMessage -= PushNotificationHandler;
         }
         
         /// <summary>
@@ -239,7 +215,7 @@ namespace Gs2.Sample.Matchmaking
                         SetState(State.Complete);
                         _matchmakingSetting.onMatchmakingComplete.Invoke(_matchmakingModel.Gathering, _matchmakingModel.JoinedPlayerIds);
 
-                        Finalize();
+                        OnClose();
                     }
                 }
                 
@@ -317,12 +293,10 @@ namespace Gs2.Sample.Matchmaking
 
         public IEnumerator SimpleMatchmakingCreateGatheringTask()
         {
-            Validate();
-            
             AsyncResult<EzCreateGatheringResult> result = null;
             yield return _matchmakingModel.CreateGathering(
-                _gs2Client.Client,
-                _session.Session,
+                GameManager.Instance.Cllient.Client,
+                GameManager.Instance.Session.Session,
                 r => result = r,
                 _matchmakingSetting.matchmakingNamespaceName,
                 _matchmakingSetting.onUpdateJoinedPlayerIds,
@@ -361,16 +335,14 @@ namespace Gs2.Sample.Matchmaking
         {
             UIManager.Instance.AddLog("SimpleMatchmakingJoinGathering");
             
-            Validate();
-            
             while (matchmakingState == State.JoinGathering)
             {
                 AsyncResult<EzDoMatchmakingResult> result = null;
                 string contextToken = null;
                 yield return _matchmakingModel.JoinGathering(
                     r => { result = r; },
-                    _gs2Client.Client,
-                    _session.Session,
+                    GameManager.Instance.Cllient.Client,
+                    GameManager.Instance.Session.Session,
                     _matchmakingSetting.matchmakingNamespaceName,
                     contextToken,
                     _matchmakingSetting.onError
@@ -422,7 +394,7 @@ namespace Gs2.Sample.Matchmaking
                         
                         _matchmakingSetting.onMatchmakingComplete.Invoke(_matchmakingModel.Gathering, _matchmakingModel.JoinedPlayerIds);
                         
-                        Finalize();
+                        OnClose();
                         
                         yield break;
                     }
@@ -467,14 +439,12 @@ namespace Gs2.Sample.Matchmaking
         public IEnumerator CancelMatchmaking()
         {
             UIManager.Instance.AddLog("CancelMatchmaking");
-            
-            Validate();
-            
+
             AsyncResult<EzCancelMatchmakingResult> result = null;
             yield return _matchmakingModel.CancelMatchmaking(
                 r => { result = r; },
-                _gs2Client.Client,
-                _session.Session,
+                GameManager.Instance.Cllient.Client,
+                GameManager.Instance.Session.Session,
                 _matchmakingSetting.matchmakingNamespaceName,
                 _matchmakingSetting.onMatchmakingCancel,
                 _matchmakingSetting.onError

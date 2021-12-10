@@ -30,16 +30,25 @@ namespace Gs2.Sample.MoneyStore
         [SerializeField]
         public string showcaseNamespaceName;
         [SerializeField]
-        public string showcaseModelName;
+        public string showcaseName;
         [SerializeField]
         public string showcaseKeyId;
 
         [SerializeField]
         public GetShowcaseEvent onGetShowcase = new GetShowcaseEvent();
+        
+        /// <summary>
+        /// 販売中のガチャ一覧を取得したとき
+        /// </summary>
+        [SerializeField]
+        public GetProductsEvent onGetProducts = new GetProductsEvent();
+        
         [SerializeField]
         public BuyEvent onBuy = new BuyEvent();
+        
         [SerializeField]
         public IssueBuyStampSheetEvent onIssueBuyStampSheet = new IssueBuyStampSheetEvent();
+        
         [SerializeField]
         public ErrorEvent onError = new ErrorEvent();
     }

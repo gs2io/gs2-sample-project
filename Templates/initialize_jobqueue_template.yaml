@@ -1,0 +1,17 @@
+GS2TemplateFormatVersion: "2019-05-01"
+Description: GS2-JobQueue initialize template Version 2021-12-07
+
+Globals:
+  Alias:
+    JobQueueNamespaceName: job-queue
+
+Resources:
+  JobQueueNamespace:
+    Type: GS2::JobQueue::Namespace
+    Properties:
+      Name: ${JobQueueNamespaceName}
+
+Outputs:
+  JobQueueNamespaceName: ${JobQueueNamespaceName}
+  JobQueueNamespaceId:
+    '!GetAttr': JobQueueNamespace.Item.NamespaceId

@@ -1,0 +1,70 @@
+GS2TemplateFormatVersion: "2019-05-01"
+Description: GS2-Inventory initialize template Version 2021-12-07
+
+Globals:
+  Alias:
+    IdentifierAcquireUnitPolicyName: inventory-acquire-unit
+    InventoryModelName: unit
+    EnableDebugAcquireUnitAction: 'true'
+    IdentifierAcquireUnitUserName: inventory-acquire-unit
+    InventoryNamespaceName: unit
+
+Resources:
+  IdentifierAcquireUnitUser:
+    Type: GS2::Identifier::User
+    Properties:
+      Name: ${IdentifierAcquireUnitUserName}
+
+  InventorySettings:
+    DependsOn:
+    - InventoryNamespace
+    Type: GS2::Inventory::CurrentItemModelMaster
+    Properties:
+      Settings: '{"version":"2019-02-05","inventoryModels":[{"name":"unit","initialCapacity":50,"maxCapacity":50,"itemModels":[{"name":"normal_0001","metadata":"{\"displayName\":\"[N] 0001\",\"rarity\":0}","stackingLimit":1,"allowMultipleStacks":true,"sortValue":10000},{"name":"normal_0002","metadata":"{\"displayName\":\"[N] 0002\",\"rarity\":0}","stackingLimit":1,"allowMultipleStacks":true,"sortValue":10100},{"name":"normal_0003","metadata":"{\"displayName\":\"[N] 0003\",\"rarity\":0}","stackingLimit":1,"allowMultipleStacks":true,"sortValue":10200},{"name":"rare_0001","metadata":"{\"displayName\":\"[R] 0001\",\"rarity\":1}","stackingLimit":1,"allowMultipleStacks":true,"sortValue":20000},{"name":"rare_0002","metadata":"{\"displayName\":\"[R] 0002\",\"rarity\":1}","stackingLimit":1,"allowMultipleStacks":true,"sortValue":20100},{"name":"rare_0003","metadata":"{\"displayName\":\"[R] 0003\",\"rarity\":1}","stackingLimit":1,"allowMultipleStacks":true,"sortValue":20200},{"name":"srare_0001","metadata":"{\"displayName\":\"[SR] 0001\",\"rarity\":2}","stackingLimit":1,"allowMultipleStacks":true,"sortValue":30000},{"name":"srare_0002","metadata":"{\"displayName\":\"[SR] 0002\",\"rarity\":2}","stackingLimit":1,"allowMultipleStacks":true,"sortValue":30100},{"name":"srare_0003","metadata":"{\"displayName\":\"[SR] 0003\",\"rarity\":2}","stackingLimit":1,"allowMultipleStacks":true,"sortValue":30200},{"name":"ssrare_0001","metadata":"{\"displayName\":\"[SSR] 0001\",\"rarity\":3}","stackingLimit":1,"allowMultipleStacks":true,"sortValue":40000},{"name":"ssrare_0002","metadata":"{\"displayName\":\"[SSR] 0002\",\"rarity\":3}","stackingLimit":1,"allowMultipleStacks":true,"sortValue":40100},{"name":"ssrare_0003","metadata":"{\"displayName\":\"[SSR] 0003\",\"rarity\":3}","stackingLimit":1,"allowMultipleStacks":true,"sortValue":40200}]}]}'
+      NamespaceName: ${InventoryNamespaceName}
+
+  IdentifierAcquireUnitUserAttachPolicy:
+    DependsOn:
+    - IdentifierAcquireUnitPolicy
+    - IdentifierAcquireUnitUser
+    Type: GS2::Identifier::AttachSecurityPolicy
+    Properties:
+      SecurityPolicyId:
+        '!GetAttr': IdentifierAcquireUnitPolicy.Item.SecurityPolicyId
+      UserName: ${IdentifierAcquireUnitUserName}
+
+  IdentifierAcquireUnitPolicy:
+    Type: GS2::Identifier::SecurityPolicy
+    Properties:
+      Name: ${IdentifierAcquireUnitPolicyName}
+      Policy:
+        Version: 2016-04-01
+        Statements:
+        - Effect: Allow
+          Actions:
+          - Gs2Inventory:AcquireItemSetByUserId
+          Resources:
+          - '*'
+
+  IdentifierAcquireUnitIdentifier:
+    DependsOn:
+    - IdentifierAcquireUnitUser
+    Type: GS2::Identifier::Identifier
+    Properties:
+      UserName: ${IdentifierAcquireUnitUserName}
+
+  InventoryNamespace:
+    Type: GS2::Inventory::Namespace
+    Properties:
+      Name: ${InventoryNamespaceName}
+
+Outputs:
+  IdentifierAcquireUnitPolicyName: ${IdentifierAcquireUnitPolicyName}
+  IdentifierAcquireUnitClientSecret:
+    '!GetAttr': IdentifierAcquireUnitIdentifier.ClientSecret
+  IdentifierAcquireUnitClientId:
+    '!GetAttr': IdentifierAcquireUnitIdentifier.Item.ClientId
+  InventoryModelName: ${InventoryModelName}
+  EnableDebugAcquireUnitAction: ${EnableDebugAcquireUnitAction}
+  IdentifierAcquireUnitUserName: ${IdentifierAcquireUnitUserName}
+  InventoryNamespaceName: ${InventoryNamespaceName}

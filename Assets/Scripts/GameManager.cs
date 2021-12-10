@@ -7,17 +7,24 @@ using Gs2.Sample.AccountTakeOver;
 using Gs2.Sample.Core;
 using Gs2.Sample.Core.Runtime;
 using Gs2.Sample.Credential;
+using Gs2.Sample.Gacha;
 using Gs2.Sample.Gold;
+using Gs2.Sample.Inventory;
+using Gs2.Sample.JobQueue;
 using Gs2.Sample.Login;
 using Gs2.Sample.Money;
 using Gs2.Sample.Realtime;
 using Gs2.Sample.Stamina;
+using Gs2.Sample.Unit;
+using Gs2.Sample.Version;
 using Gs2.Unity;
 using Gs2.Unity.Gs2Account.Model;
 using Gs2.Unity.Gs2Account.Result;
 using Gs2.Unity.Gs2Auth.Result;
 using Gs2.Unity.Gs2Gateway.Result;
 using Gs2.Unity.Gs2Matchmaking.Model;
+using Gs2.Unity.Gs2Version.Model;
+using Gs2.Unity.Gs2Version.Result;
 using Gs2.Unity.Util;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -38,26 +45,38 @@ namespace Gs2.Sample
 
         private GameState gameState = GameState.START;
 
-        public AccountTakeOverPresenter takeoverPresenter;
+        public bool skipCheckVersion = true;
+        public bool skipCheckTerm = true;
+        [SerializeField] private VersionModel _versionModel;
+        [SerializeField] private TermModel _termModel;
         
-        public StaminaPresenter staminaPresenter;
-        public MoneyPresenter moneyPresenter;
-        public GoldPresenter goldPresenter;
+        [SerializeField] public AccountTakeOverPresenter takeoverPresenter;
         
-        public RealtimePresenter realtimePresenter;
+        [SerializeField] public StaminaPresenter staminaPresenter;
+        [SerializeField] public MoneyPresenter moneyPresenter;
+        [SerializeField] public GoldPresenter goldPresenter;
+        [SerializeField] public InventoryPresenter inventoryPresenter;
+
+        [SerializeField] public RealtimePresenter realtimePresenter;
+
+        [SerializeField] public UnitPresenter unitPresenter;
+        [SerializeField] public GachaStorePresenter gachaPresenter;
         
         /// <summary>
         /// アカウント情報の保存領域
         /// </summary>
-        public PlayerPrefsAccountRepository accountRepository;
+        [SerializeField] public PlayerPrefsAccountRepository accountRepository;
 
+        private int _saveSlot = 0;
+        
         private Gs2Client _client = new Gs2Client();
         public Gs2Client Cllient => _client;
         
         private Gs2GameSession _session = new Gs2GameSession();
         public Gs2GameSession Session => _session;
     
-        private StampSheetRunner _stampSheetRunner;
+        private StampSheetRunner _staminaStampSheetRunner;
+        private StampSheetRunner _gachaStampSheetRunner;
         
         // Credential
         [SerializeField]
@@ -75,6 +94,12 @@ namespace Gs2.Sample
         }
         public CreateGs2GameSessionEvent onCreateGs2GameSessionEvent = new CreateGs2GameSessionEvent();
 
+        [SerializeField]
+        private VersionSetting _versionSetting;
+        
+        [SerializeField]
+        private TermSetting _termSetting;
+        
         // Stamina
         [SerializeField]
         private StaminaSetting _staminaSetting;
@@ -92,6 +117,11 @@ namespace Gs2.Sample
 
         // Realtime
         private RealtimeModel _realtimeModel;
+        
+        // JobQueue
+        [SerializeField]
+        private JobQueueSetting _jobQueueSetting;
+        private JobQueueModel _jobQueueModel;
         
         /// <summary>
         /// シーンの開始時に実行される。
@@ -125,6 +155,9 @@ namespace Gs2.Sample
             _realtimeModel = GetComponent<RealtimeModel>();
             Assert.IsNotNull(_realtimeModel);
             
+            _jobQueueModel = GetComponent<JobQueueModel>();
+            Assert.IsNotNull(_jobQueueModel);
+            
             UIManager.Instance.SetActiveGame(false);
         }
 
@@ -139,6 +172,7 @@ namespace Gs2.Sample
             InitializeCredential();
 
             UIManager.Instance.SetStartButtonInteractable(false);
+            UIManager.Instance.SetSelectAccountButtonInteractable(false);
             UIManager.Instance.SetRemoveAccountButtonInteractable(false);
             UIManager.Instance.SetActiveTitleProgress(true);
             
@@ -241,6 +275,27 @@ namespace Gs2.Sample
         }
         
         /// <summary>
+        /// アカウント選択処理
+        /// </summary>
+        /// <returns></returns>
+        public void OnSelectAccount(int slot)
+        {
+            switch (slot)
+            {
+                default:
+                    UIManager.Instance.SetSaveSlotText("default");
+                    _saveSlot = 0;
+                    break;
+                case 1:
+                case 2:
+                case 3:
+                    UIManager.Instance.SetSaveSlotText("Slot " + slot.ToString());
+                    _saveSlot = slot;
+                    break;
+            }
+        }
+        
+        /// <summary>
         /// アカウント削除処理
         /// </summary>
         /// <returns></returns>
@@ -249,7 +304,7 @@ namespace Gs2.Sample
             UIManager.Instance.OpenDialog2("確認", "アカウント情報を削除します。よろしいですか？");
             UIManager.Instance.AddPositiveListner(() =>
             {
-                accountRepository.DeleteAccount();
+                accountRepository.DeleteAccount(_saveSlot);
             });
         }
 
@@ -271,16 +326,34 @@ namespace Gs2.Sample
 
             _client = client;
 
-            _stampSheetRunner = new StampSheetRunner(
+            _staminaStampSheetRunner = new StampSheetRunner(
                 _client.Client
             );
-            _stampSheetRunner.AddDoneStampTaskEventHandler(
+            _staminaStampSheetRunner.AddDoneStampTaskEventHandler(
+                moneyPresenter.GetTaskCompleteAction(),
                 staminaPresenter.GetTaskCompleteAction()
             );
-            _stampSheetRunner.AddCompleteStampSheetEvent(
+            _staminaStampSheetRunner.AddCompleteStampSheetEvent(
+                moneyPresenter.GetSheetCompleteAction(),
                 staminaPresenter.GetSheetCompleteAction()
             );
 
+            _gachaStampSheetRunner = new StampSheetRunner(
+                _client.Client
+            );
+            _gachaStampSheetRunner.AddDoneStampTaskEventHandler(
+                moneyPresenter.GetTaskCompleteAction(),
+                unitPresenter.GetTaskCompleteAction(),
+                _jobQueueModel.GetTaskCompleteAction(),
+                gachaPresenter.GetTaskCompleteAction()
+            );
+            _gachaStampSheetRunner.AddCompleteStampSheetEvent(
+                moneyPresenter.GetSheetCompleteAction(),
+                unitPresenter.GetSheetCompleteAction(),
+                _jobQueueModel.GetSheetCompleteAction(),
+                gachaPresenter.GetSheetCompleteAction()
+            );
+            
             StartCoroutine(
                 Login()
             );
@@ -313,7 +386,7 @@ namespace Gs2.Sample
             _loginSetting.onError.RemoveListener(OnLoginError);
         }
         
-        public static IEnumerator AutoLogin(
+        public IEnumerator AutoLogin(
             Client client,
             IAccountRepository repository,
             string accountNamespaceName,
@@ -333,7 +406,8 @@ namespace Gs2.Sample
                     {
                         UserId = account.UserId,
                         Password = account.Password,
-                    }
+                    },
+                    _saveSlot
                 );
             }
 
@@ -347,7 +421,7 @@ namespace Gs2.Sample
 
             try
             {
-                if (!repository.IsExistsAccount())
+                if (!repository.IsExistsAccount(_saveSlot))
                 {
                     yield return CreateAccount(
                         client,
@@ -362,7 +436,7 @@ namespace Gs2.Sample
                     yield break;
                 }
             
-                var account = repository.LoadAccount();
+                var account = repository.LoadAccount(_saveSlot);
                 yield return Authentication(
                     client,
                     account?.UserId,
@@ -381,7 +455,7 @@ namespace Gs2.Sample
             }
         }
         
-        public static IEnumerator CreateAccount(
+        public IEnumerator CreateAccount(
             Client client,
             string accountNamespaceName,
             CreateAccountEvent onCreateAccount,
@@ -410,11 +484,11 @@ namespace Gs2.Sample
             onCreateAccount.Invoke(account);
         }
         
-        public static void DeleteAccount(
+        public void DeleteAccount(
             IAccountRepository repository
         )
         {
-            repository.DeleteAccount();
+            repository.DeleteAccount(_saveSlot);
         }
         
         public static IEnumerator Authentication(
@@ -508,10 +582,110 @@ namespace Gs2.Sample
                 Destroy(go);
             
             _session.Session = session;
-            
-            takeoverPresenter.Initialize();
-            
+
+            if (!skipCheckVersion)
+            {
+                OnRequestVersionCheck();
+                return;
+            }
+            else if (!skipCheckTerm)
+            {
+                OnRequestTermCheck();
+                return;
+            }
+
             OnStartTitle();
+        }
+        
+        public void OnCheckVersion(List<EzTargetVersion> target, EzCheckVersionResult result)
+        {
+            UIManager.Instance.AddLog("GameManager::OnCheckVersion");
+            UIManager.Instance.AddLog("Errors : " + result.Errors.Count);
+            UIManager.Instance.AddLog("Warnings : " + result.Warnings.Count);
+            UIManager.Instance.AddLog("ProjectToken : " + result.ProjectToken);
+
+            if (result.Errors.Count > 0)
+            {
+                UIManager.Instance.OpenDialog1("お知らせ", "最新のアプリがあります。");
+                UIManager.Instance.AddAcceptListner(OnRequestVersionCheck);
+                return;
+            }
+
+            var config = new Dictionary<string, string>();
+
+            if (!skipCheckTerm)
+            {
+                OnRequestTermCheck();
+                return;
+            }
+
+            OnStartTitle();
+        }
+
+        private void OnRequestVersionCheck()
+        {
+            StartCoroutine(
+                _versionModel.CheckVersion(
+                    _client.Client,
+                    _session.Session,
+                    _versionSetting.versionNamespaceName,
+                    _versionSetting.versionName,
+                    _versionSetting.currentVersionMajor,
+                    _versionSetting.currentVersionMinor,
+                    _versionSetting.currentVersionMicro,
+                    _versionSetting.onCheckVersion,
+                    _versionSetting.onError
+                )
+            );
+        }
+
+        private void OnRequestTermCheck()
+        {
+            StartCoroutine(
+                _termModel.CheckTerm(
+                    _client.Client,
+                    _session.Session,
+                    _termSetting.versionNamespaceName,
+                    _termSetting.versionName,
+                    _termSetting.onCheckVersion,
+                    _termSetting.onError
+                )
+            );
+        }
+        
+        public void OnCheckTerm(List<EzTargetVersion> target, EzCheckVersionResult result)
+        {
+            UIManager.Instance.AddLog("GameManager::OnCheckTerm");
+            UIManager.Instance.AddLog("Errors : " + result.Errors.Count);
+            UIManager.Instance.AddLog("Warnings : " + result.Warnings.Count);
+            UIManager.Instance.AddLog("ProjectToken : " + result.ProjectToken);
+
+            var config = new Dictionary<string, string>();
+
+            if (result.Errors.Count > 0)
+            {
+                UIManager.Instance.OpenDialog2("利用規約", "「利用規約」への同意が必要です。", "同意する", "同意しない");
+                UIManager.Instance.AddPositiveListner(OnRequestAcceptTerm);
+                UIManager.Instance.AddNegativeListner(OnRequestVersionCheck);
+            }
+            else
+            {
+                OnStartTitle();
+            }
+        }
+        
+        private void OnRequestAcceptTerm()
+        {
+            StartCoroutine(
+                _termModel.AcceptTerm(
+                    _client.Client,
+                    _session.Session,
+                    _termSetting.versionNamespaceName,
+                    _termSetting.versionName,
+                    _termSetting.onAcceptTerm,
+                    _termSetting.onError
+                )
+            );
         }
         
         public void OnLoginError(Gs2Exception e)
@@ -530,6 +704,8 @@ namespace Gs2.Sample
 
         public void OnStartTitle()
         {
+            takeoverPresenter.Initialize();
+            
             UIManager.Instance.SetStateText(gameState.ToString());
             UIManager.Instance.AddLog("GameManager::OnStartTitle");
             UIManager.Instance.CloseDialog();
@@ -549,12 +725,27 @@ namespace Gs2.Sample
 
             // ゲーム初期化
             UIManager.Instance.SetActiveGameProgress(true);
-            
+
             StartCoroutine(staminaPresenter.Initialize());
+
+            StartCoroutine(moneyPresenter.Initialize());
+
+            StartCoroutine(goldPresenter.Initialize());
+
+            StartCoroutine(inventoryPresenter.Initialize());
+            StartCoroutine(unitPresenter.Initialize());
+
+            _jobQueueModel.Initialize(
+                _jobQueueSetting.jobQueueNamespaceName,
+                _jobQueueSetting.onRunJob,
+                _jobQueueSetting.onError
+            );
+
+            gachaPresenter.Initialize(_gachaStampSheetRunner);
             
-            StartCoroutine( moneyPresenter.Initialize() );
-            
-            StartCoroutine( goldPresenter.Initialize() );
+            _jobQueueModel.onExecJob.AddListener(
+                unitPresenter.GetJobQueueAction()
+            );
             
             UIManager.Instance.SetTapToStartInteractable(false);
             UIManager.Instance.SetTakeOverInteractable(false);
@@ -587,9 +778,9 @@ namespace Gs2.Sample
             UIManager.Instance.SetActiveGame(false);
             UIManager.Instance.CloseProcessing();
 
-            staminaPresenter.Finalize();
-            moneyPresenter.Finalize();
-            goldPresenter.Finalize();
+            _realtimeModel.Clear();
+            
+            _jobQueueModel.Finish();
         }
         
         /// <summary>
@@ -603,6 +794,5 @@ namespace Gs2.Sample
             
             realtimePresenter.Initialize();
         }
-        
     }
 }
