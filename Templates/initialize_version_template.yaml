@@ -1,0 +1,68 @@
+GS2TemplateFormatVersion: "2019-05-01"
+Description: GS2 SDK for Unity initialize template Version 2021-12-03
+
+Globals:
+  Alias:
+    VersionNamespaceName: application
+    ElevationUserName: authorized_application
+    KeyNamespaceName: application-key-namespace
+    KeyName: application-key
+
+Resources:
+
+  VersionKeyNamespace:
+    Type: GS2::Key::Namespace
+    Properties:
+      Name: ${KeyNamespaceName}
+
+  VersionKey:
+    Type: GS2::Key::Key
+    Properties:
+      NamespaceName: ${KeyNamespaceName}
+      Name: ${KeyName}
+    DependsOn:
+      - VersionKeyNamespace
+
+  IdentifierElevationUser:
+    Type: GS2::Identifier::User
+    Properties:
+      Name: ${ElevationUserName}
+
+  IdentifierElevationUserAttachPolicy:
+    Type: GS2::Identifier::AttachSecurityPolicy
+    Properties:
+      UserName: ${ElevationUserName}
+      SecurityPolicyId: grn:gs2::system:identifier:securityPolicy:AdministratorAccess
+    DependsOn:
+      - IdentifierElevationUser
+
+  Namespace:
+    Type: GS2::Version::Namespace
+    Properties:
+      Name: ${VersionNamespaceName}
+      AssumeUserId: !GetAttr IdentifierElevationUser.Item.UserId
+    DependsOn:
+      - IdentifierElevationUser
+
+  VersionSettings:
+    Type: GS2::Version::CurrentVersionMaster
+    Properties:
+      NamespaceName: ${VersionNamespaceName}
+      Settings:
+        version: "2019-10-09"
+        versionModels:
+          - name: application
+            metadata: application
+            warningVersion: 
+              major: 1
+              minor: 0
+              micro: 0
+            errorVersion:
+              major: 0
+              minor: 9
+              micro: 0
+            scope: passive
+            needSignature: false
+    DependsOn:
+      - Namespace
+      - VersionKey

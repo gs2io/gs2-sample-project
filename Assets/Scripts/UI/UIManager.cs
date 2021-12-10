@@ -11,6 +11,8 @@ namespace Gs2.Sample
         [SerializeField]
         public TextMeshProUGUI stateText = null;
         [SerializeField]
+        public TextMeshProUGUI saveSlotText = null;
+        [SerializeField]
         public TextMeshProUGUI acountText = null;
         
         [SerializeField]
@@ -27,6 +29,8 @@ namespace Gs2.Sample
         
         [SerializeField]
         public Button startButton = null;
+        [SerializeField]
+        public Button selectAccountButton = null;
         [SerializeField]
         public Button removeAccountButton = null;
         [SerializeField]
@@ -71,6 +75,11 @@ namespace Gs2.Sample
             stateText.SetText(text);
            
             Debug.Log("State:" + text);
+        }
+        
+        public void SetSaveSlotText(string text)
+        {
+            saveSlotText.SetText(text);
         }
         
         public void SetQuestStateText(string text)
@@ -147,6 +156,15 @@ namespace Gs2.Sample
         public void SetStartButtonInteractable(bool enable)
         {
             startButton.interactable = enable;
+        }
+        
+        /// <summary>
+        /// アカウント選択ボタン
+        /// </summary>
+        /// <param name="enable"></param>
+        public void SetSelectAccountButtonInteractable(bool enable)
+        {
+            selectAccountButton.interactable = enable;
         }
         
         /// <summary>

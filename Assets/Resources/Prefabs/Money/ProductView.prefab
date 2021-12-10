@@ -65,7 +65,7 @@ MonoBehaviour:
   gemsText: {fileID: 3865766742052190809}
   priceText: {fileID: 1135897288870124915}
   buyButton: {fileID: 4137852204597164314}
-  buyButtonLabel: {fileID: 0}
+  buyButtonLabel: {fileID: 2577838571976463624}
 --- !u!114 &6087196406793621954
 MonoBehaviour:
   m_ObjectHideFlags: 0

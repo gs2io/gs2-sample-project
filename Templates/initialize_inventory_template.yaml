@@ -1,0 +1,69 @@
+GS2TemplateFormatVersion: "2019-05-01"
+Description: GS2-Inventory initialize template Version 2021-12-03
+
+Globals:
+  Alias:
+    IdentifierAcquireItemUserName: inventory-acquire-item
+    EnableDebugAcquireItemAction: 'True'
+    InventoryNamespaceName: inventory
+    IdentifierAcquireItemPolicyName: inventory-acquire-item
+
+Resources:
+  IdentifierAcquireItemPolicy:
+    Type: GS2::Identifier::SecurityPolicy
+    Properties:
+      Name: ${IdentifierAcquireItemPolicyName}
+      Policy:
+        Version: "2016-04-01"
+        Statements:
+        - Effect: Allow
+          Actions:
+          - Gs2Inventory:AcquireItemSetByUserId
+          Resources:
+          - '*'
+
+  IdentifierAcquireItemUser:
+    Type: GS2::Identifier::User
+    Properties:
+      Name: ${IdentifierAcquireItemPolicyName}
+
+  IdentifierAcquireItemUserAttachPolicy:
+    DependsOn:
+    - IdentifierAcquireItemPolicy
+    - IdentifierAcquireItemUser
+    Type: GS2::Identifier::AttachSecurityPolicy
+    Properties:
+      SecurityPolicyId:
+        '!GetAttr': IdentifierAcquireItemPolicy.Item.SecurityPolicyId
+      UserName: ${IdentifierAcquireItemUserName}
+
+  InventorySettings:
+    DependsOn:
+    - InventoryNamespace
+    Type: GS2::Inventory::CurrentItemModelMaster
+    Properties:
+      Settings: '{"version":"2019-02-05","inventoryModels":[{"name":"inventory","initialCapacity":100,"maxCapacity":100,"itemModels":[{"name":"fire_element","stackingLimit":99,"allowMultipleStacks":true,"sortValue":0},{"name":"water_element","stackingLimit":99,"allowMultipleStacks":true,"sortValue":1}]}]}'
+      NamespaceName: ${InventoryNamespaceName}
+
+  IdentifierAcquireItemIdentifier:
+    DependsOn:
+    - IdentifierAcquireItemUser
+    Type: GS2::Identifier::Identifier
+    Properties:
+      UserName: ${IdentifierAcquireItemUserName}
+
+  InventoryNamespace:
+    Type: GS2::Inventory::Namespace
+    Properties:
+      Name: ${InventoryNamespaceName}
+
+Outputs:
+  InventoryNamespaceName: ${InventoryNamespaceName}
+  InventoryModelName: inventory
+  IdentifierAcquireItemPolicyName: ${IdentifierAcquireItemPolicyName}
+  IdentifierAcquireItemUserName: ${IdentifierAcquireItemUserName}
+  EnableDebugAcquireItemAction: ${EnableDebugAcquireItemAction}
+  IdentifierAcquireItemClientSecret:
+    '!GetAttr': IdentifierAcquireItemIdentifier.ClientSecret
+  IdentifierAcquireItemClientId:
+    '!GetAttr': IdentifierAcquireItemIdentifier.Item.ClientId

@@ -8,6 +8,8 @@ using Gs2.Gs2Money.Request;
 using Gs2.Sample.Core;
 using Gs2.Sample.MoneyStore;
 using Gs2.Unity;
+using Gs2.Unity.Gs2Distributor.Result;
+using Gs2.Unity.Gs2JobQueue.Model;
 using Gs2.Unity.Gs2Limit.Result;
 using Gs2.Unity.Gs2Money.Model;
 using Gs2.Unity.Gs2Money.Result;
@@ -319,5 +321,7 @@ namespace Gs2.Sample.Money
             
             callback.Invoke(new AsyncResult<object>(null, null));
         }
+        
+
     }
 }
