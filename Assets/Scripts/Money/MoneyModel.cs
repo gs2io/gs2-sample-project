@@ -45,7 +45,7 @@ namespace Gs2.Sample.Money
         public Product selectedProduct;
         
         /// <summary>
-        /// 現在の有償財貨の取得
+        /// 現在の課金通貨の取得
         /// </summary>
         /// <param name="client"></param>
         /// <param name="moneyNamespaceName"></param>
@@ -173,7 +173,7 @@ namespace Gs2.Sample.Money
         }
              
         /// <summary>
-        /// 
+        /// 入手アクション取得
         /// </summary>
         /// <param name="salesItem"></param>
         /// <param name="action"></param>
@@ -193,7 +193,7 @@ namespace Gs2.Sample.Money
         }
 
         /// <summary>
-        /// 
+        /// 消費アクション取得
         /// </summary>
         /// <param name="salesItem"></param>
         /// <param name="action"></param>
@@ -213,7 +213,7 @@ namespace Gs2.Sample.Money
         }
         
         /// <summary>
-        /// 通貨を購入する
+        /// 課金通貨を購入する
         /// </summary>
         /// <param name="callback"></param>
         /// <param name="client"></param>
@@ -254,11 +254,14 @@ namespace Gs2.Sample.Money
                     yield break;
                 }
 
+                // 課金通貨商品購入 レシート情報
                 receipt = result.Result.receipt;
 #endif
             }
+            
             string stampSheet = null;
             {
+                // Showcase 商品の購入をリクエスト
                 AsyncResult<EzBuyResult> result = null;
                 yield return client.Showcase.Buy(
                     r => { result = r; },
@@ -290,9 +293,11 @@ namespace Gs2.Sample.Money
                     yield break;
                 }
 
+                // スタンプシートを取得
                 stampSheet = result.Result.StampSheet;
             }
             {
+                // スタンプシート ステートマシンを生成
                 var machine = new StampSheetStateMachine(
                     stampSheet,
                     client,
@@ -307,16 +312,21 @@ namespace Gs2.Sample.Money
                 }
                 
                 onError.AddListener(OnError);
+                
+                // スタンプシートの実行
                 yield return machine.Execute(onError);
+                
                 onError.RemoveListener(OnError);
                 
                 if (exception != null)
                 {
+                    // スタンプシート実行エラー
                     callback.Invoke(new AsyncResult<object>(null, exception));
                     yield break;
                 }
             }
-            
+            // 商品購入に成功
+
             onBuy.Invoke(selectedProduct);
             
             callback.Invoke(new AsyncResult<object>(null, null));

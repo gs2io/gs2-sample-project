@@ -1,7 +1,14 @@
 {
   "dependencies": {
+    "com.cysharp.unitask": {
+      "version": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "50a67d8f419b6cea0398eff6c19cf0bbe11ed609"
+    },
     "com.unity.2d.animation": {
-      "version": "3.2.14",
+      "version": "3.2.15",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -15,7 +22,7 @@
     },
     "com.unity.2d.common": {
       "version": "2.1.0",
-      "depth": 1,
+      "depth": 0,
       "source": "registry",
       "dependencies": {
         "com.unity.2d.sprite": "1.0.0",
@@ -25,7 +32,7 @@
     },
     "com.unity.2d.path": {
       "version": "2.1.1",
-      "depth": 1,
+      "depth": 0,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
@@ -55,7 +62,7 @@
       "dependencies": {}
     },
     "com.unity.2d.spriteshape": {
-      "version": "3.0.17",
+      "version": "3.0.18",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -79,11 +86,11 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ide.rider": {
-      "version": "3.0.7",
+      "version": "1.2.1",
       "depth": 0,
       "source": "registry",
       "dependencies": {
-        "com.unity.ext.nunit": "1.0.6"
+        "com.unity.test-framework": "1.1.1"
       },
       "url": "https://packages.unity.com"
     },
@@ -163,7 +170,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.timeline": {
-      "version": "1.6.3",
+      "version": "1.2.18",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -184,7 +191,7 @@
       }
     },
     "io.gs2.csharp.sdk": {
-      "version": "2021.11.3",
+      "version": "2021.12.5",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -193,11 +200,11 @@
       "url": "https://upm.gs2.io/npm"
     },
     "io.gs2.unity.sdk": {
-      "version": "2021.11.6",
+      "version": "2021.12.5",
       "depth": 0,
       "source": "registry",
       "dependencies": {
-        "com.unity.modules.unitywebrequest": "1.0.0"
+        "io.gs2.csharp.sdk": "2021.12.5"
       },
       "url": "https://upm.gs2.io/npm"
     },

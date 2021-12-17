@@ -49,6 +49,7 @@ namespace Gs2.Sample.Matchmaking
                 {
                     RoleName = "default"
                 },
+                new List<EzAttributeRange>(),
                 new List<EzCapacityOfRole>
                 {
                     new EzCapacityOfRole
@@ -57,7 +58,6 @@ namespace Gs2.Sample.Matchmaking
                         Capacity = Capacity
                     },
                 },
-                new List<EzAttributeRange>(),
                 new List<string>(),
                 null
             );

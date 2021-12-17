@@ -80,8 +80,8 @@ namespace Gs2.Sample.AccountTakeOver
                 r => { result = r; },
                 session,
                 accountNamespaceName,
-                30,
-                null
+                null,
+                30
             );
             
             if (result.Error != null)

@@ -133,8 +133,8 @@ namespace Gs2.Sample.Quest
                 r => { result = r; },
                 session,
                 questNamespaceName,
-                30,
-                null
+                null,
+                30
             );
             
             if (result.Error != null)
@@ -321,8 +321,8 @@ namespace Gs2.Sample.Quest
             Client client,
             GameSession session,
             string questNamespaceName,
-            List<EzReward> rewards,
             bool isComplete,
+            List<EzReward> rewards,
             int slot,
             string distributorNamespaceName,
             string questKeyId,
@@ -337,9 +337,9 @@ namespace Gs2.Sample.Quest
                     r => { result = r; },
                     session,
                     questNamespaceName,
-                    Progress.TransactionId,
                     isComplete,
                     rewards,
+                    Progress.TransactionId,
                     new List<EzConfig>
                     {
                         new EzConfig
@@ -359,6 +359,7 @@ namespace Gs2.Sample.Quest
                     yield break;
                 }
 
+                // スタンプシートを取得
                 stampSheet = result.Result.StampSheet;
             }
             {
@@ -377,16 +378,19 @@ namespace Gs2.Sample.Quest
 
                 onError.AddListener(OnError);
                 
+                // スタンプシートの実行
                 yield return machine.Execute(onError);
                 
                 onError.RemoveListener(OnError);
                 
                 if (exception != null)
                 {
+                    // スタンプシート実行エラー
                     callback.Invoke(new AsyncResult<object>(null, exception));
                     yield break;
                 }
             }
+            // クエストを完了
             
             onEnd.Invoke(Progress, rewards, isComplete);
             

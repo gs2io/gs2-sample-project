@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,10 +22,18 @@ namespace Gs2.Sample.Unit
         [SerializeField]
         public ScrollRect scrollRect;
         
+        public void OnEnable()
+        {
+            StartCoroutine(ScrollTop());
+        }
+        private IEnumerator ScrollTop(){
+            yield return null;
+            scrollRect.verticalNormalizedPosition = 1.0f;
+        }
+        
         public void OnOpenEvent()
         {
             gameObject.SetActive(true);
-            scrollRect.verticalNormalizedPosition = 1.0f;
         }
         
         public void OnCloseEvent()

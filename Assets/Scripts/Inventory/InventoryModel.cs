@@ -152,8 +152,8 @@ namespace Gs2.Sample.Inventory
                     session,
                     inventoryNamespaceName,
                     inventoryName,
-                    30,
-                    null
+                    null,
+                    30
                 );
 
                 if (result.Error != null)

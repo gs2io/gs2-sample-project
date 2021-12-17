@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
 using Gs2.Unity.Gs2Inventory.Model;
 using TMPro;
 using UnityEngine;
@@ -30,10 +30,18 @@ namespace Gs2.Sample.Inventory
         
         public UseItemEvent onUseItem = new UseItemEvent();
 
+        public void OnEnable()
+        {
+            StartCoroutine(ScrollTop());
+        }
+        private IEnumerator ScrollTop(){
+            yield return null;
+            scrollRect.verticalNormalizedPosition = 1.0f;
+        }
+        
         public void OnOpenEvent()
         {
             gameObject.SetActive(true);
-            scrollRect.verticalNormalizedPosition = 1.0f;
         }
         
         public void OnCloseEvent()

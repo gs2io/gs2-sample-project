@@ -48,13 +48,10 @@ namespace Gs2.Sample.Gacha
 
         [SerializeField]
         public GetShowcaseEvent onGetShowcase = new GetShowcaseEvent();
-        
-        [SerializeField]
-        public MoneyStore.BuyEvent onBuy = new MoneyStore.BuyEvent();
-        [SerializeField]
-        public AcquireInventoryItemEvent onAcquireInventoryItem = new AcquireInventoryItemEvent();
         [SerializeField]
         public IssueBuyStampSheetEvent onIssueBuyStampSheet = new IssueBuyStampSheetEvent();
+        [SerializeField]
+        public AcquireInventoryItemEvent onAcquireInventoryItem = new AcquireInventoryItemEvent();
         [SerializeField]
         public ErrorEvent onError = new ErrorEvent();
     }
