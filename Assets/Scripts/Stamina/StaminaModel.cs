@@ -127,6 +127,7 @@ namespace Gs2.Sample.Stamina
                     yield break;
                 }
 
+                // スタンプシートを取得
                 stampSheet = result.Result.StampSheet;
             }
             {
@@ -145,11 +146,15 @@ namespace Gs2.Sample.Stamina
                 }
 
                 onError.AddListener(OnError);
+                
+                // スタンプシートの実行
                 yield return machine.Execute(onError);
+                
                 onError.RemoveListener(OnError);
 
                 if (exception != null)
                 {
+                    // スタンプシート実行エラー
                     onError.Invoke(
                         exception
                     );
@@ -157,7 +162,8 @@ namespace Gs2.Sample.Stamina
                     yield break;
                 }
             }
-
+            // スタミナ購入に成功
+            
             onBuy.Invoke();
 
             callback.Invoke(new AsyncResult<object>(null, null));

@@ -202,6 +202,8 @@ namespace Gs2.Sample.Inventory
                 Instantiate(_inventoryView.inventoryItemEmptyPrefab, _inventoryView.contentTransform);
             }
 
+            _inventoryView.scrollRect.verticalNormalizedPosition = 1.0f;
+            
             _inventoryView.capacity.SetText(
                 $"{inventory.CurrentInventoryCapacityUsage} / {inventory.CurrentInventoryMaxCapacity}");
         }

@@ -34,6 +34,17 @@ namespace Gs2.Sample.Gacha
         /// </summary>
         public SalesItem selectedItem;
         
+        /// <summary>
+        /// 商品棚を取得
+        /// </summary>
+        /// <param name="callback"></param>
+        /// <param name="client"></param>
+        /// <param name="session"></param>
+        /// <param name="showcaseNamespaceName"></param>
+        /// <param name="showcaseName"></param>
+        /// <param name="onGetShowcase"></param>
+        /// <param name="onError"></param>
+        /// <returns></returns>
         public IEnumerator GetShowcase(
             UnityAction<AsyncResult<EzGetShowcaseResult>> callback,
             Client client,
@@ -151,25 +162,28 @@ namespace Gs2.Sample.Gacha
                 controller = result.Result.controller;
                 product = result.Result.product;
             }
-
             
+            // ガチャ購入 レシート情報
             if (receipt != null)
             {
                 tempConfig.Add(
                     new EzConfig
                     {
                         Key = "receipt", 
-                        Value = receipt,
+                        Value = receipt
                     }
                 );
+                
+                UIManager.Instance.AddLog("receipt:" + receipt);
             }
 #else
-            Debug.LogError("Unity Purchasing を有効にしてください。");
-            throw new InvalidProgramException("Unity Purchasing を有効にしてください。");
+            Debug.LogError("課金通貨・ガチャ機能の実行には Unity Purchasing を有効にしてください。");
+            throw new InvalidProgramException("課金通貨・ガチャ機能の実行には Unity Purchasing を有効にしてください。");
 #endif
 
-            string stampSheet;
+            string stampSheet = null;
             {
+                // Showcase 商品の購入をリクエスト
                 AsyncResult<EzBuyResult> result = null;
                 yield return client.Showcase.Buy(
                     r => { result = r; },
@@ -187,10 +201,12 @@ namespace Gs2.Sample.Gacha
                     );
                     yield break;
                 }
-
+                
+                // スタンプシートを取得
                 stampSheet = result.Result.StampSheet;
             }
 
+            // スタンプシートを取得
             onIssueBuyStampSheet.Invoke(stampSheet);
 
 #if GS2_ENABLE_PURCHASING

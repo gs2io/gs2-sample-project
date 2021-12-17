@@ -326,6 +326,7 @@ namespace Gs2.Sample
 
             _client = client;
 
+            // スタミナ回復商品購入のスタンプシート
             _staminaStampSheetRunner = new StampSheetRunner(
                 _client.Client
             );
@@ -338,6 +339,7 @@ namespace Gs2.Sample
                 staminaPresenter.GetSheetCompleteAction()
             );
 
+            // ガチャ抽選処理のスタンプシート
             _gachaStampSheetRunner = new StampSheetRunner(
                 _client.Client
             );
@@ -741,6 +743,7 @@ namespace Gs2.Sample
                 _jobQueueSetting.onError
             );
 
+            // ガチャ抽選実行のスタンプシート
             gachaPresenter.Initialize(_gachaStampSheetRunner);
             
             _jobQueueModel.onExecJob.AddListener(

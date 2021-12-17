@@ -135,8 +135,8 @@ namespace Gs2.Sample.Gold
                     session,
                     inventoryNamespaceName,
                     inventoryName,
-                    30,
-                    null
+                    null,
+                    30
                 );
 
                 if (result.Error != null)

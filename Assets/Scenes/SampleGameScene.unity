@@ -6956,6 +6956,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1917406018}
     m_Modifications:
+    - target: {fileID: 1493624971179584677, guid: 42a36c59a884ef943b82c08e790d6408,
+        type: 3}
+      propertyPath: m_MovementType
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1501456963342857305, guid: 42a36c59a884ef943b82c08e790d6408,
         type: 3}
       propertyPath: m_SizeDelta.y
@@ -10085,7 +10090,7 @@ MonoBehaviour:
   onGetShowcase:
     m_PersistentCalls:
       m_Calls: []
-  onBuy:
+  onIssueBuyStampSheet:
     m_PersistentCalls:
       m_Calls: []
   onAcquireInventoryItem:
@@ -10102,9 +10107,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  onIssueBuyStampSheet:
-    m_PersistentCalls:
-      m_Calls: []
   onError:
     m_PersistentCalls:
       m_Calls:

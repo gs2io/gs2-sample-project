@@ -218,6 +218,10 @@ namespace Gs2.Sample.Gacha
             );
         }
 
+        /// <summary>
+        /// スタンプシートを発行
+        /// </summary>
+        /// <param name="stampSheet"></param>
         public void OnIssueStampSheet(
             string stampSheet
         )
@@ -247,8 +251,10 @@ namespace Gs2.Sample.Gacha
             {
                 Debug.Log("GachaStorePresenter::StateMachineOnCompleteStampSheet");
 
+                // Lottery 抽選処理の結果を取得
                 if (sheet.Action == "Gs2Lottery:DrawByUserId")
                 {
+                    // 抽選によって取得したアイテムがインベントリに追加される
                     var json = JsonMapper.ToObject(sheetResult.Result);
                     var result = DrawByUserIdResult.FromJson(json);
                     var mergedAcquireRequests = new List<AcquireItemSetByUserIdRequest>();
@@ -264,6 +270,7 @@ namespace Gs2.Sample.Gacha
                     _gachaSetting.onAcquireInventoryItem.Invoke(
                         mergedAcquireRequests
                     );
+                    // スタンプシートを実行
                     StartCoroutine(
                         _stampSheetRunner.Run(
                             result.StampSheet,
@@ -275,6 +282,10 @@ namespace Gs2.Sample.Gacha
             };
         }
         
+        /// <summary>
+        /// ガチャで入手したアイテム ダイアログ
+        /// </summary>
+        /// <param name="requests"></param>
         public void OnAcquireInventoryItem(
             List<AcquireItemSetByUserIdRequest> requests
         )
