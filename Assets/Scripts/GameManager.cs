@@ -506,6 +506,7 @@ namespace Gs2.Sample
         {
             UIManager.Instance.AddLog("Authentication");
             
+            // ゲームプレイヤーアカウントを認証
             AsyncResult<EzAuthenticationResult> result = null;
             yield return client.Account.Authentication(
                 r =>
@@ -526,10 +527,11 @@ namespace Gs2.Sample
                 yield break;
             }
 
-            UIManager.Instance.AddLog("Auth.Login");
-            
             var account = result.Result.Item;
 
+            UIManager.Instance.AddLog("Auth.Login");
+            
+            // 指定したユーザIDでGS2にログイン
             AsyncResult<EzLoginResult> result2 = null;
             yield return client.Auth.Login(
                 r =>
@@ -550,7 +552,8 @@ namespace Gs2.Sample
             );
 
             UIManager.Instance.AddLog("Gateway.SetUserId");
-                
+
+			// サーバからプッシュ通知を受けるためのユーザーIDを設定
             AsyncResult<EzSetUserIdResult> result3 = null;
             yield return client.Gateway.SetUserId(
                 r => { result3 = r; },

@@ -25,6 +25,14 @@ GS2のSDKのほか、Unity2019.4上での動作に必要なパッケージの記
 を使用しています。  
 Licensed under SIL Open Font License 1.1 ( http://scripts.sil.org/OFL )  
 
+## 機能別の解説
+
+各機能を単独で動作させる方法、機能の詳細については以下のページで個別に解説しています。
+
+- [アカウントの作成・ログイン 解説](Docs/Login.md)
+- [課金通貨ストア 解説](Docs/Money.md)
+- [ガチャ機能 解説](Docs/Gacha.md)
+
 ## 起動の準備
 
 ここではUnity Editor上でPlayボタンでゲームを再生するまでの準備について扱います。
@@ -156,6 +164,9 @@ IAP パッケージのインポートを行います。
 有効化されていればアプリのバージョンチェック、利用規約のユーザー確認、  
 （GS2-Version）を行い、
 アカウントによるログインを実行します。  
+
+- [⇒アカウントの作成・ログイン 解説へ](Docs/Login.md)
+
 初回起動時は匿名アカウントの自動作成を行います。  
 （GS2-Account）  
 
@@ -204,6 +215,8 @@ IAP パッケージのインポートを行います。
 アイテムをタップで消費（つかう）します。  
 （GS2-Inventory）
 
+- [⇒ガチャストア 解説へ](Docs/Gacha.md)
+　
 ## 対戦タブ
 
 ![プレイヤー](Docs/Matching.png)
@@ -230,7 +243,7 @@ GS2-Money を使って管理されている課金通貨を、GS2-Showcase で販
 定義されている商品の１つに GS2-Limit による購入回数の制限があり、１回のみ購入が可能になっています。  
 （GS2-Showcase、GS2-Limit、GS2-Money）  
 
-　[→ 課金通貨ストア 解説 へ](Docs/Money.md)
+　[→ ⇒課金通貨ストア 解説 へ](Docs/Money.md)
 
-# Settings 設定の詳細
+## Settings 設定の詳細
 [→ Settings 設定 へ](Docs/Settings.md)

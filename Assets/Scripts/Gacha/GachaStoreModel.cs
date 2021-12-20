@@ -83,7 +83,7 @@ namespace Gs2.Sample.Gacha
         }
         
         /// <summary>
-        /// 
+        /// 入手アクション取得
         /// </summary>
         /// <param name="salesItem"></param>
         /// <param name="action"></param>
@@ -103,7 +103,7 @@ namespace Gs2.Sample.Gacha
         }
 
         /// <summary>
-        /// 
+        /// 消費アクション取得
         /// </summary>
         /// <param name="salesItem"></param>
         /// <param name="action"></param>

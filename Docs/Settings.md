@@ -4,18 +4,6 @@
 
 Settingにコールバックを設定することで、イベント発生時に処理を追加することができます。  
 
-### アカウントの登録・ログイン
-
-![インスペクターウィンドウ](Gs2Settings.png)
-
-| イベント | 説明 |
----------|------
-| OnLoadAccount(EzAccount account) | アカウントがロードされたときに呼び出されます。 |
-| OnSaveAccount(EzAccount account) | アカウントがセーブされたときに呼び出されます。 |
-| OnCreateAccount(EzAccount account) | アカウントが作成されたときに呼び出されます。 |
-| OnLogin(EzAccount account, GameSession session) | ログインに成功したときに呼び出されます。 |
-| OnError(Gs2Exception error) | エラーが発生したときに呼び出されます。 |
-
 ### アカウントの引継ぎ
 
 ![インスペクターウィンドウ](TakeOver.png)

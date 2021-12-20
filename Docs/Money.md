@@ -6,24 +6,23 @@ GS2-Money を使って管理されている課金通貨を、GS2-Showcase で販
 
 ![商品リスト](Products.png)
 
-# テンプレート
-
-- [initialize_money_template.yaml - 課金通貨/課金通貨ストア](../Templates/initialize_money_template.yaml)
-
-## 課金通貨商品の購入処理の流れ
-
-
-
 # GS2-Deploy テンプレート
 
 - [initialize_money_template.yaml - 課金通貨/課金通貨ストア](../Templates/initialize_money_template.yaml)
+
+## Unity IAPの有効化、インポート
+
+GS2-Moneyを使用したサンプルの動作には、Unity IAPの有効化が必要になります。  
+( https://docs.unity3d.com/ja/2019.4/Manual/UnityIAPSettingUp.html )  
+サービスウィンドウでのIn-App Purchasingの有効化、  
+IAP パッケージのインポートを行います。
 
 ## 課金通貨/課金通貨ストア設定 MoneySetting
 
 ![インスペクターウィンドウ](Money.png)
 
-| スクリプトファイル | 設定名 | 説明 |
------------------|------|------
+| 設定名 | 説明 | 
+|---|---|
 | moneyNamespaceName | GS2-Money のネームスペース名 |
 | showcaseNamespaceName | GS2-Showcase のネームスペース名 |
 | showcaseName | GS2-Showcase の陳列棚名 |
@@ -32,7 +31,7 @@ GS2-Money を使って管理されている課金通貨を、GS2-Showcase で販
 | distributorNamespaceName | 購入した商品を配送する GS2-Distributor のネームスペース名 |
 
 | イベント | 説明 |
----------|------
+|---|---|
 | OnGetWallet(EzWalletDetail wallet) | ウォレットの情報を取得したときに呼び出されます。 |
 | OnGetProducts(List<Product> products) | 販売中の商品一覧を取得したときに呼び出されます。 |
 | OnBuy(Product product) | 商品の購入が完了したときに呼び出されます。 |
@@ -56,7 +55,7 @@ GS2-Money を使って管理されている課金通貨を、GS2-Showcase で販
 ```
 
 ## 課金通貨ストアの表示
-![商品英スト](Products2.png)
+![商品リスト](Products2.png)
 
 商品リストを取得し、ストアを表示します。
 ```c#
