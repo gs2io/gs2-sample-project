@@ -5,7 +5,7 @@ GS2-Showcase でガチャ商品を販売、GS2-Lotteryによる抽選を行い�
 
 # GS2-Deploy テンプレート
 
-- [initialize_gacha_template.yaml - ガチャ機能](Templates/initialize_gacha_template.yaml)
+- [initialize_gacha_template.yaml - ガチャ機能](../Templates/initialize_gacha_template.yaml)
 
 ## Unity IAPの有効化、インポート
 
@@ -42,16 +42,16 @@ IAP パッケージのインポートを行います。
 
 商品リストを取得し、ストアを表示します。
 ```c#
-            AsyncResult<EzGetShowcaseResult> result = null;
-            yield return client.Showcase.GetShowcase(
-                r =>
-                {
-                    result = r;
-                },
-                session,
-                showcaseNamespaceName,
-                showcaseName
-            );
+AsyncResult<EzGetShowcaseResult> result = null;
+yield return client.Showcase.GetShowcase(
+    r =>
+    {
+        result = r;
+    },
+    session,
+    showcaseNamespaceName,
+    showcaseName
+);
 ```
 
 ## 購入処理
@@ -61,84 +61,84 @@ IAP パッケージのインポートを行います。
 エディター環境ではFake Storeのレシートが発行されます。  
 得られたレシートを後続の処理で参照できるよう保持しておきます。
 ```c#
-            IStoreController controller = null;
-            UnityEngine.Purchasing.Product product = null;
-            string receipt = null;
-            if (contentsId != null)
-            {
-                AsyncResult<Gs2.Unity.Util.PurchaseParameters> result = null;
-                yield return new IAPUtil().Buy(
-                    r => { result = r; },
-                    contentsId
-                );
+IStoreController controller = null;
+UnityEngine.Purchasing.Product product = null;
+string receipt = null;
+if (contentsId != null)
+{
+    AsyncResult<Gs2.Unity.Util.PurchaseParameters> result = null;
+    yield return new IAPUtil().Buy(
+        r => { result = r; },
+        contentsId
+    );
 
-                if (result.Error != null)
-                {
-                    onError.Invoke(
-                        result.Error
-                    );
-                    yield break;
-                }
+    if (result.Error != null)
+    {
+        onError.Invoke(
+            result.Error
+        );
+        yield break;
+    }
 
-                receipt = result.Result.receipt;
-                controller = result.Result.controller;
-                product = result.Result.product;
-            }
+    receipt = result.Result.receipt;
+    controller = result.Result.controller;
+    product = result.Result.product;
+}
 ```
 
 購入したレシートを使って、GS2-Showcase の商品を購入する処理を実行します。  
 Config には GS2-Money のウォレットスロットと、レシートの内容を渡します。
 ```c#
-            // ガチャ購入 レシート情報
-            if (receipt != null)
-            {
-                tempConfig.Add(
-                    new EzConfig
-                    {
-                        Key = "receipt", 
-                        Value = receipt
-                    }
-                );
-                
-                UIManager.Instance.AddLog("receipt:" + receipt);
-            }
+// ガチャ購入 レシート情報
+if (receipt != null)
+{
+    tempConfig.Add(
+        new EzConfig
+        {
+            Key = "receipt", 
+            Value = receipt
+        }
+    );
+
+    UIManager.Instance.AddLog("receipt:" + receipt);
+}
 ```
 
 ```c#
-                // Showcase 商品の購入をリクエスト
-                AsyncResult<EzBuyResult> result = null;
-                yield return client.Showcase.Buy(
-                    r => { result = r; },
-                    session,
-                    showcaseNamespaceName,
-                    showcaseName,
-                    displayItemId,
-                    tempConfig
-                );
+// Showcase 商品の購入をリクエスト
+AsyncResult<EzBuyResult> result = null;
+yield return client.Showcase.Buy(
+    r => { result = r; },
+    session,
+    showcaseNamespaceName,
+    showcaseName,
+    displayItemId,
+    tempConfig
+);
 
-                if (result.Error != null)
-                {
-                    onError.Invoke(
-                        result.Error
-                    );
-                    yield break;
-                }
+if (result.Error != null)
+{
+    onError.Invoke(
+        result.Error
+    );
+    yield break;
+}
                 
-                // スタンプシートを取得
-                stampSheet = result.Result.StampSheet;
+// スタンプシートを取得
+stampSheet = result.Result.StampSheet;
 ```
 取得したスタンプシートを実行します。  
 GS2 SDK for Unity ではスタンプシート実行用のステートマシンが用意されていますので、そちらを利用します。  
 ステートマシンの実行には GS2-Distributor と スタンプシートの署名計算に使用した暗号鍵が必要となります。
 
 ```c#
-            StartCoroutine(
-                _stampSheetRunner.Run(
-                    stampSheet,
-                    _gachaSetting.showcaseKeyId,
-                    _gachaSetting.onError
-                )
-            );
+StartCoroutine(
+    _stampSheetRunner.Run(
+    stampSheet,
+    _gachaSetting.showcaseKeyId,
+    _gachaSetting.onError
+    )
+);
 ```
 
 通常の課金通貨商品の購入スタンプシートの流れは以下になります。
@@ -150,32 +150,32 @@ GS2 SDK for Unity ではスタンプシート実行用のステートマシン�
 スタンプシートの実行後、サーバ側でGS2-JobQueueを使用して順にインベントリーへのアイテム入手処理が実行されます。
 
 ```c#
-                // Lottery 抽選処理の結果を取得
-                if (sheet.Action == "Gs2Lottery:DrawByUserId")
-                {
-                    // 抽選によって取得したアイテムがインベントリに追加される
-                    var json = JsonMapper.ToObject(sheetResult.Result);
-                    var result = DrawByUserIdResult.FromJson(json);
-                    var mergedAcquireRequests = new List<AcquireItemSetByUserIdRequest>();
-                    foreach (var acquireRequests in result.Items.Select(item => (
-                        from acquireAction in item.AcquireActions 
-                        where acquireAction.Action == "Gs2Inventory:AcquireItemSetByUserId" 
-                        select JsonMapper.ToObject(acquireAction.Request) into acquireJson 
-                        select AcquireItemSetByUserIdRequest.FromJson(acquireJson)
-                    ).ToList()))
-                    {
-                        mergedAcquireRequests.AddRange(acquireRequests);
-                    }
-                    _gachaSetting.onAcquireInventoryItem.Invoke(
-                        mergedAcquireRequests
-                    );
-                    // スタンプシートを実行
-                    StartCoroutine(
-                        _stampSheetRunner.Run(
-                            result.StampSheet,
-                            _gachaSetting.lotteryKeyId,
-                            _gachaSetting.onError
-                        )
-                    );
-                }
+// Lottery 抽選処理の結果を取得
+if (sheet.Action == "Gs2Lottery:DrawByUserId")
+{
+    // 抽選によって取得したアイテムがインベントリに追加される
+    var json = JsonMapper.ToObject(sheetResult.Result);
+    var result = DrawByUserIdResult.FromJson(json);
+    var mergedAcquireRequests = new List<AcquireItemSetByUserIdRequest>();
+    foreach (var acquireRequests in result.Items.Select(item => (
+        from acquireAction in item.AcquireActions 
+        where acquireAction.Action == "Gs2Inventory:AcquireItemSetByUserId" 
+        select JsonMapper.ToObject(acquireAction.Request) into acquireJson 
+        select AcquireItemSetByUserIdRequest.FromJson(acquireJson)
+    ).ToList()))
+    {
+        mergedAcquireRequests.AddRange(acquireRequests);
+    }
+    _gachaSetting.onAcquireInventoryItem.Invoke(
+        mergedAcquireRequests
+    );
+    // スタンプシートを実行
+    StartCoroutine(
+        _stampSheetRunner.Run(
+            result.StampSheet,
+            _gachaSetting.lotteryKeyId,
+            _gachaSetting.onError
+        )
+    );
+}
 ```

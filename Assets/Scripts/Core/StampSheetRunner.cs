@@ -64,5 +64,33 @@ namespace Gs2.Sample.Core
                 onError
             );
         }
+        
+        public IEnumerator Run(
+            string stampSheet,
+            string distributorNamespaceName,
+            string encryptionKeyId,
+            UnityEvent<Gs2Exception> onError
+        )
+        {
+            var stateMachine = new StampSheetStateMachine(
+                stampSheet,
+                _client,
+                distributorNamespaceName,
+                encryptionKeyId
+            );
+
+            foreach (var handler in _onDoneStampTasks)
+            {
+                stateMachine.OnDoneStampTask.AddListener(handler);
+            }
+            foreach (var handler in _onCompleteStampSheets)
+            {
+                stateMachine.OnCompleteStampSheet.AddListener(handler);
+            }
+
+            yield return stateMachine.Execute(
+                onError
+            );
+        }
     }
 }

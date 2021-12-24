@@ -2,8 +2,6 @@
 using System.Collections;
 using Gs2.Core;
 using Gs2.Core.Util;
-using Gs2.Sample.Core.Runtime;
-using Gs2.Unity;
 using Gs2.Unity.Gs2Distributor.Result;
 using Gs2.Unity.Gs2Stamina.Model;
 using Gs2.Unity.Gs2Stamina.Result;
@@ -24,15 +22,6 @@ namespace Gs2.Sample.Stamina
         [SerializeField]
         private StaminaView _staminaView;
 
-        /// <summary>
-        /// Gs2Client
-        /// </summary>
-        private Gs2Client _gs2Client;
-        /// <summary>
-        /// Gs2GameSession
-        /// </summary>
-        private Gs2GameSession _session;
-        
         // Start is called before the first frame update
         void Start()
         {
@@ -40,18 +29,6 @@ namespace Gs2.Sample.Stamina
             Assert.IsNotNull(_staminaModel);
         }
 
-        private void Validate()
-        {
-            if (_gs2Client == null)
-            {
-                _gs2Client = GameManager.Instance.Cllient;
-            }
-            if (_session == null)
-            {
-                _session = GameManager.Instance.Session;
-            }
-        }
-        
         /// <summary>
         /// スタミナの初期化
         /// </summary>
@@ -59,11 +36,9 @@ namespace Gs2.Sample.Stamina
         public IEnumerator Initialize()
         {
             UIManager.Instance.AddLog("Stamina::Initialize");
-         
-            Validate();
             
             void OnGetStaminaModel(
-                string staminaModelNameTemp, 
+                string staminaModelNameTemp,
                 EzStaminaModel staminaModel
             )
             {
@@ -130,8 +105,17 @@ namespace Gs2.Sample.Stamina
             UIManager.Instance.AddLog("OnClickStamina_ConsumeButton");
             UIManager.Instance.CloseDialog();
             
+            StartCoroutine(
+                ConsumeStamina(
+                    consumeValue
+                )
+            );
+        }
+
+        public IEnumerator ConsumeStamina(int consumeValue)
+        {
             void RefreshStaminaAction(
-                EzStaminaModel staminaModelTemp, 
+                EzStaminaModel staminaModelTemp,
                 EzStamina stamina
             )
             {
@@ -139,67 +123,27 @@ namespace Gs2.Sample.Stamina
                 {
                     return;
                 }
-                
+
                 _staminaSetting.onGetStamina.RemoveListener(RefreshStaminaAction);
-                
+
                 UIManager.Instance.AddLog("stamina.Value : " + _staminaModel.stamina.Value);
             }
 
             _staminaSetting.onGetStamina.AddListener(RefreshStaminaAction);
-            
-            StartCoroutine(
-                ConsumeStamina(
-                    GameManager.Instance.Cllient.Client,
-                    GameManager.Instance.Session.Session,
-                    _staminaSetting.staminaNamespaceName,
-                    _staminaModel.staminaModel,
-                    consumeValue,
-                    _staminaSetting.onConsumeStamina,
-                    _staminaSetting.onGetStamina,
-                    _staminaSetting.onError
-                )
-            );
-        }
-        
-        public IEnumerator ConsumeStamina(
-            Client client,
-            GameSession session,
-            string staminaNamespaceName,
-            EzStaminaModel staminaModel,
-            int consumeValue,
-            ConsumeStaminaEvent onConsumeStamina,
-            GetStaminaEvent onGetStamina,
-            Gs2.Unity.Util.ErrorEvent onError
-        )
-        {
-            AsyncResult<EzConsumeResult> result = null;
-            yield return client.Stamina.Consume(
-                r =>
-                {
-                    result = r;
-                },
-                session,
-                staminaNamespaceName,
-                staminaModel.Name,
-                consumeValue
-            );
-            
-            if (result.Error != null)
-            {
-                onError.Invoke(
-                    result.Error
-                );
-                yield break;
-            }
 
-            var stamina = result.Result.Item;
-
-            onConsumeStamina.Invoke(staminaModel, stamina, consumeValue);
-            onGetStamina.Invoke(staminaModel, stamina);
+            yield return _staminaModel.ConsumeStamina(
+                GameManager.Instance.Cllient.Client,
+                GameManager.Instance.Session.Session,
+                _staminaSetting.staminaNamespaceName,
+                consumeValue,
+                _staminaSetting.onConsumeStamina,
+                _staminaSetting.onGetStamina,
+                _staminaSetting.onError
+            );
             
             yield return Refresh();
         }
-        
+
         private void Update()
         {
             if (_staminaModel.stamina != null)
@@ -211,6 +155,7 @@ namespace Gs2.Sample.Stamina
                     _staminaModel.stamina.NextRecoverAt = 0;
                     _staminaView.SetRecoveryTime("--:--");
                     _staminaView.SetStamina(_staminaModel.stamina);
+                    return;
                 }
 
                 if (_staminaModel.stamina.NextRecoverAt == 0)
@@ -279,8 +224,8 @@ namespace Gs2.Sample.Stamina
             AsyncResult<EzGetStaminaResult> result = null;
             yield return _staminaModel.GetStamina(
                 r => result = r,
-                _gs2Client.Client,
-                _session.Session,
+                GameManager.Instance.Cllient.Client,
+                GameManager.Instance.Session.Session,
                 _staminaSetting.staminaNamespaceName,
                 _staminaSetting.staminaName,
                 _staminaSetting.onGetStamina,

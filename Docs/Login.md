@@ -4,7 +4,7 @@ GS2-Account を使用してログインする機能のサンプルです。
 
 ## GS2-Deploy テンプレート
 
-- [initialize_account_template.yaml](initialize_account_template.yaml)
+- [initialize_account_template.yaml](../Templates/initialize_account_template.yaml)
 
 ## ログイン設定 LoginSetting
 
@@ -35,14 +35,14 @@ PlayerPrefsから保存済みのアカウント情報を読み込みます。
 GS2-Account でアカウントを作成します。
 
 ```c#
-            AsyncResult<EzCreateResult> result = null;
-            yield return client.Account.Create(
-                r =>
-                {
-                    result = r;
-                },
-                accountNamespaceName
-            );
+AsyncResult<EzCreateResult> result = null;
+yield return client.Account.Create(
+    r =>
+    {
+        result = r;
+    },
+    accountNamespaceName
+);
 ```
 
 PlayerPrefsに新規作成したアカウント情報を保存します。  
@@ -58,50 +58,50 @@ PlayerPrefsに新規作成したアカウント情報を保存します。
 ### ログイン処理
 
 ```c#
-            AsyncResult<EzAuthenticationResult> result = null;
-            yield return client.Account.Authentication(
-                r =>
-                {
-                    result = r;
-                },
-                accountNamespaceName,
-                userId,
-                accountEncryptionKeyId,
-                password
-            );
+AsyncResult<EzAuthenticationResult> result = null;
+yield return client.Account.Authentication(
+    r =>
+    {
+        result = r;
+    },
+    accountNamespaceName,
+    userId,
+    accountEncryptionKeyId,
+    password
+);
 ```
 ```c#
-            AsyncResult<EzLoginResult> result2 = null;
-            yield return client.Auth.Login(
-                r =>
-                {
-                    result2 = r;
-                },
-                userId,
-                accountEncryptionKeyId,
-                result.Result.Body,
-                result.Result.Signature
-            );
+AsyncResult<EzLoginResult> result2 = null;
+yield return client.Auth.Login(
+    r =>
+    {
+        result2 = r;
+    },
+    userId,
+    accountEncryptionKeyId,
+    result.Result.Body,
+    result.Result.Signature
+);
 
-            var session = new GameSession(
-                new AccessToken()
-                    .WithToken(result2.Result.Token)
-                    .WithExpire(result2.Result.Expire)
-                    .WithUserId(result2.Result.UserId)
-            );
+var session = new GameSession(
+    new AccessToken()
+        .WithToken(result2.Result.Token)
+        .WithExpire(result2.Result.Expire)
+        .WithUserId(result2.Result.UserId)
+);
 ```
 
 アカウント情報で GS2-Account の認証処理をおこない、結果の EzAuthenticationResult の body と signature を  
 GS2-Auth の ログイン処理に渡してアクセストークンを得ます。 
 
 ```c#
-            AsyncResult<EzSetUserIdResult> result3 = null;
-            yield return client.Gateway.SetUserId(
-                r => { result3 = r; },
-                session,
-                gatewayNamespaceName,
-                true
-            );
+AsyncResult<EzSetUserIdResult> result3 = null;
+yield return client.Gateway.SetUserId(
+    r => { result3 = r; },
+    session,
+    gatewayNamespaceName,
+    true
+);
 ```
 GS2-Gateway で　WebSocketセッションに対してログインしたユーザIDを設定してプッシュ通知を受け取れるようにしています。  
 マッチメイキングの遷移の通知を受けとるために使用します。

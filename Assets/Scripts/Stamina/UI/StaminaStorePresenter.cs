@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 using Gs2.Core;
-using Gs2.Sample.Core.Runtime;
+using Gs2.Sample.Core;
 using Gs2.Sample.Money;
 using Gs2.Unity.Gs2Stamina.Model;
 using Gs2.Unity.Gs2Stamina.Result;
@@ -11,61 +11,64 @@ namespace Gs2.Sample.Stamina
 {
     public class StaminaStorePresenter : MonoBehaviour
     {
-        [SerializeField] private StaminaSetting _staminaSetting;
+        [SerializeField]
+        private StaminaSetting _staminaSetting;
 
-        [SerializeField] private StaminaModel _staminaModel;
+        [SerializeField]
+        private StaminaModel _staminaModel;
 
-        [SerializeField] private StaminaStoreView _staminaStoreView;
+        [SerializeField]
+        private StaminaStoreView _staminaStoreView;
 
-        [SerializeField] private StaminaPresenter _staminaPresenter;
-        [SerializeField] private MoneyPresenter _moneyPresenter;
-                
-        /// <summary>
-        /// Gs2Client
-        /// </summary>
-        private Gs2Client _gs2Client;
-           
-        /// <summary>
-        /// Gs2Client
-        /// </summary>
-        private Gs2GameSession _session;
-        
+        [SerializeField]
+        private StaminaPresenter _staminaPresenter;
+        [SerializeField]
+        private MoneyPresenter _moneyPresenter;
+
         public enum State
         {
             MainMenu,
             
+            /// <summary>
+            /// スタミナ情報を取得中
+            /// </summary>
             GetStaminaProcessing,
-            OpenStaminaStore,
+            /// <summary>
+            /// スタミナ情報の取得に失敗
+            /// </summary>
             GetStaminaFailed,
             
-            Store,
-            
+            /// <summary>
+            /// スタミナ回復ストアを開く
+            /// </summary>
+            OpenStaminaStore,
+
+            /// <summary>
+            /// スタミナ回復商品を購入
+            /// </summary>
             BuyProcessing,
+            /// <summary>
+            /// スタミナ回復商品購入に成功
+            /// </summary>
             BuySucceed,
+            /// <summary>
+            /// スタミナ回復商品購入に失敗
+            /// </summary>
             BuyFailed,
         }
         
         /// <summary>
-        /// 現在のステータス
+        /// 現在のステート
         /// </summary>
         private State _staminaStoreState = State.MainMenu;
 
-        private void Validate()
-        {
-            if (_gs2Client == null)
-            {
-                _gs2Client = GameManager.Instance.Cllient;
-            }
-            if (_session == null)
-            {
-                _session = GameManager.Instance.Session;
-            }
-        }
-        
         private void Start()
         {
             Assert.IsNotNull(_staminaSetting);
             Assert.IsNotNull(_staminaModel);
+            Assert.IsNotNull(_staminaStoreView);
+            Assert.IsNotNull(_staminaPresenter);
+            Assert.IsNotNull(_moneyPresenter);
             
             _staminaStoreView.OnCloseEvent();
         }
@@ -86,9 +89,6 @@ namespace Gs2.Sample.Stamina
                     case State.OpenStaminaStore:
                         UIManager.Instance.CloseProcessing();
                         _staminaStoreView.OnOpenEvent();
-                        break;
-                    
-                    case State.Store:
                         break;
 
                     case State.BuyProcessing:
@@ -145,13 +145,11 @@ namespace Gs2.Sample.Stamina
         /// <returns></returns>
         private IEnumerator GetStaminaTask()
         {
-            Validate();
-            
             AsyncResult<EzGetStaminaResult> result = null;
             yield return _staminaModel.GetStamina(
                 r => result = r,
-                _gs2Client.Client,
-                _session.Session,
+                GameManager.Instance.Cllient.Client,
+                GameManager.Instance.Session.Session,
                 _staminaSetting.staminaNamespaceName,
                 _staminaSetting.staminaName,
                 _staminaSetting.onGetStamina,
@@ -186,8 +184,8 @@ namespace Gs2.Sample.Stamina
                                 ? State.BuySucceed
                                 : State.BuyFailed);
                         },
-                        _gs2Client.Client,
-                        _session.Session,
+                        GameManager.Instance.Cllient.Client,
+                        GameManager.Instance.Session.Session,
                         _staminaSetting.exchangeNamespaceName,
                         _staminaSetting.exchangeRateName,
                         MoneyModel.Slot,

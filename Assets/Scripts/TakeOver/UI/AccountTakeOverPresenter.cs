@@ -35,7 +35,13 @@ namespace Gs2.Sample.AccountTakeOver
             
             MainMenu,
 
+            /// <summary>
+            /// アカウント連携情報を取得中
+            /// </summary>
             GetTakeOverSettingsProcessing,
+            /// <summary>
+            /// アカウント連携情報の取得に失敗
+            /// </summary>
             GetTakeOverSettingsFailed,
 
             /// <summary>
@@ -47,23 +53,44 @@ namespace Gs2.Sample.AccountTakeOver
             /// アカウント連携 Email設定
             /// </summary>
             SettingEmail,
+            /// <summary>
+            /// Emailの設定をキャンセル
+            /// </summary>
             CancelSettingEmail,
             
+            /// <summary>
+            /// Platformによるアカウント連携を保存/削除
+            /// </summary>
             SettingPlatform,
+            /// <summary>
+            /// Platformによるアカウント連携を保存/削除に失敗
+            /// </summary>
             SettingPlatformError,
             
             /// <summary>
-            /// 引継ぎ追加中
+            /// 引継ぎ設定の登録を実行中
             /// </summary>
             AddSettingProcessing,
+            /// <summary>
+            /// 引継ぎ設定の登録に成功
+            /// </summary>
             AddSettingSucceed,
+            /// <summary>
+            /// 引継ぎ設定の登録に失敗
+            /// </summary>
             AddSettingFailed,
 
             /// <summary>
-            /// 設定削除中
+            /// 引継ぎ設定の削除中
             /// </summary>
             DeleteSettingProcessing,
+            /// <summary>
+            /// 引継ぎ設定の削除に成功
+            /// </summary>
             DeleteSettingSucceed,
+            /// <summary>
+            /// 引継ぎ設定の削除に失敗
+            /// </summary>
             DeleteSettingFailed,
             
             /// <summary>
@@ -75,17 +102,25 @@ namespace Gs2.Sample.AccountTakeOver
             /// 引継ぎ Email設定
             /// </summary>
             TakeOverEmail,
+            /// <summary>
+            /// Emailの設定をキャンセル
+            /// </summary>
             CancelTakeOverEmail,
             
             /// <summary>
             /// 引継ぎ実行中
             /// </summary>
             TakeOver_Processing,
+            /// <summary>
+            /// 引継ぎの実行を完了
+            /// </summary>
             TakeOverCompleted,
+            /// <summary>
+            /// 引継ぎの実行に失敗
+            /// </summary>
             TakeOverFailed,
 
             Error,
-            
         }
 
         private State takeOverState = State.Initialize;

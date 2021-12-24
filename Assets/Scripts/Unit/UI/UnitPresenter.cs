@@ -41,7 +41,7 @@ namespace Gs2.Sample.Unit
         }
         
         /// <summary>
-        /// 現在のステータス
+        /// 現在のステート
         /// </summary>
         private State _inventoryState = State.MainMenu;
         

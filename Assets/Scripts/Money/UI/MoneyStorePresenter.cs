@@ -8,30 +8,51 @@ namespace Gs2.Sample.Money
 {
     public class MoneyStorePresenter : MonoBehaviour
     {
-        [SerializeField] public MoneySetting _moneySetting;
+        [SerializeField]
+        public MoneySetting _moneySetting;
 
-        [SerializeField] private MoneyModel _moneyModel;
-        [SerializeField] private MoneyStoreView _moneyStoreView;
+        [SerializeField]
+        private MoneyModel _moneyModel;
+        [SerializeField]
+        private MoneyStoreView _moneyStoreView;
 
-        [SerializeField] private MoneyPresenter _moneyPresenter;
+        [SerializeField]
+        private MoneyPresenter _moneyPresenter;
         
         public enum State
         {
             MainMenu,
             
+            /// <summary>
+            /// 商品情報を取得中
+            /// </summary>
             GetProductsProcessing,
-            OpenMoneyStore,
+            /// <summary>
+            /// 商品情報の取得に失敗
+            /// </summary>
             GetProductsFailed,
             
-            SelectProduct,
+            /// <summary>
+            /// 課金通貨ストアを開く
+            /// </summary>
+            OpenMoneyStore,
             
+            /// <summary>
+            /// 課金通貨商品を購入
+            /// </summary>     
             BuyProcessing,
+            /// <summary>
+            /// 課金通貨商品の購入に成功
+            /// </summary>
             BuySucceed,
+            /// <summary>
+            /// 課金通貨商品の購入に失敗
+            /// </summary>
             BuyFailed,
         }
         
         /// <summary>
-        /// 現在のステータス
+        /// 現在のステート
         /// </summary>
         private State _moneyStoreState = State.MainMenu;
 
@@ -39,6 +60,8 @@ namespace Gs2.Sample.Money
         {
             Assert.IsNotNull(_moneySetting);
             Assert.IsNotNull(_moneyModel);
+            Assert.IsNotNull(_moneyStoreView);
+            Assert.IsNotNull(_moneyPresenter);
             
             _moneyStoreView.OnCloseEvent();
         }
@@ -61,9 +84,6 @@ namespace Gs2.Sample.Money
                         _moneyStoreView.OnOpenEvent();
                         break;
                     
-                    case State.SelectProduct:
-                        break;
-
                     case State.BuyProcessing:
                         UIManager.Instance.OpenProcessing();
                         break;

@@ -15,16 +15,6 @@ Settingにコールバックを設定することで、イベント発生時に�
 | OnDoTakeOver(EzAccount takeOver) | アカウントの引継ぎが実行されたとき。 |
 | OnError(Gs2Exception error) | エラーが発生したときに呼び出されます。 |
 
-### スタミナ/スタミナストア
-
-![インスペクターウィンドウ](Stamina.png)
-
-| イベント | 説明 |
----------|------
-| OnGetStamina(EzStamina stamina) | スタミナの情報を取得したとき。 |
-| OnBuy() | 交換が完了したとき。 |
-| OnError(Gs2Exception error) | エラーが発生したときに呼び出されます。 |
-
 ### ゴールド
 
 ![インスペクターウィンドウ](Gold.png)
@@ -36,20 +26,6 @@ Settingにコールバックを設定することで、イベント発生時に�
 | onAcquire(Product product) | ゴールドを追加したとき。 |
 | onConsume(Product product) | ゴールドを消費したとき。 |
 | onError(Gs2Exception error) | エラーが発生したときに呼び出されます。 |
-
-### クエスト
-
-![インスペクターウィンドウ](Quest.png)
-
-| イベント | 説明 |
----------|------
-| OnListCompletedQuestModel(List<EzCompletedQuestList> completedQuests) | クリア済みのクエスト一覧を取得したとき。 |
-| OnListGroupQuestModel(List<EzQuestGroupModel> questGroups) | クエストグループの一覧を取得したとき。 |
-| OnListQuestModel(List<EzQuestModel> quests) | クエストの一覧を取得したとき。 |
-| OnGetProgress(EzProgress progress) | 進行中で中断されたクエストを取得したとき。 |
-| OnStart(EzProgress progress) | クエストを開始したとき。 |
-| OnEnd(EzProgress progress, List<EzReward> rewards, bool isComplete) | クエストを完了したとき。 |
-| OnError(Gs2Exception error) | エラーが発生したときに呼び出されます。 |
 
 ### マッチメイキング
 

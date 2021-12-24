@@ -25,6 +25,7 @@ GameObject:
   - component: {fileID: 6523205806459831967}
   - component: {fileID: 4320372128248017031}
   - component: {fileID: 3789078397751016452}
+  - component: {fileID: 1593262524687613454}
   m_Layer: 5
   m_Name: QuestUI
   m_TagString: Untagged
@@ -67,11 +68,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _questSetting: {fileID: 0}
-  _moneySetting: {fileID: 0}
   _questModel: {fileID: 0}
   _selectQuestView: {fileID: 3789078397751016452}
   _questClearView: {fileID: 5608791503833641549}
   _staminaPresenter: {fileID: 0}
+  _moneyPresenter: {fileID: 0}
 --- !u!114 &3789078397751016452
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -88,9 +89,32 @@ MonoBehaviour:
   QuestMenu: {fileID: 7031052963708644102}
   QuestClear: {fileID: 6717983873525537185}
   questGroupsContent: {fileID: 8423092086876526518}
-  QuestGroupInfo: {fileID: 8382778190589032971}
+  questGroupInfo: {fileID: 0}
   questsContent: {fileID: 4375833462780371851}
-  QuestInfo: {fileID: 5932975989027871871}
+  questInfo: {fileID: 0}
+  questStart: {fileID: 0}
+  questEnd: {fileID: 0}
+--- !u!114 &1593262524687613454
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4454038117664815576}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1efd3c5c86d60045a7904feedbf0da0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  onPushJob:
+    m_PersistentCalls:
+      m_Calls: []
+  onRunJob:
+    m_PersistentCalls:
+      m_Calls: []
+  onExecJob:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1001 &1909145161844074676
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -626,12 +650,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 2798677924639300115}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &5932975989027871871 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8394934576420996716, guid: 7d8e2557c141b094abbd636659c87342,
-    type: 3}
-  m_PrefabInstance: {fileID: 2798677924639300115}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &7964658027913358894
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -876,12 +894,6 @@ RectTransform:
 --- !u!1 &8423092086876526518 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1904164916933228952, guid: e087d4049d22ead4a85b10e44ee85bf1,
-    type: 3}
-  m_PrefabInstance: {fileID: 7964658027913358894}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &8382778190589032971 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1935908055666283557, guid: e087d4049d22ead4a85b10e44ee85bf1,
     type: 3}
   m_PrefabInstance: {fileID: 7964658027913358894}
   m_PrefabAsset: {fileID: 0}

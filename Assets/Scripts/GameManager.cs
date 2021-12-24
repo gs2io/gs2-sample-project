@@ -4,15 +4,14 @@ using Gs2.Core;
 using Gs2.Core.Exception;
 using Gs2.Gs2Auth.Model;
 using Gs2.Sample.AccountTakeOver;
-using Gs2.Sample.Core;
 using Gs2.Sample.Core.Runtime;
 using Gs2.Sample.Credential;
 using Gs2.Sample.Gacha;
 using Gs2.Sample.Gold;
 using Gs2.Sample.Inventory;
-using Gs2.Sample.JobQueue;
 using Gs2.Sample.Login;
 using Gs2.Sample.Money;
+using Gs2.Sample.Quest;
 using Gs2.Sample.Realtime;
 using Gs2.Sample.Stamina;
 using Gs2.Sample.Unit;
@@ -28,7 +27,6 @@ using Gs2.Unity.Gs2Version.Result;
 using Gs2.Unity.Util;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.Events;
 using FinalizeGs2AccountEvent = Gs2.Sample.Credential.FinalizeGs2AccountEvent;
 using InitializeGs2AccountEvent = Gs2.Sample.Credential.InitializeGs2AccountEvent;
 
@@ -57,10 +55,11 @@ namespace Gs2.Sample
         [SerializeField] public GoldPresenter goldPresenter;
         [SerializeField] public InventoryPresenter inventoryPresenter;
 
-        [SerializeField] public RealtimePresenter realtimePresenter;
-
-        [SerializeField] public UnitPresenter unitPresenter;
+        [SerializeField] public QuestPresenter questPresenter;
         [SerializeField] public GachaStorePresenter gachaPresenter;
+        [SerializeField] public UnitPresenter unitPresenter;
+        
+        [SerializeField] public RealtimePresenter realtimePresenter;
         
         /// <summary>
         /// アカウント情報の保存領域
@@ -75,24 +74,13 @@ namespace Gs2.Sample
         private Gs2GameSession _session = new Gs2GameSession();
         public Gs2GameSession Session => _session;
     
-        private StampSheetRunner _staminaStampSheetRunner;
-        private StampSheetRunner _gachaStampSheetRunner;
-        
         // Credential
         [SerializeField]
         private CredentialSetting _credentialSetting;
-        public class CreateClientEvent : UnityEvent<Gs2Client>
-        {
-        }
-        public CreateClientEvent onCreateClient = new CreateClientEvent();
 
         // Login
         [SerializeField]
         private LoginSetting _loginSetting;
-        public class CreateGs2GameSessionEvent : UnityEvent<Gs2GameSession>
-        {
-        }
-        public CreateGs2GameSessionEvent onCreateGs2GameSessionEvent = new CreateGs2GameSessionEvent();
 
         [SerializeField]
         private VersionSetting _versionSetting;
@@ -117,11 +105,6 @@ namespace Gs2.Sample
 
         // Realtime
         private RealtimeModel _realtimeModel;
-        
-        // JobQueue
-        [SerializeField]
-        private JobQueueSetting _jobQueueSetting;
-        private JobQueueModel _jobQueueModel;
         
         /// <summary>
         /// シーンの開始時に実行される。
@@ -154,9 +137,6 @@ namespace Gs2.Sample
 
             _realtimeModel = GetComponent<RealtimeModel>();
             Assert.IsNotNull(_realtimeModel);
-            
-            _jobQueueModel = GetComponent<JobQueueModel>();
-            Assert.IsNotNull(_jobQueueModel);
             
             UIManager.Instance.SetActiveGame(false);
         }
@@ -227,11 +207,9 @@ namespace Gs2.Sample
                 yield break;
             }
 
-            var client = new Gs2.Unity.Client(profile);
+            var client = new Client(profile);
 
             onInitializeGs2.Invoke(profile, client);
-            
-            
         }
 
         /// <summary>
@@ -249,7 +227,7 @@ namespace Gs2.Sample
         }
         
         public static IEnumerator FinalizeGs2(
-            Gs2.Unity.Util.Profile profile,
+            Profile profile,
             FinalizeGs2AccountEvent onFinalizeGs2
         )
         {
@@ -326,36 +304,6 @@ namespace Gs2.Sample
 
             _client = client;
 
-            // スタミナ回復商品購入のスタンプシート
-            _staminaStampSheetRunner = new StampSheetRunner(
-                _client.Client
-            );
-            _staminaStampSheetRunner.AddDoneStampTaskEventHandler(
-                moneyPresenter.GetTaskCompleteAction(),
-                staminaPresenter.GetTaskCompleteAction()
-            );
-            _staminaStampSheetRunner.AddCompleteStampSheetEvent(
-                moneyPresenter.GetSheetCompleteAction(),
-                staminaPresenter.GetSheetCompleteAction()
-            );
-
-            // ガチャ抽選処理のスタンプシート
-            _gachaStampSheetRunner = new StampSheetRunner(
-                _client.Client
-            );
-            _gachaStampSheetRunner.AddDoneStampTaskEventHandler(
-                moneyPresenter.GetTaskCompleteAction(),
-                unitPresenter.GetTaskCompleteAction(),
-                _jobQueueModel.GetTaskCompleteAction(),
-                gachaPresenter.GetTaskCompleteAction()
-            );
-            _gachaStampSheetRunner.AddCompleteStampSheetEvent(
-                moneyPresenter.GetSheetCompleteAction(),
-                unitPresenter.GetSheetCompleteAction(),
-                _jobQueueModel.GetSheetCompleteAction(),
-                gachaPresenter.GetSheetCompleteAction()
-            );
-            
             StartCoroutine(
                 Login()
             );
@@ -732,26 +680,15 @@ namespace Gs2.Sample
             UIManager.Instance.SetActiveGameProgress(true);
 
             StartCoroutine(staminaPresenter.Initialize());
-
             StartCoroutine(moneyPresenter.Initialize());
-
             StartCoroutine(goldPresenter.Initialize());
 
             StartCoroutine(inventoryPresenter.Initialize());
+
+            StartCoroutine(questPresenter.Initialize());
+
+            gachaPresenter.Initialize();
             StartCoroutine(unitPresenter.Initialize());
-
-            _jobQueueModel.Initialize(
-                _jobQueueSetting.jobQueueNamespaceName,
-                _jobQueueSetting.onRunJob,
-                _jobQueueSetting.onError
-            );
-
-            // ガチャ抽選実行のスタンプシート
-            gachaPresenter.Initialize(_gachaStampSheetRunner);
-            
-            _jobQueueModel.onExecJob.AddListener(
-                unitPresenter.GetJobQueueAction()
-            );
             
             UIManager.Instance.SetTapToStartInteractable(false);
             UIManager.Instance.SetTakeOverInteractable(false);
@@ -784,9 +721,10 @@ namespace Gs2.Sample
             UIManager.Instance.SetActiveGame(false);
             UIManager.Instance.CloseProcessing();
 
-            _realtimeModel.Clear();
+            questPresenter.Finish();
+            gachaPresenter.Finish();
             
-            _jobQueueModel.Finish();
+            _realtimeModel.Clear();
         }
         
         /// <summary>
