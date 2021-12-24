@@ -589,9 +589,6 @@ MonoBehaviour:
   _inventorySetting: {fileID: 0}
   _inventoryModel: {fileID: 0}
   _inventoryView: {fileID: 8873332133989567793}
-  onUpdateInventoryEvent:
-    m_PersistentCalls:
-      m_Calls: []
   onClickAcquireButton:
     m_PersistentCalls:
       m_Calls:
@@ -837,6 +834,11 @@ PrefabInstance:
     - target: {fileID: 3751740807000288846, guid: 3ec5263c15ee37e4290583d28fbeb3cb,
         type: 3}
       propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4762805226750558716, guid: 3ec5263c15ee37e4290583d28fbeb3cb,
+        type: 3}
+      propertyPath: m_Constraint
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5356161945984247213, guid: 3ec5263c15ee37e4290583d28fbeb3cb,

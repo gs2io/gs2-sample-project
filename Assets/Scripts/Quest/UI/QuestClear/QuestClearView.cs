@@ -12,11 +12,6 @@ namespace Gs2.Sample.Quest
         /// </summary>
         public TextMeshProUGUI questName;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public TextMeshProUGUI randomSeed;
-
         [SerializeField]
         public Button successButton = null;
         
@@ -33,10 +28,9 @@ namespace Gs2.Sample.Quest
             gameObject.SetActive(false);
         }
         
-        public void SetProgress(string questName, string RandomSeed)
+        public void SetProgress(string questName)
         {
             SetText( questName );
-            randomSeed.SetText(RandomSeed);
         }
         
         public void SetInteractable(bool enable)

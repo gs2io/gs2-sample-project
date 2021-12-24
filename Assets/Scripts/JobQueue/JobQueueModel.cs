@@ -9,76 +9,59 @@ using Gs2.Unity.Gs2JobQueue.Result;
 using Gs2.Unity.Util;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.PlayerLoop;
 
 namespace Gs2.Sample.JobQueue
 {
-    [Serializable]
-    public class RegistJobEvent : UnityEvent
-    {
-    }
-    
-    [Serializable]
-    public class ExecJobEvent : UnityEvent<EzJob, EzJobResultBody>
-    {
-    }
-    
     public class JobQueueModel : MonoBehaviour
     {
-        public RegistJobEvent onRegistJob = new RegistJobEvent();
-        public ExecJobEvent onExecJob = new ExecJobEvent();
-        
         private string _jobQueueNamespaceName;
         
-        private RunJobEvent _onRunJob;
-        private ErrorEvent _onError;
+        [Serializable]
+        public class PushJobEvent : UnityEvent
+        {
+        }
+    
+        [Serializable]
+        public class ExecJobEvent : UnityEvent<EzJob, EzJobResultBody>
+        {
+        }
+        
+        [Serializable]
+        public class RunJobEvent : UnityEvent<EzJob, EzJobResultBody, bool>
+        {
+        }
         
         /// <summary>
-        /// 
+        /// ジョブ実行 リクエスト
         /// </summary>
-        /// <param name="job"></param>
-        /// <param name="body"></param>
-        /// <param name="isLastJob"></param>
-        void OnRunJob(EzJob job, EzJobResultBody body, bool isLastJob)
-        {
-            if (!isLastJob)
-            {
-                onRegistJob.Invoke();
-            }
-
-            if (job != null)
-            {
-                onExecJob.Invoke(job, body);
-            }
-        }
-
-        void OnError(Gs2Exception e)
-        {
-            onRegistJob.Invoke();
-        }
+        private PushJobEvent _onPushJob = new PushJobEvent();
+        /// <summary>
+        /// ジョブ実行後に実行
+        /// </summary>
+        public ExecJobEvent onExecJob = new ExecJobEvent();
+        
+        private ErrorEvent _onError;
 
         public void Initialize(
             string jobQueueNamespaceName,
-            RunJobEvent onRunJob,
             ErrorEvent onError
         )
         {
             _jobQueueNamespaceName = jobQueueNamespaceName;
-            
-            _onRunJob = onRunJob;
+
             _onError = onError;
-
-            _onRunJob.AddListener(OnRunJob);
-            _onError.AddListener(OnError);
             
-            onRegistJob.AddListener(OnPushJob);
+            _onPushJob.AddListener(OnPushJob);
         }
-
+        
         public void Finish()
         {
-            onRegistJob.RemoveListener(OnPushJob);
+            _onPushJob.RemoveListener(OnPushJob);
         }
 
+        /// <summary>
+        /// ジョブキューの実行
+        /// </summary>
         void OnPushJob()
         {
             StartCoroutine(
@@ -86,55 +69,49 @@ namespace Gs2.Sample.JobQueue
             );
         }
         
+        /// <summary>
+        /// ジョブキューの実行 リクエスト
+        /// </summary>
+        /// <returns></returns>
         public IEnumerator Run()
         {
-            yield return Run(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
-                _jobQueueNamespaceName,
-                _onRunJob,
-                _onError
-            );
-        }
-        
-        /// <summary>
-        /// ジョブキューの実行
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="gameSession"></param>
-        /// <param name="jobQueueNamespaceName"></param>
-        /// <param name="onRunJob"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
-        public static IEnumerator Run(
-            Client client,
-            GameSession gameSession,
-            string jobQueueNamespaceName,
-            RunJobEvent onRunJob,
-            ErrorEvent onError
-        )
-        {
+            Client _client = GameManager.Instance.Cllient.Client;
+            GameSession _gameSession = GameManager.Instance.Session.Session;
+            
             AsyncResult<EzRunResult> result = null;
-            yield return client.JobQueue.Run(
+            yield return _client.JobQueue.Run(
                 r => { result = r; },
-                gameSession,
-                jobQueueNamespaceName
+                _gameSession,
+                _jobQueueNamespaceName
             );
 
             if (result.Error != null)
             {
                 Debug.LogError(result.Error);
-                onError.Invoke(
+                _onError.Invoke(
                     result.Error
                 );
                 yield break;
             }
 
             var job = result.Result.Item;
-            var jobResult = result.Result.Result;
+            var body = result.Result.Result;
             var isLastJob = result.Result.IsLastJob;
 
-            onRunJob.Invoke(job, jobResult, isLastJob);
+            if (job != null)
+            {
+                // ジョブキュー実行後に実行するコールバックの呼び出し
+                onExecJob.Invoke(job, body);
+            }
+            
+            // JobQueueの実行間隔は1秒以上で
+            yield return new WaitForSeconds(1);
+            
+            if (!isLastJob)
+            {
+                // 次のジョブ実行をリクエスト
+                _onPushJob.Invoke();
+            }
         }
 
         public UnityAction<EzJob, EzJobResultBody> GetJobQueueAction()

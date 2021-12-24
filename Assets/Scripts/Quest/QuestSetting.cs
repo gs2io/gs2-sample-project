@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using Gs2.Core.Exception;
 using Gs2.Unity.Gs2Quest.Model;
+using Gs2.Unity.Util;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -36,11 +36,6 @@ namespace Gs2.Sample.Quest
     {
     }
 
-    [Serializable]
-    public class ErrorEvent : UnityEvent<Gs2Exception>
-    {
-    }
-    
     [Serializable]
     public class QuestSetting : MonoBehaviour
     {
@@ -95,6 +90,7 @@ namespace Gs2.Sample.Quest
         /// <summary>
         /// エラー発生時に発行されるイベント
         /// </summary>
-        [SerializeField] public ErrorEvent onError = new ErrorEvent();
+        [SerializeField]
+        public ErrorEvent onError = new ErrorEvent();
     }
 }

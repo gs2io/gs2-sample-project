@@ -206,7 +206,7 @@ namespace Gs2.Sample.Gacha
                 stampSheet = result.Result.StampSheet;
             }
 
-            // スタンプシートを取得
+            // スタンプシートを実行
             onIssueBuyStampSheet.Invoke(stampSheet);
 
 #if GS2_ENABLE_PURCHASING

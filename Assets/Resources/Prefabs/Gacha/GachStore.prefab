@@ -1699,6 +1699,7 @@ GameObject:
   - component: {fileID: 8203282668560222541}
   - component: {fileID: 8203282668560222542}
   - component: {fileID: 1532761832378126735}
+  - component: {fileID: 6987046111963303067}
   m_Layer: 5
   m_Name: GachStore
   m_TagString: Untagged
@@ -1782,6 +1783,29 @@ MonoBehaviour:
   _gachaStoreModel: {fileID: 0}
   _unitModel: {fileID: 0}
   _moneyPresenter: {fileID: 0}
+  _unitPresenter: {fileID: 0}
+  _jobQueueModel: {fileID: 6987046111963303067}
+--- !u!114 &6987046111963303067
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8203282668560222538}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1efd3c5c86d60045a7904feedbf0da0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  onPushJob:
+    m_PersistentCalls:
+      m_Calls: []
+  onRunJob:
+    m_PersistentCalls:
+      m_Calls: []
+  onExecJob:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &8330065133573673795
 GameObject:
   m_ObjectHideFlags: 0

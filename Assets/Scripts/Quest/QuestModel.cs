@@ -233,10 +233,10 @@ namespace Gs2.Sample.Quest
                 onError.AddListener(OnError);
                 machine.OnCompleteStampSheet.AddListener(OnComplete);
 
+                // スタンプシートを実行
                 yield return machine.Execute(onError);
                 
                 onError.RemoveListener(OnError);
-                machine.OnCompleteStampSheet.RemoveListener(OnComplete);
                 
                 if (exception != null)
                 {
@@ -247,10 +247,12 @@ namespace Gs2.Sample.Quest
                     yield break;
                 }
             }
+
+            Progress = progress;
             
-            onStart.Invoke(progress);
+            onStart.Invoke(Progress);
             
-            callback.Invoke(new AsyncResult<EzProgress>(progress, null));
+            callback.Invoke(new AsyncResult<EzProgress>(Progress, null));
         }
                 
         /// <summary>
@@ -326,6 +328,7 @@ namespace Gs2.Sample.Quest
             int slot,
             string distributorNamespaceName,
             string questKeyId,
+            UnityAction<EzStampSheet, Gs2.Unity.Gs2Distributor.Result.EzRunStampSheetResult> OnComplete,
             EndEvent onEnd,
             ErrorEvent onError
         )
@@ -376,6 +379,7 @@ namespace Gs2.Sample.Quest
                     exception = e;
                 }
 
+                machine.OnCompleteStampSheet.AddListener(OnComplete);
                 onError.AddListener(OnError);
                 
                 // スタンプシートの実行

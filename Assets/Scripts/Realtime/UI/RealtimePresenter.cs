@@ -35,7 +35,7 @@ namespace Gs2.Sample.Realtime
         [SerializeField] private RealtimeSetting _realtimeSetting;
 
         [SerializeField] private RealtimeModel _realtimeModel;
-        [SerializeField] private RealtimeView _view;
+        [SerializeField] private RealtimeView _realtimeView;
 
         [SerializeField] public PlayerDescriptor myCharacter;
 
@@ -47,19 +47,48 @@ namespace Gs2.Sample.Realtime
         public enum State
         {
             Initialize,
+            
+            /// <summary>
+            /// ルーム情報を取得
+            /// </summary>
             GetRoom,
+            /// <summary>
+            /// ルーム情報の取得に失敗
+            /// </summary>
             GetRoomFailed,
             
+            /// <summary>
+            /// ルームに接続
+            /// </summary>
             ConnectRoom,
+            /// <summary>
+            /// ルームへの接続に失敗
+            /// </summary>
             ConnectRoomFailed,
             
+            /// <summary>
+            /// 他プレイヤーと情報を同期
+            /// </summary>
             SyncPlayerProfiles,
+            /// <summary>
+            /// 他プレイヤーと情報の同期に失敗
+            /// </summary>
             SyncPlayerProfilesFailed,
             
+            /// <summary>
+            /// ゲームプレイ中
+            /// </summary>
             Main,
+            /// <summary>
+            /// 切断
+            /// </summary>
             Disconnected,
+
             Error,
             
+            /// <summary>
+            /// 退室
+            /// </summary>
             Leave,
         }
         
@@ -69,6 +98,7 @@ namespace Gs2.Sample.Realtime
         {
             Assert.IsNotNull(_realtimeSetting);
             Assert.IsNotNull(_realtimeModel);
+            Assert.IsNotNull(_realtimeView);
             
             _realtimeSetting.onJoinPlayer.AddListener(JoinPlayerHandler);
             
@@ -104,7 +134,7 @@ namespace Gs2.Sample.Realtime
 
         private void Update()
         {
-            _view.SetPlayerCount(players.Count + 1);
+            _realtimeView.SetPlayerCount(players.Count + 1);
 
             int result = -1;
             _rpsState = RPSState.Decide;
@@ -129,7 +159,7 @@ namespace Gs2.Sample.Realtime
             
             if (_rpsState != RPSState.Decide)
             {
-                _view.SetResult("");
+                _realtimeView.SetResult("");
                 return;
             }
 
@@ -153,7 +183,7 @@ namespace Gs2.Sample.Realtime
                 }
                 if (cnt == 3 || cnt == 1)
                 {
-                    _view.SetResult("DRAW");
+                    _realtimeView.SetResult("DRAW");
                     return;
                 }
 
@@ -179,13 +209,13 @@ namespace Gs2.Sample.Realtime
             switch (result)
             {
                 case 0:
-                    _view.SetResult("DRAW");
+                    _realtimeView.SetResult("DRAW");
                     break;
                 case 1:
-                    _view.SetResult("LOSE");
+                    _realtimeView.SetResult("LOSE");
                     break;
                 case 2:
-                    _view.SetResult("WIN");
+                    _realtimeView.SetResult("WIN");
                     break;
             }
         }
@@ -197,7 +227,7 @@ namespace Gs2.Sample.Realtime
                 switch (_state)
                 {
                     default:
-                        _view.OnDisableEvent();
+                        _realtimeView.OnDisableEvent();
                         break;
                     
                     case State.GetRoom:
@@ -229,12 +259,12 @@ namespace Gs2.Sample.Realtime
                     case State.ConnectRoomFailed:
                     case State.SyncPlayerProfilesFailed:
                         UIManager.Instance.CloseProcessing();
-                        _view.OnDisableEvent();
+                        _realtimeView.OnDisableEvent();
                         break;
                     
                     case State.Main:
                         UIManager.Instance.CloseProcessing();
-                        _view.OnEnableEvent();
+                        _realtimeView.OnEnableEvent();
                         
                         StartCoroutine(myCharacter.SendStatus());
                         
@@ -243,7 +273,7 @@ namespace Gs2.Sample.Realtime
                     case State.Error:
                     case State.Disconnected:
                     case State.Leave:
-                        _view.OnDisableEvent();
+                        _realtimeView.OnDisableEvent();
                         break;
                 }
             }
@@ -266,18 +296,18 @@ namespace Gs2.Sample.Realtime
             if (myCharacter == null || myCharacter.Session == null) return;
             if (player.ConnectionId == myCharacter.Session.MyConnectionId) return;
 
-            _view.OtherPlayerPrefab.SetActive(false);
+            _realtimeView.OtherPlayerPrefab.SetActive(false);
 
-            var otherPlayer = Instantiate<GameObject>(_view.OtherPlayerPrefab, _view.OtherPlayerPrefab.transform.parent);
+            var otherPlayer = Instantiate<GameObject>(_realtimeView.OtherPlayerPrefab, _realtimeView.OtherPlayerPrefab.transform.parent);
             otherPlayer.SetActive(true);
             players[player.ConnectionId] = otherPlayer.GetComponent<OtherPlayerDescriptor>();
         }
         
         void ClearPlayers()
         {
-            foreach (Transform child in _view.joinedPlayersContent.transform)
+            foreach (Transform child in _realtimeView.joinedPlayersContent.transform)
             {
-                if (child != null && child.gameObject != _view.OtherPlayerPrefab)
+                if (child != null && child.gameObject != _realtimeView.OtherPlayerPrefab)
                 {
                     Destroy(child.gameObject);
                 }
@@ -442,7 +472,7 @@ namespace Gs2.Sample.Realtime
         }
                 
         /// <summary>
-        /// 他プレイヤーの座標情報を同期
+        /// 他プレイヤーと情報を同期
         /// </summary>
         /// <returns></returns>
         private IEnumerator SyncPlayerProfiles()
@@ -458,7 +488,7 @@ namespace Gs2.Sample.Realtime
         }
         
         /// <summary>
-        /// 他プレイヤーの座標情報を同期
+        /// 他プレイヤーと情報を同期
         /// </summary>
         /// <param name="callback"></param>
         /// <returns></returns>
@@ -470,6 +500,9 @@ namespace Gs2.Sample.Realtime
             yield break;
         }
 
+        /// <summary>
+        /// 退室
+        /// </summary>
         public void OnLeaveRoom()
         {
             SetState(State.Leave);

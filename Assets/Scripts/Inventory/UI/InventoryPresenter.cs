@@ -22,10 +22,13 @@ namespace Gs2.Sample.Inventory
     
     public class InventoryPresenter : MonoBehaviour
     {
-        [SerializeField] private InventorySetting _inventorySetting;
+        [SerializeField]
+        private InventorySetting _inventorySetting;
         
-        [SerializeField] public InventoryModel _inventoryModel;
-        [SerializeField] public InventoryView _inventoryView;
+        [SerializeField]
+        public InventoryModel _inventoryModel;
+        [SerializeField]
+        public InventoryView _inventoryView;
         
         public ClickAcquireButtonEvent onClickAcquireButton = new ClickAcquireButtonEvent();
 
@@ -51,7 +54,7 @@ namespace Gs2.Sample.Inventory
         }
         
         /// <summary>
-        /// 現在のステータス
+        /// 現在のステート
         /// </summary>
         private State _inventoryState = State.MainMenu;
 

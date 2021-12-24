@@ -19,12 +19,18 @@ namespace Gs2.Sample.Matchmaking
         /// <summary>
         /// GS2-Matchmaking の設定値
         /// </summary>
-        [SerializeField] private MatchmakingSetting _matchmakingSetting;
+        [SerializeField]
+        private MatchmakingSetting _matchmakingSetting;
         
-        [SerializeField] private MatchmakingModel _matchmakingModel;
-        [SerializeField] private CreateGatheringView _createGatheringView;
-        [SerializeField] private MatchmakingView _matchmakingView;
-        [SerializeField] private JoinGatheringView _joinGatheringView;
+        [SerializeField]
+        private MatchmakingModel _matchmakingModel;
+        
+        [SerializeField]
+        private CreateGatheringView _createGatheringView;
+        [SerializeField]
+        private MatchmakingView _matchmakingView;
+        [SerializeField]
+        private JoinGatheringView _joinGatheringView;
         
         public enum State
         {
@@ -69,6 +75,7 @@ namespace Gs2.Sample.Matchmaking
             /// マッチメイキングが成立
             /// </summary>
             Complete,
+            
             Error,
         }
         
@@ -100,6 +107,9 @@ namespace Gs2.Sample.Matchmaking
         {
             Assert.IsNotNull(_matchmakingSetting);
             Assert.IsNotNull(_matchmakingModel);
+            Assert.IsNotNull(_createGatheringView);
+            Assert.IsNotNull(_matchmakingView);
+            Assert.IsNotNull(_joinGatheringView);
             
             _createGatheringView.OnCloseEvent();
             _matchmakingView.OnCloseEvent();

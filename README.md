@@ -30,6 +30,8 @@ Licensed under SIL Open Font License 1.1 ( http://scripts.sil.org/OFL )
 各機能を単独で動作させる方法、機能の詳細については以下のページで個別に解説しています。
 
 - [アカウントの作成・ログイン 解説](Docs/Login.md)
+- [スタミナ/スタミナストア 解説](Docs/Stamina.md)
+- [クエスト 解説](Docs/Quest.md)
 - [課金通貨ストア 解説](Docs/Money.md)
 - [ガチャ機能 解説](Docs/Gacha.md)
 
@@ -57,8 +59,8 @@ Textの描画にTextMeshProを使用しています。
 Templatesフォルダの以下のファイルでスタックを作成します。  
 
 - [initialize_credential_template.yaml - クレデンシャル](Templates/initialize_credential_template.yaml)
-- [initialize_account_template.yaml - ログイン/アカウント連携・引継ぎ](Templates/initialize_account_template.yaml)  
-- [initialize_stamina_template.yaml - スタミナ](Templates/initialize_stamina_template.yaml)
+- [initialize_account_template.yaml - ログイン/アカウント連携・引継ぎ](Templates/initialize_account_template.yaml)
+- [initialize_stamina_template.yaml - スタミナ/スタミナストア](Templates/initialize_stamina_template.yaml)
 - [initialize_money_template.yaml - 課金通貨/課金通貨ストア](Templates/initialize_money_template.yaml)
 - [initialize_gold_template.yaml - ゴールド](Templates/initialize_gold_template.yaml)
 - [initialize_quest_template.yaml - クエスト](Templates/initialize_quest_template.yaml)
@@ -145,7 +147,6 @@ IAP パッケージのインポートを行います。
 | UnitSetting | inventoryModelName | GS2-Inventoryのガチャアイテム専用インベントリのモデルのネームスペース名 |
 | __UnitSetting__ | __identifierAcquireUnitClientId__ | __アイテムの増加が可能な権限のクライアントID__ |
 | __UnitSetting__ | __identifierAcquireUnitClientSecret__ | __アイテムの増加が可能な権限のクライアントシークレット__ |
-| JobQueueSetting | jobQueueNamespaceName | GS2-JobQueue のネームスペース名 |
 
 ### バージョンチェック機能の有効化
 
@@ -207,6 +208,7 @@ IAP パッケージのインポートを行います。
 `クエスト開始`　・・・　クエストグループを選択、クエストを開始します。  
 `クエスト完了`　・・・　クエストを完了、もしくは失敗（破棄）します。  
 （GS2-Quest）  
+[⇒クエスト 解説へ](Docs/Quest.md)
 
 `ガチャをまわす`　・・・　ガチャ商品リストでガチャ商品を選択、ガチャを回します。  
 抽選後、アイテムを入手します。アイテムは専用のインベントリに振り込まれます。  
@@ -238,12 +240,14 @@ IAP パッケージのインポートを行います。
 GS2-Exchange と連携して GS2-Money を消費してスタミナ値を回復する商品の購入のサンプルです。  
 （GS2-Stamina、GS2-Exchange、Gs2-Money）  
 
+[⇒スタミナ/スタミナストア 解説へ](Docs/Stamina.md)
+ 
 課金通貨ストア　（課金通貨表示の＋ボタン）・・・  
 GS2-Money を使って管理されている課金通貨を、GS2-Showcase で販売するサンプルです。  
 定義されている商品の１つに GS2-Limit による購入回数の制限があり、１回のみ購入が可能になっています。  
 （GS2-Showcase、GS2-Limit、GS2-Money）  
 
-　[→ ⇒課金通貨ストア 解説 へ](Docs/Money.md)
+[⇒課金通貨ストア 解説 へ](Docs/Money.md)
 
 ## Settings 設定の詳細
-[→ Settings 設定 へ](Docs/Settings.md)
+[⇒Settings 設定 へ](Docs/Settings.md)

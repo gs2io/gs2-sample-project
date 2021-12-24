@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Gs2.Core;
 using Gs2.Core.Exception;
+using Gs2.Core.Util;
 using Gs2.Unity;
 using Gs2.Unity.Gs2Exchange.Result;
 using Gs2.Unity.Gs2Stamina.Model;
@@ -72,6 +73,53 @@ namespace Gs2.Sample.Stamina
             callback.Invoke(result);
         }
 
+        /// <summary>
+        /// スタミナを消費する
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="session"></param>
+        /// <param name="staminaNamespaceName"></param>
+        /// <param name="consumeValue"></param>
+        /// <param name="onConsumeStamina"></param>
+        /// <param name="onGetStamina"></param>
+        /// <param name="onError"></param>
+        /// <returns></returns>
+        public IEnumerator ConsumeStamina(
+            Client client,
+            GameSession session,
+            string staminaNamespaceName,
+            int consumeValue,
+            ConsumeStaminaEvent onConsumeStamina,
+            GetStaminaEvent onGetStamina,
+            ErrorEvent onError
+        )
+        {
+            AsyncResult<EzConsumeResult> result = null;
+            yield return client.Stamina.Consume(
+                r =>
+                {
+                    result = r;
+                },
+                session,
+                staminaNamespaceName,
+                staminaModel.Name,
+                consumeValue
+            );
+            
+            if (result.Error != null)
+            {
+                onError.Invoke(
+                    result.Error
+                );
+                yield break;
+            }
+
+            stamina = result.Result.Item;
+
+            onConsumeStamina.Invoke(staminaModel, stamina, consumeValue);
+            onGetStamina.Invoke(staminaModel, stamina);
+        }
+        
         /// <summary>
         /// スタミナを購入する
         /// </summary>

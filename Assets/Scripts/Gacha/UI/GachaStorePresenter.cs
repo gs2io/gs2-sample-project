@@ -4,9 +4,8 @@ using Gs2.Core.Exception;
 using Gs2.Gs2Inventory.Request;
 using Gs2.Gs2Lottery.Result;
 using Gs2.Sample.Core;
-using Gs2.Sample.Core.Runtime;
+using Gs2.Sample.JobQueue;
 using Gs2.Sample.Money;
-using Gs2.Sample.Quest;
 using Gs2.Sample.Unit;
 using Gs2.Unity.Gs2Distributor.Result;
 using Gs2.Unity.Gs2Showcase.Model;
@@ -24,42 +23,73 @@ namespace Gs2.Sample.Gacha
         private GachaSetting _gachaSetting;
         
         [SerializeField]
+        public GachaStoreModel _gachaStoreModel;
+        
+        [SerializeField]
         public GachaStoreView _gachaStoreView;
         [SerializeField]
         public GetItemDialog _getItemDialog;
         [SerializeField]
-        public GachaStoreModel _gachaStoreModel;
-        [SerializeField]
         public UnitModel _unitModel;
         
-        [SerializeField] private MoneyPresenter _moneyPresenter;
-
+        [SerializeField]
+        private MoneyPresenter _moneyPresenter;
+        [SerializeField]
+        private UnitPresenter _unitPresenter;
+        
         private StampSheetRunner _stampSheetRunner;
+        
+        [SerializeField]
+        private JobQueueModel _jobQueueModel;
         
         public enum State
         {
             MainMenu,
             
+            /// <summary>
+            /// 商品棚情報を取得中
+            /// </summary>
             GetShowcaseProcessing,
-            OpenGachaStore,
+            /// <summary>
+            /// 商品棚情報の取得に失敗
+            /// </summary>
             GetShowcaseFailed,
             
-            SelectGacha,
+            /// <summary>
+            /// ガチャストアを開く
+            /// </summary>
+            OpenGachaStore,
             
+            /// <summary>
+            /// ガチャ商品を購入
+            /// </summary>
             BuyProcessing,
+            /// <summary>
+            /// ガチャ商品の購入に成功
+            /// </summary>
             BuySucceed,
+            /// <summary>
+            /// ガチャ商品の購入に失敗
+            /// </summary>
             BuyFailed,
         }
         
         /// <summary>
-        /// 現在のステータス
+        /// 現在のステート
         /// </summary>
         private State _gachaStoreState = State.MainMenu;
         
         public void Start()
         {
             Assert.IsNotNull(_gachaSetting);
-
+            Assert.IsNotNull(_gachaStoreModel);
+            Assert.IsNotNull(_gachaStoreView);
+            Assert.IsNotNull(_getItemDialog);
+            Assert.IsNotNull(_unitModel);
+            Assert.IsNotNull(_moneyPresenter);
+            Assert.IsNotNull(_unitPresenter);
+            Assert.IsNotNull(_jobQueueModel);
+            
             _gachaStoreView.OnCloseEvent();
             
             _gachaSetting.onIssueBuyStampSheet.AddListener(OnIssueStampSheet);
@@ -83,9 +113,6 @@ namespace Gs2.Sample.Gacha
                         UIManager.Instance.CloseProcessing();
                         _gachaStoreView.OnOpenEvent();
                         break;
-                    
-                    case State.SelectGacha:
-                        break;
 
                     case State.BuyProcessing:
                         UIManager.Instance.OpenProcessing();
@@ -105,19 +132,41 @@ namespace Gs2.Sample.Gacha
             _gachaStoreState = _state;
         }
         
-        public void OnDestroy()
+        public void Initialize()
+        {
+            UIManager.Instance.AddLog("GachaStorePresenter::Initialize");
+            
+            // ガチャ抽選処理のスタンプシート
+            _stampSheetRunner = new StampSheetRunner(
+                GameManager.Instance.Cllient.Client
+            );
+            _stampSheetRunner.AddDoneStampTaskEventHandler(
+                _moneyPresenter.GetTaskCompleteAction(),
+                _unitPresenter.GetTaskCompleteAction(),
+                _jobQueueModel.GetTaskCompleteAction(),
+                GetTaskCompleteAction()
+            );
+            _stampSheetRunner.AddCompleteStampSheetEvent(
+                _moneyPresenter.GetSheetCompleteAction(),
+                _unitPresenter.GetSheetCompleteAction(),
+                _jobQueueModel.GetSheetCompleteAction(),
+                GetSheetCompleteAction()
+            );
+            
+            // 商品受け取りのJobQueue
+            _jobQueueModel.Initialize(
+                _gachaSetting.jobQueueNamespaceName,
+                _gachaSetting.onError
+            );
+            _jobQueueModel.onExecJob.AddListener(
+                _unitPresenter.GetJobQueueAction()
+            );
+        }
+        
+        public void Finish()
         {
             _gachaSetting.onIssueBuyStampSheet.RemoveListener(OnIssueStampSheet);
             _gachaSetting.onError.RemoveListener(OnError);
-        }
-
-        public void Initialize(
-            StampSheetRunner stampSheetRunner
-        )
-        {
-            Debug.Log("GachaStorePresenter::Initialize");
-
-　           _stampSheetRunner = stampSheetRunner;
         }
 
         public void OnError(Gs2Exception e)
@@ -184,6 +233,7 @@ namespace Gs2.Sample.Gacha
 
 
         /// <summary>
+        /// ガチャ商品を購入
         /// </summary>
         /// <param name="salesItem"></param>
         public void OnBuyGacha(
@@ -219,15 +269,16 @@ namespace Gs2.Sample.Gacha
         }
 
         /// <summary>
-        /// スタンプシートを発行
+        /// スタンプシートが発行された
         /// </summary>
         /// <param name="stampSheet"></param>
         public void OnIssueStampSheet(
             string stampSheet
         )
         {
-            Debug.Log("GachaStorePresenter::OnIssueStampSheet");
+            UIManager.Instance.AddLog("GachaStorePresenter::OnIssueStampSheet");
 
+            // スタンプシートを実行
             StartCoroutine(
                 _stampSheetRunner.Run(
                     stampSheet,

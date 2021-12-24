@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Gs2.Core.Util;
-using Gs2.Sample.Core;
-using Gs2.Sample.Money;
-using Gs2.Sample.Stamina;
-using Gs2.Unity.Gs2Quest.Model;
 using UnityEngine;
+using UnityEngine.Assertions;
+using UnityEngine.UI;
 
 namespace Gs2.Sample.Quest
 {
@@ -27,7 +22,7 @@ namespace Gs2.Sample.Quest
         /// クエストグループ項目 クローン元のGameObject
         /// </summary>
         /// <returns></returns>
-        public GameObject QuestGroupInfo;
+        public GameObject questGroupInfo;
 
         /// <summary>
         /// クエスト　項目の親
@@ -38,16 +33,23 @@ namespace Gs2.Sample.Quest
         /// クエスト項目 クローン元のGameObject
         /// </summary>
         /// <returns></returns>
-        public GameObject QuestInfo;
+        public GameObject questInfo;
 
-        public void OnOpenEvent()
-        {
-            gameObject.SetActive(true);
-        }
+        public Button questStart;
         
+        public Button questEnd;
+
+        private void Start()
+        {
+            Assert.IsNotNull(questStart);
+            Assert.IsNotNull(questEnd);
+        }
+
         public void OnCloseEvent()
         {
-            gameObject.SetActive(false);
+            QuestGroupMenu.gameObject.SetActive(false);
+            QuestMenu.gameObject.SetActive(false); 
+            QuestClear.gameObject.SetActive(false);
         }
         
         public void OnOpenQuestGroupMenuEvent()
