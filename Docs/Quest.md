@@ -1,13 +1,13 @@
 ﻿# クエスト　解説
 
-GS2-Quest を使ってクエストを管理するサンプルです。
+[GS2-Quest](https://app.gs2.io/docs/index.html#gs2-quest) を使ってクエストを管理するサンプルです。
 
 クエストには、メインシナリオクエストとキャラクターシナリオクエストの2種類（2グループ）があります。  
 クエストには、クエストに挑戦するために必要なコストと、クリア報酬を設定できますが、  
 このサンプルでは、必要コストにスタミナ、クリア報酬に課金通貨を設定しています。  
 クエストに失敗した場合は報酬にコストとして費やしたスタミナを返すよう設定されています。
 
-# GS2-Deploy テンプレート
+## GS2-Deploy テンプレート
 
 - [initialize_quest_template.yaml - クエスト](../Templates/initialize_quest_template.yaml)
 
@@ -43,6 +43,7 @@ QUEST STATE は、存在しなければ `None` 、存在すれば `QuestStarted`
 必要コストの払い戻しを受けます。
 
 ### クエストの状態取得
+
 ```c#
 AsyncResult<EzGetProgressResult> result = null;
 yield return client.Quest.GetProgress(
@@ -202,7 +203,7 @@ yield return machine.Execute(onError);
 #### 報酬配布処理の遅延実行
 
 クエスト完了時の報酬に複数のリソース入手を設定した場合、  
-スタンプシートによってジョブキューに報酬を入手するジョブが登録されます。  
+スタンプシートによってジョブキュー( [GS2-JobQueue](https://app.gs2.io/docs/index.html#gs2-jobqueue) )に報酬を入手するジョブが登録されます。  
 クライアントがジョブキューを実行することで、実際に報酬を受け取る処理が実行されます。
 
 スタンプシートによるジョブ登録
@@ -220,7 +221,8 @@ public UnityAction<EzStampSheet, EzRunStampSheetResult> GetSheetCompleteAction()
 }
 ```
 
-JobQueueの実行
+ジョブキューの実行
+
 ```c#
 AsyncResult<EzRunResult> result = null;
 yield return _client.JobQueue.Run(

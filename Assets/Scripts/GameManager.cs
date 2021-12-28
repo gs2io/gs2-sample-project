@@ -175,7 +175,15 @@ namespace Gs2.Sample
                 )
             );
         }
-
+        
+        /// <summary>
+        /// クレデンシャル　初期化
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="clientSecret"></param>
+        /// <param name="onInitializeGs2"></param>
+        /// <param name="onError"></param>
+        /// <returns></returns>
         public static IEnumerator InitializeGs2(
             string clientId,
             string clientSecret,
@@ -226,6 +234,12 @@ namespace Gs2.Sample
             );
         }
         
+        /// <summary>
+        /// クレデンシャル　終期化
+        /// </summary>
+        /// <param name="profile"></param>
+        /// <param name="onFinalizeGs2"></param>
+        /// <returns></returns>
         public static IEnumerator FinalizeGs2(
             Profile profile,
             FinalizeGs2AccountEvent onFinalizeGs2
@@ -239,6 +253,11 @@ namespace Gs2.Sample
             onFinalizeGs2.Invoke(profile);
         }
 
+        /// <summary>
+        /// クレデンシャル　初期化　完了
+        /// </summary>
+        /// <param name="profile"></param>
+        /// <param name="client"></param>
         public void OnInitializeGs2(
             Profile profile,
             Client client
@@ -285,7 +304,34 @@ namespace Gs2.Sample
                 accountRepository.DeleteAccount(_saveSlot);
             });
         }
+        
+        /// <summary>
+        /// アカウント引継ぎ実行
+        /// </summary>
+        /// <returns></returns>
+        public void OnDoTakeOverAccount(EzAccount account)
+        {
+            accountRepository.SaveAccount(
+                new PersistAccount
+                {
+                    UserId = account.UserId,
+                    Password = account.Password,
+                },
+                _saveSlot
+            );
+        }
 
+        /// <summary>
+        /// 再ログイン
+        /// </summary>
+        /// <returns></returns>
+        public void ReLogin()
+        {
+            StartCoroutine(
+                Login()
+            );
+        }
+        
         /// <summary>
         /// GS2 SDK の初期化が完了し、GS2 Client の取得が終わったときに呼び出される。
         /// 受け取った GS2 Client を使用して、アカウントの新規作成・ログインを実行する。
@@ -479,7 +525,7 @@ namespace Gs2.Sample
 
             UIManager.Instance.AddLog("Auth.Login");
             
-            // 指定したユーザIDでGS2にログイン
+            // 指定したユーザーIDでGS2にログイン
             AsyncResult<EzLoginResult> result2 = null;
             yield return client.Auth.Login(
                 r =>

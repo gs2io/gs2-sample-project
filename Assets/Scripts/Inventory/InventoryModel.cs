@@ -43,16 +43,40 @@ namespace Gs2.Sample.Inventory
     
     public class InventoryModel : MonoBehaviour
     {
+        /// <summary>
+        /// インベントリのネームスペース名
+        /// </summary>
         public string InventoryNamespaceName;
         
+        /// <summary>
+        /// インベントリモデル
+        /// </summary>
         public EzInventoryModel Model;
         
+        /// <summary>
+        /// アイテムモデル
+        /// </summary>
         public List<EzItemModel> ItemModels;
         
+        /// <summary>
+        /// インベントリ
+        /// </summary>
         public EzInventory Inventory;
         
+        /// <summary>
+        /// アイテムセット
+        /// </summary>
         public List<EzItemSet> ItemSets = new List<EzItemSet>();
 
+        /// <summary>
+        /// インベントリモデルを取得
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="inventoryNamespaceName"></param>
+        /// <param name="inventoryModelName"></param>
+        /// <param name="onGetInventoryModel"></param>
+        /// <param name="onError"></param>
+        /// <returns></returns>
         public IEnumerator GetInventoryModel(
             Client client,
             string inventoryNamespaceName,
@@ -104,7 +128,7 @@ namespace Gs2.Sample.Inventory
         }
         
         /// <summary>
-        /// インベントリ名を指定してインベントリの情報を取得<
+        /// インベントリの情報を取得
         /// </summary>
         /// <param name="client"></param>
         /// <param name="session"></param>
@@ -171,47 +195,19 @@ namespace Gs2.Sample.Inventory
             onGetInventory.Invoke(inventory, itemSets);
         }
         
-        public static IEnumerator GetItemSetWithSignature(
-            Client client,
-            GameSession session,
-            string inventoryNamespaceName,
-            string inventoryModelName,
-            string itemModelName,
-            string itemSetName,
-            string signatureKeyId,
-            GetItemSetWithSignatureEvent onGetItemSetWithSignature,
-            ErrorEvent onError
-        )
-        {
-            {
-                AsyncResult<EzGetItemWithSignatureResult> result = null;
-                yield return client.Inventory.GetItemWithSignature(
-                    r => { result = r; },
-                    session,
-                    inventoryNamespaceName,
-                    inventoryModelName,
-                    itemModelName,
-                    signatureKeyId,
-                    itemSetName
-                );
-
-                if (result.Error != null)
-                {
-                    onError.Invoke(
-                        result.Error
-                    );
-                    yield break;
-                }
-
-                onGetItemSetWithSignature.Invoke(
-                    result.Result.Items.First().ItemSetId,
-                    signatureKeyId,
-                    result.Result.Body,
-                    result.Result.Signature
-                );
-            }
-        }
-
+        /// <summary>
+        /// アイテムの入手
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="identifierAcquireItemClientId"></param>
+        /// <param name="identifierAcquireItemClientSecret"></param>
+        /// <param name="inventoryNamespaceName"></param>
+        /// <param name="inventoryModelName"></param>
+        /// <param name="itemModelName"></param>
+        /// <param name="value"></param>
+        /// <param name="onAcquire"></param>
+        /// <param name="onError"></param>
+        /// <returns></returns>
         public IEnumerator Acquire(
             GameSession session,
             string identifierAcquireItemClientId,
@@ -225,7 +221,7 @@ namespace Gs2.Sample.Inventory
         )
         {
             // ※この処理はサンプルの動作確認のためものです。
-            // 実際にクライアントが直接ゴールドの増加を行う実装は非推奨となります。
+            // 実際にクライアントが直接アイテムの増加を行う実装は非推奨となります。
             
             var restSession = new Gs2RestSession(
                 new BasicGs2Credential(
@@ -283,6 +279,19 @@ namespace Gs2.Sample.Inventory
             yield return restSession.Close(() => { });
         }
 
+        /// <summary>
+        /// アイテムの消費
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="session"></param>
+        /// <param name="inventoryNamespaceName"></param>
+        /// <param name="inventoryModelName"></param>
+        /// <param name="itemModelName"></param>
+        /// <param name="consumeValue"></param>
+        /// <param name="onConsume"></param>
+        /// <param name="onError"></param>
+        /// <param name="itemSetName"></param>
+        /// <returns></returns>
         public IEnumerator Consume(
             Client client,
             GameSession session,

@@ -30,9 +30,14 @@ Licensed under SIL Open Font License 1.1 ( http://scripts.sil.org/OFL )
 各機能を単独で動作させる方法、機能の詳細については以下のページで個別に解説しています。
 
 - [アカウントの作成・ログイン 解説](Docs/Login.md)
+- [バージョンチェック 解説](Docs/Version.md)
+- [アカウント引継ぎ 解説](Docs/Takeover.md)
 - [スタミナ/スタミナストア 解説](Docs/Stamina.md)
+- [課金通貨/課金通貨ストア 解説](Docs/Money.md)
+- [ゴールド/インベントリ 解説](Docs/Inventory.md)
 - [クエスト 解説](Docs/Quest.md)
-- [課金通貨ストア 解説](Docs/Money.md)
+- [マッチメイキング 解説](Docs/Matchmaking.md)
+- [リアルタイム 解説](Docs/Realtime.md)
 - [ガチャ機能 解説](Docs/Gacha.md)
 
 ## 起動の準備
@@ -70,7 +75,7 @@ Templatesフォルダの以下のファイルでスタックを作成します�
 - [initialize_jobqueue_template.yaml - JobQueue機能設定](Templates/initialize_jobqueue_template.yaml)
 - [initialize_unit_template.yaml - ガチャアイテム用インベントリ](Templates/initialize_unit_template.yaml)
 
-※GS2-Version バージョンチェック機能を使うときは作成が必要
+※GS2-Version バージョンチェック機能を使う場合は作成
 - [initialize_version_template.yaml - アプリバージョンチェック](Templates/initialize_version_template.yaml)
 - [initialize_term_template.yaml - 利用規約チェック](Templates/initialize_term_template.yaml)
 
@@ -165,11 +170,12 @@ IAP パッケージのインポートを行います。
 有効化されていればアプリのバージョンチェック、利用規約のユーザー確認、  
 （GS2-Version）を行い、
 アカウントによるログインを実行します。  
-
-- [⇒アカウントの作成・ログイン 解説へ](Docs/Login.md)
-
 初回起動時は匿名アカウントの自動作成を行います。  
 （GS2-Account）  
+
+[⇒アカウントの作成・ログイン 解説へ](Docs/Login.md)  
+[⇒バージョンチェック 解説へ](Docs/Version.md)  
+[⇒アカウント引継ぎ 解説へ](Docs/Takeover.md)  
 
 ![タイトル](Docs/Start.png)
 ログイン完了後、タイトル画面に遷移します。`アカウント連携` 機能を呼び出すことができます。  
@@ -183,7 +189,7 @@ IAP パッケージのインポートを行います。
 
 ![プレイヤーステータス](Docs/status.png)
 
-右上に　__スタミナ__、__課金通貨__、__ゴールド__ が表示されます。
+右上に　__スタミナ__、__課金通貨__、__ゴールド__ が表示されます。  
 （GS2-Stamina、GS2-Money、GS2-Inventory）
 
 ## プレイヤータブ
@@ -193,6 +199,8 @@ IAP パッケージのインポートを行います。
 `スタミナ消費`　・・・　スタミナを減少し、一定時間で回復します。
 （GS2-Stamina）
 
+[⇒スタミナ/スタミナストア 解説へ](Docs/Stamina.md)
+
 `ゴールド消費`　・・・　ゴールドを10減少させます。  
 `ゴールド増加`　・・・　ゴールドを100増加させます。  
 （GS2-Inventory）
@@ -201,13 +209,16 @@ IAP パッケージのインポートを行います。
 `FireElement入手`、`WaterElement入手`　・・・　アイテムをそれぞれ5増加させます。  
 （GS2-Inventory）
 
+[⇒ゴールド/インベントリ 解説へ](Docs/Inventory.md)
+
 ## ゲームサイクルタブ
 
-![プレイヤー](Docs/GameCycle.png)
+![ゲームサイクル](Docs/GameCycle.png)
 
 `クエスト開始`　・・・　クエストグループを選択、クエストを開始します。  
 `クエスト完了`　・・・　クエストを完了、もしくは失敗（破棄）します。  
 （GS2-Quest）  
+
 [⇒クエスト 解説へ](Docs/Quest.md)
 
 `ガチャをまわす`　・・・　ガチャ商品リストでガチャ商品を選択、ガチャを回します。  
@@ -217,20 +228,24 @@ IAP パッケージのインポートを行います。
 アイテムをタップで消費（つかう）します。  
 （GS2-Inventory）
 
-- [⇒ガチャストア 解説へ](Docs/Gacha.md)
+[⇒ガチャストア 解説へ](Docs/Gacha.md)
 　
 ## 対戦タブ
 
-![プレイヤー](Docs/Matching.png)
+![対戦](Docs/Matching.png)
 
 `ギャザリング作成`　・・・　参加人数を設定してギャザリング（マッチングの単位）を作成します。  
 `ギャザリング待機`　・・・　ギャザリングへの参加をリクエストします。  
 （GS2-Matchmaking）  
 
+[⇒マッチメイキング 解説へ](Docs/Matchmaking.md)
+
 マッチングに成功すると、GS2-Realtimeを使用したRoomへの入室が行われ、  
 参加者同士での通信が可能になります。  
 サンプルでは簡単なじゃんけん対戦を行えます。  
 (GS2-Realtime)  
+
+[⇒リアルタイム 解説へ](Docs/Realtime.md)
 
 ## ステータス
 
@@ -248,6 +263,3 @@ GS2-Money を使って管理されている課金通貨を、GS2-Showcase で販
 （GS2-Showcase、GS2-Limit、GS2-Money）  
 
 [⇒課金通貨ストア 解説 へ](Docs/Money.md)
-
-## Settings 設定の詳細
-[⇒Settings 設定 へ](Docs/Settings.md)

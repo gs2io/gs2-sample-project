@@ -1,7 +1,7 @@
 ﻿# スタミナ/スタミナストア　解説
 
-GS2-Stamina を使ってスタミナ値を管理するサンプルです。  
-GS2-Exchange と連携し GS2-Money の課金通貨を消費しスタミナ値を回復するストア機能のサンプルです。  
+[GS2-Stamina](https://app.gs2.io/docs/index.html#gs2-stamina) を使ってスタミナ値を管理するサンプルです。  
+[GS2-Exchange](https://app.gs2.io/docs/index.html#gs2-exchange) と連携し [GS2-Money](https://app.gs2.io/docs/index.html#gs2-money) の課金通貨を消費しスタミナ値を回復するストア機能のサンプルです。  
 
 ## GS2-Deploy テンプレート
 
@@ -31,7 +31,7 @@ GS2-Exchange と連携し GS2-Money の課金通貨を消費しスタミナ値�
 
 最新のスタミナの状態を取得します。
 
-```csharp
+```c#
 AsyncResult<EzGetStaminaResult> result = null;
 yield return client.Stamina.GetStamina(
     r =>
@@ -48,7 +48,7 @@ yield return client.Stamina.GetStamina(
 
 スタミナを5消費します。
 
-```csharp
+```c#
 AsyncResult<EzConsumeResult> result = null;
 yield return client.Stamina.Consume(
     r =>
@@ -66,7 +66,7 @@ yield return client.Stamina.Consume(
 
 スタミナ回復の購入処理を実行します。
 
-```csharp
+```c#
 AsyncResult<EzExchangeResult> result = null;
 yield return gs2Client.client.Exchange.Exchange(
     r => { result = r; },
@@ -87,7 +87,7 @@ yield return gs2Client.client.Exchange.Exchange(
 
 `result.Result.StampSheet` にスタンプシートが返りますので
 
-```
+```c#
 var machine = new StampSheetStateMachine(
     stampSheet,
     gs2Client.client,

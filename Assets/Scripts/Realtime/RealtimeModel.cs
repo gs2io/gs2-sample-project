@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using Gs2.Core;
 using Gs2.Unity.Gs2Realtime;
 using Gs2.Unity.Gs2Realtime.Model;

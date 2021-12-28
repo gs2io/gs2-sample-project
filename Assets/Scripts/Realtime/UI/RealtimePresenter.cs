@@ -1,9 +1,7 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using Google.Protobuf;
 using Gs2.Core;
-using Gs2.Sample.Core.Runtime;
 using Gs2.Unity.Gs2Realtime;
 using Gs2.Unity.Gs2Realtime.Model;
 using Gs2.Unity.Gs2Realtime.Result;
@@ -302,7 +300,7 @@ namespace Gs2.Sample.Realtime
             otherPlayer.SetActive(true);
             players[player.ConnectionId] = otherPlayer.GetComponent<OtherPlayerDescriptor>();
         }
-        
+
         void ClearPlayers()
         {
             foreach (Transform child in _realtimeView.joinedPlayersContent.transform)
@@ -313,8 +311,7 @@ namespace Gs2.Sample.Realtime
                 }
             }
         }
-        
-        
+
         /// <summary>
         /// GS2-Realtime のルーム情報を取得
         /// </summary>
@@ -322,19 +319,6 @@ namespace Gs2.Sample.Realtime
         private IEnumerator GetRoom()
         {
             UIManager.Instance.AddLog("RealtimePresenter::GetRoom");
-            
-            if (!string.IsNullOrEmpty(_realtimeModel.room.IpAddress))
-            {
-                _realtimeModel.room = new EzRoom
-                {
-                    Name = _realtimeModel.room.Name,
-                    IpAddress = _realtimeModel.room.IpAddress,
-                    Port = _realtimeModel.room.Port,
-                    EncryptionKey = _realtimeModel.room.EncryptionKey,
-                };
-                SetState(State.ConnectRoom);
-                yield break;
-            }
             
             while (true)
             {
