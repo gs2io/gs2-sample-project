@@ -55,7 +55,7 @@ namespace Gs2.Sample.Version
                 },
                 session,    // GameSession ログイン状態を表すセッションオブジェクト
                 versionNamespaceName,   //  ネームスペース名
-                targetVersions   //  加算するリソース(オプション値)
+                targetVersions   //  比較する現在のアプリのバージョン値
             );
             
             if (result != null &&result.Error != null)
@@ -63,6 +63,7 @@ namespace Gs2.Sample.Version
                 onError.Invoke(
                     result.Error
                 );
+                onCheckVersion.Invoke(targetVersions, null);
                 yield break;
             }
             

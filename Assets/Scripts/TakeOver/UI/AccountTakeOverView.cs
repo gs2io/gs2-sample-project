@@ -53,22 +53,19 @@ namespace Gs2.Sample.AccountTakeOver
         
         private void Start()
         {
-            OnCloseEvent();
             OnCloseMainMenuEvent();
             OnCloseSettingTypeEvent();
             OnCloseSettingEmailEvent();
             OnCloseTakeOverTypeEvent();
             OnCloseTakeOverEmailEvent();
         }
-
-        public void OnOpenEvent()
-        {
-            gameObject.SetActive(true);
-        }
         
         public void OnCloseEvent()
         {
-            gameObject.SetActive(false);
+            OnCloseMainMenuEvent();
+            OnCloseSettingTypeEvent();
+            OnCloseSettingEmailEvent();
+            OnCloseTakeOverTypeEvent();
         }
 
         public void OnOpenMainMenuEvent()

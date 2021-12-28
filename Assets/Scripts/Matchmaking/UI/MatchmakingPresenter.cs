@@ -4,8 +4,6 @@ using Gs2.Core;
 using Gs2.Core.Exception;
 using Gs2.Core.Model;
 using Gs2.Gs2Matchmaking.Model;
-using Gs2.Sample.Core.Runtime;
-using Gs2.Unity.Gs2Matchmaking.Model;
 using Gs2.Unity.Gs2Matchmaking.Result;
 using Gs2.Util.LitJson;
 using TMPro;

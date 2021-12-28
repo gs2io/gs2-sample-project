@@ -1,9 +1,9 @@
 # ガチャ機能　解説
 
-GS2-Showcase でガチャ商品を販売、GS2-Lotteryによる抽選を行い、  
+[GS2-Showcase](https://app.gs2.io/docs/index.html#gs2-showcase) でガチャ商品を販売、[GS2-Lottery](https://app.gs2.io/docs/index.html#gs2-lottery) による抽選を行い、  
 専用のインベントリーにアイテムの払い出しを行うサンプルです。
 
-# GS2-Deploy テンプレート
+## GS2-Deploy テンプレート
 
 - [initialize_gacha_template.yaml - ガチャ機能](../Templates/initialize_gacha_template.yaml)
 
@@ -36,7 +36,7 @@ IAP パッケージのインポートを行います。
 
 ## ガチャ商品購入処理の流れ
 
-## ガチャストアの表示
+### ガチャストアの表示
 
 ![商品リスト](GachaList.png)
 
@@ -54,7 +54,7 @@ yield return client.Showcase.GetShowcase(
 );
 ```
 
-## 購入処理
+### 購入処理
 
 モバイル環境であれば、Unity IAP を使用して AppStore や GooglePlay でのコンテンツの購入を行います  
 （商品の登録、設定が必要になります）。  
@@ -86,8 +86,8 @@ if (contentsId != null)
 }
 ```
 
-購入したレシートを使って、GS2-Showcase の商品を購入する処理を実行します。  
-Config には GS2-Money のウォレットスロットと、レシートの内容を渡します。
+購入したレシートを使って、__GS2-Showcase__ の商品を購入する処理を実行します。  
+Config には __GS2-Money__ のウォレットスロットと、レシートの内容を渡します。
 ```c#
 // ガチャ購入 レシート情報
 if (receipt != null)
@@ -129,7 +129,7 @@ stampSheet = result.Result.StampSheet;
 ```
 取得したスタンプシートを実行します。  
 GS2 SDK for Unity ではスタンプシート実行用のステートマシンが用意されていますので、そちらを利用します。  
-ステートマシンの実行には GS2-Distributor と スタンプシートの署名計算に使用した暗号鍵が必要となります。
+ステートマシンの実行には [GS2-Distributor](https://app.gs2.io/docs/index.html#gs2-distributor) と スタンプシートの署名計算に使用した暗号鍵が必要となります。
 
 ```c#
 StartCoroutine(
@@ -147,7 +147,7 @@ StartCoroutine(
 
 発行されたスタンプシートに含まれている抽選結果をつかい、必要であればクライアントはガチャ演出等を再生したのち、  
 取得したアイテムの一覧表示可能です。  
-スタンプシートの実行後、サーバ側でGS2-JobQueueを使用して順にインベントリーへのアイテム入手処理が実行されます。
+スタンプシートの実行後、サーバ側で [GS2-JobQueue](https://app.gs2.io/docs/index.html#gs2-jobqueue) を使用して順にインベントリーへのアイテム入手処理が実行されます。
 
 ```c#
 // Lottery 抽選処理の結果を取得

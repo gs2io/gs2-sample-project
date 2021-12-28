@@ -65,6 +65,7 @@ namespace Gs2.Sample.Version
                 onError.Invoke(
                     result.Error
                 );
+                onCheckVersion.Invoke(targetVersions, null);
                 yield break;
             }
             

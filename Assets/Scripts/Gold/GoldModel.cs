@@ -17,12 +17,12 @@ namespace Gs2.Sample.Gold
     public class GoldModel : MonoBehaviour
     {
         /// <summary>
-        /// ゴールドのインベントリーモデル
+        /// ゴールドのインベントリモデル
         /// </summary>
         public EzInventoryModel InventoryModel;
 
         /// <summary>
-        /// ゴールドのインベントリー
+        /// ゴールドのインベントリ
         /// </summary>
         public EzInventory Inventory;
 
@@ -87,7 +87,7 @@ namespace Gs2.Sample.Gold
         }
 
         /// <summary>
-        /// インベントリーの取得
+        /// インベントリの情報を取得
         /// </summary>
         /// <param name="client"></param>
         /// <param name="session"></param>
@@ -154,6 +154,19 @@ namespace Gs2.Sample.Gold
             onGetInventory.Invoke(inventory, itemSets);
         }
 
+        /// <summary>
+        /// ゴールドの入手
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="identifierAcquireItemClientId"></param>
+        /// <param name="identifierAcquireItemClientSecret"></param>
+        /// <param name="inventoryNamespaceName"></param>
+        /// <param name="inventoryModelName"></param>
+        /// <param name="itemModelName"></param>
+        /// <param name="value"></param>
+        /// <param name="onAcquire"></param>
+        /// <param name="onError"></param>
+        /// <returns></returns>
         public IEnumerator Acquire(
             GameSession session,
             string identifierAcquireItemClientId,
@@ -225,6 +238,19 @@ namespace Gs2.Sample.Gold
             yield return restSession.Close(() => { });
         }
 
+        /// <summary>
+        /// ゴールドの消費
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="session"></param>
+        /// <param name="inventoryNamespaceName"></param>
+        /// <param name="inventoryModelName"></param>
+        /// <param name="itemModelName"></param>
+        /// <param name="consumeValue"></param>
+        /// <param name="onConsume"></param>
+        /// <param name="onError"></param>
+        /// <param name="itemSetName"></param>
+        /// <returns></returns>
         public IEnumerator Consume(
             Client client,
             GameSession session,
@@ -237,7 +263,7 @@ namespace Gs2.Sample.Gold
             string itemSetName = null
         )
         {
-            AsyncResult<Gs2.Unity.Gs2Inventory.Result.EzConsumeResult> result = null;
+            AsyncResult<EzConsumeResult> result = null;
             yield return client.Inventory.Consume(
                 r => { result = r; },
                 session,

@@ -18,15 +18,6 @@ namespace Gs2.Sample.AccountTakeOver
         [SerializeField] private AccountTakeOverModel _accountTakeOverModel;
         [SerializeField] private AccountTakeOverView _view;
 
-        /// <summary>
-        /// Gs2Client
-        /// </summary>
-        private Gs2Client _gs2Client;
-        /// <summary>
-        /// Gs2GameSession
-        /// </summary>
-        private Gs2GameSession _session;
-
         public enum State
         {
             Initialize,
@@ -152,7 +143,6 @@ namespace Gs2.Sample.AccountTakeOver
                         UIManager.Instance.CloseProcessing();
                         _view.OnCloseSettingTypeEvent();
                         _view.OnCloseTakeOverTypeEvent();
-                        _view.OnOpenEvent();
                         _view.OnOpenMainMenuEvent();
                         break;
                         
@@ -237,7 +227,7 @@ namespace Gs2.Sample.AccountTakeOver
                         break;
                     
                     case State.TakeOverEmail:
-                        _view.OnCloseTakeOverTypeEvent();;
+                        _view.OnCloseTakeOverTypeEvent();
                         _view.OnOpenTakeOverEmailEvent();
                         break;
                     case State.CancelTakeOverEmail:
@@ -247,9 +237,13 @@ namespace Gs2.Sample.AccountTakeOver
                     
                     case State.TakeOverCompleted:
                         UIManager.Instance.CloseProcessing();
+                        _view.OnCloseEvent();
+                        _view.OnCloseSettingTypeEvent();
+                        _view.OnCloseSettingEmailEvent();
                         _view.OnCloseTakeOverTypeEvent();
                         _view.OnCloseTakeOverEmailEvent();
                         UIManager.Instance.OpenDialog1("Notice","アカウント引継ぎを実行しました。");
+                        UIManager.Instance.AddAcceptListner(OnClickConfirmTakeOver);
                         break;
                     case State.TakeOverFailed:
                         UIManager.Instance.CloseProcessing();
@@ -259,26 +253,12 @@ namespace Gs2.Sample.AccountTakeOver
             }
         }
 
-        private void Validate()
-        {
-            if (_gs2Client == null)
-            {
-                _gs2Client = GameManager.Instance.Cllient;
-            }
-            if (_session == null)
-            {
-                _session = GameManager.Instance.Session;
-            }
-        }
-
         /// <summary>
         /// 初期化処理
         /// </summary>
         /// <returns></returns>
         public void Initialize()
         {
-            Validate();
-
             if (!Social.localUser.authenticated)
             {
                 Social.localUser.Authenticate(success => { Debug.Log("signed-in"); });
@@ -291,8 +271,6 @@ namespace Gs2.Sample.AccountTakeOver
         /// <returns></returns>
         private IEnumerator GetTakeOverSettings()
         {
-            Validate();
-            
             yield return _accountTakeOverModel.ListAccountTakeOverSettings(
                 r =>
                 {
@@ -300,15 +278,13 @@ namespace Gs2.Sample.AccountTakeOver
                         ? State.Setting_SelectTypeMenu
                         : State.GetTakeOverSettingsFailed);
                 },
-                _gs2Client.Client,
-                _session.Session,
+                GameManager.Instance.Cllient.Client,
+                GameManager.Instance.Session.Session,
                 _loginSetting.accountNamespaceName,
                 _takeOverSetting.onError
             );
         }
         
-
-
         /// <summary>
         /// 引継ぎ設定の登録を実行
         /// </summary>
@@ -316,11 +292,9 @@ namespace Gs2.Sample.AccountTakeOver
         /// <returns></returns>
         private IEnumerator AddTakeOverSetting()
         {
-            Validate();
-            
             yield return _accountTakeOverModel.AddAccountTakeOverSetting(
-                _gs2Client.Client,
-                _session.Session,
+                GameManager.Instance.Cllient.Client,
+                GameManager.Instance.Session.Session,
                 r =>
                 {
                     SetState(r.Error == null
@@ -351,15 +325,18 @@ namespace Gs2.Sample.AccountTakeOver
         /// <returns></returns>
         private IEnumerator DoTakeOver()
         {
-            Validate();
-            
             yield return _accountTakeOverModel.DoAccountTakeOver(
-                _gs2Client.Client,
+                GameManager.Instance.Cllient.Client,
                 r =>
                 {
-                    SetState(r.Error == null
-                        ? State.TakeOverCompleted
-                        : State.TakeOverFailed);
+                    if (r.Error == null)
+                    {
+                        SetState(State.TakeOverCompleted);
+                    }
+                    else
+                    {
+                        SetState(State.TakeOverFailed);
+                    }
                 },
                 _loginSetting.accountNamespaceName,
                 _takeOverSetting.onDoTakeOver,
@@ -385,11 +362,9 @@ namespace Gs2.Sample.AccountTakeOver
         /// <returns></returns>
         private IEnumerator DeleteTakeOverSetting()
         {
-            Validate();
-            
             yield return _accountTakeOverModel.DeleteAccountTakeOverSetting(
-                _gs2Client.Client,
-                _session.Session,
+                GameManager.Instance.Cllient.Client,
+                GameManager.Instance.Session.Session,
                 r =>
                 {
                     SetState(r.Error == null
@@ -505,13 +480,13 @@ namespace Gs2.Sample.AccountTakeOver
         {
             _accountTakeOverModel.userIdentifier = _view.setEmailTakeOverSettingUserIdentifier.text;
             _accountTakeOverModel.password = _view.setEmailTakeOverSettingPassword.text;
+            
             SetState(State.AddSettingProcessing);
+            
             StartCoroutine(
                 AddTakeOverSetting()
             );
         }
-
-
 
         /// <summary>
         /// 引継ぎを選択した
@@ -544,20 +519,34 @@ namespace Gs2.Sample.AccountTakeOver
         public void OnClickSubmitTakeOverEmail()
         {
             _accountTakeOverModel.type = (int)TakeOverType.Email;
+            _accountTakeOverModel.userIdentifier = _view.doEmailTakeOverSettingUserIdentifier.text;
+            _accountTakeOverModel.password = _view.doEmailTakeOverSettingPassword.text;
+            
             SetState(State.TakeOver_Processing);
+            
             ExecTakeOver();
         }
         
         /// <summary>
         /// Platformによる引継ぎ実行
         /// </summary>
-        public void OnClickTakeOverPlatform()
+        public void OnClickExecTakeOverPlatform()
         {
             _accountTakeOverModel.type = (int)TakeOverType.Platform;
+
             SetState(State.TakeOver_Processing);
+            
             ExecTakeOver();
         }
 
+        /// <summary>
+        /// 再ログイン
+        /// </summary>
+        public void OnClickConfirmTakeOver()
+        {
+            GameManager.Instance.ReLogin();
+        }
+        
         /// <summary>
         /// エラー内容の確認ボタンをクリック
         /// </summary>

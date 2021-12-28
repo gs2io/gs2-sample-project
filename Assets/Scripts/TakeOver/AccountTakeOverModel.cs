@@ -56,7 +56,6 @@ namespace Gs2.Sample.AccountTakeOver
             return takeOverSettings.Find(takeOver => takeOver.Type == (int) TakeOverType.Platform);
         }
 
-        
         /// <summary>
         /// 設定済みの引継ぎ設定一覧を取得
         /// </summary>

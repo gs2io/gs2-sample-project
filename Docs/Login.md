@@ -1,6 +1,6 @@
 # アカウントの作成・ログイン　解説
 
-GS2-Account を使用してログインする機能のサンプルです。
+[GS2-Account](https://app.gs2.io/docs/index.html#gs2-account) を使用してログインする機能のサンプルです。
 
 ## GS2-Deploy テンプレート
 
@@ -32,7 +32,7 @@ PlayerPrefsから保存済みのアカウント情報を読み込みます。
 
 ### アカウント作成
 
-GS2-Account でアカウントを作成します。
+__GS2-Account__ でアカウントを作成します。
 
 ```c#
 AsyncResult<EzCreateResult> result = null;
@@ -91,8 +91,9 @@ var session = new GameSession(
 );
 ```
 
-アカウント情報で GS2-Account の認証処理をおこない、結果の EzAuthenticationResult の body と signature を  
-GS2-Auth の ログイン処理に渡してアクセストークンを得ます。 
+アカウント情報で __GS2-Account__ の認証処理をおこない、  
+結果の EzAuthenticationResult の body と signature を  
+[GS2-Auth](https://app.gs2.io/docs/index.html#gs2-auth) の ログイン処理に渡してアクセストークンを得ます。 
 
 ```c#
 AsyncResult<EzSetUserIdResult> result3 = null;
@@ -103,7 +104,9 @@ yield return client.Gateway.SetUserId(
     true
 );
 ```
-GS2-Gateway で　WebSocketセッションに対してログインしたユーザIDを設定してプッシュ通知を受け取れるようにしています。  
-マッチメイキングの遷移の通知を受けとるために使用します。
+
+[GS2-Gateway](https://app.gs2.io/docs/index.html#gs2-gateway) で　WebSocketセッションに対してログインしたユーザIDを  
+設定してプッシュ通知を受け取れるようにしています。  
+マッチメイキング()の遷移の通知を受けとるために使用します。
 
 

@@ -1,18 +1,20 @@
-# 課金通貨ストア　解説
+# 課金通貨/課金通貨ストア　解説
 
-GS2-Money を使って管理されている課金通貨を、GS2-Showcase で販売するサンプルです。
+[GS2-Money](https://app.gs2.io/docs/index.html#gs2-money) を使って管理されている課金通貨を、  
+[GS2-Showcase](https://app.gs2.io/docs/index.html#gs2-showcase) で販売するサンプルです。
 
-サンプルにで定義されている商品のうち１つには GS2-Limit による購入回数の制限がついており、１回のみ購入が可能になっています。
+サンプルにで定義されている商品のうち１つには [GS2-Limit](https://app.gs2.io/docs/index.html#gs2-limit) による  
+購入回数の制限がついており、１回のみ購入が可能になっています。
 
 ![商品リスト](Products.png)
 
-# GS2-Deploy テンプレート
+## GS2-Deploy テンプレート
 
 - [initialize_money_template.yaml - 課金通貨/課金通貨ストア](../Templates/initialize_money_template.yaml)
 
 ## Unity IAPの有効化、インポート
 
-GS2-Moneyを使用したサンプルの動作には、Unity IAPの有効化が必要になります。  
+[GS2-Money](https://app.gs2.io/docs/index.html#gs2-money) を使用したサンプルの動作には、Unity IAPの有効化が必要になります。  
 ( https://docs.unity3d.com/ja/2019.4/Manual/UnityIAPSettingUp.html )  
 サービスウィンドウでのIn-App Purchasingの有効化、  
 IAP パッケージのインポートを行います。
@@ -37,10 +39,11 @@ IAP パッケージのインポートを行います。
 | OnBuy(Product product) | 商品の購入が完了したときに呼び出されます。 |
 | OnError(Gs2Exception error) | エラーが発生したときに呼び出されます。 |
 
-## ウォレットの表示
+## ウォレットの取得
 ![プレイヤーステータス](Wallet.png)
 
 ログイン後、以下で最新のウォレットの状態を取得します。
+
 ```c#
 AsyncResult<EzGetResult> result = null;
 yield return client.Money.Get(
@@ -54,10 +57,11 @@ yield return client.Money.Get(
 );
 ```
 
-## 課金通貨ストアの表示
+## 課金通貨ストアの商品取得
 ![商品リスト](Products2.png)
 
 商品リストを取得し、ストアを表示します。
+
 ```c#
 AsyncResult<EzGetShowcaseResult> result = null;
 yield return client.Showcase.GetShowcase(
@@ -70,6 +74,7 @@ yield return client.Showcase.GetShowcase(
     showcaseName
 );
 ```
+
 取得した商品情報をパースし、販売価格や入手できる課金通貨の数量を取得します。  
 購入回数制限が設定されている場合は、購入回数カウンターの状態も取得しています。
 
@@ -125,10 +130,11 @@ foreach (var displayItem in result.Result.Item.DisplayItems)
 
 ## 購入処理
 
-モバイル環境であれば、Unity IAP を使用して AppStore や GooglePlay でのコンテンツの購入を行います  
+モバイル環境であれば、Unity IAP を使用して AppStore や GooglePlay でのコンテンツの購入を行います   
 （商品の登録、設定が必要になります）。  
 エディター環境ではFake Storeのレシートが発行されます。  
 得られたレシートを後続の処理で参照できるよう保持しておきます。
+
 ```c#
 AsyncResult<PurchaseParameters> result = null;
 yield return new IAPUtil().Buy(
@@ -144,8 +150,9 @@ if (result.Error != null)
     yield break;
 }
 ```
-購入したレシートを使って、GS2-Showcase の商品を購入する処理を実行します。  
-Config には GS2-Money のウォレットスロットと、レシートの内容を渡します。
+
+購入したレシートを使って、[GS2-Showcase](https://app.gs2.io/docs/index.html#gs2-showcase) の商品を購入する処理を実行します。  
+Config には [GS2-Money](https://app.gs2.io/docs/index.html#gs2-money)  のウォレットスロットと、レシートの内容を渡します。
 
 ```c#
 // Showcase 商品の購入をリクエスト
@@ -183,9 +190,10 @@ if (result.Error != null)
 // スタンプシートを取得
 stampSheet = result.Result.StampSheet;
 ```
+
 取得したスタンプシートを実行します。  
 GS2 SDK for Unity ではスタンプシート実行用のステートマシンが用意されていますので、そちらを利用します。  
-ステートマシンの実行には GS2-Distributor と スタンプシートの署名計算に使用した暗号鍵が必要となります。
+ステートマシンの実行には [GS2-Distributor](https://app.gs2.io/docs/index.html#gs2-distributor) と スタンプシートの署名計算に使用した暗号鍵が必要となります。
 
 ```c#
 {
