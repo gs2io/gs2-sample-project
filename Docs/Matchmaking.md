@@ -109,8 +109,8 @@ yield return gs2Client.client.Matchmaking.CancelMatchmaking(
 
 | メッセージ | 説明 |
 ---|---
-Gs2Matchmaking:Join | ギャザリングに新たに参加者が増えた
-Gs2Matchmaking:Join | ギャザリングから参加者が減った
+Gs2Matchmaking:Join | ギャザリングに新たにプレイヤーが参加した
+Gs2Matchmaking:Leave | ギャザリングからプレイヤーが離脱した
 Gs2Matchmaking:Complete | マッチングが完了した
 
 ```c#
