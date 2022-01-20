@@ -31,30 +31,28 @@ Resources:
       Name: ${IdentifierAcquireGoldUserName}
       
   IdentifierAcquireGoldUserAttachPolicy:
-    DependsOn:
-    - IdentifierAcquireGoldPolicy
-    - IdentifierAcquireGoldUser
     Type: GS2::Identifier::AttachSecurityPolicy
     Properties:
+      UserName: ${IdentifierAcquireGoldUserName}
       SecurityPolicyId:
         '!GetAttr': IdentifierAcquireGoldPolicy.Item.SecurityPolicyId
+    DependsOn:
+      - IdentifierAcquireGoldPolicy
+      - IdentifierAcquireGoldUser
+
+  IdentifierAcquireGoldIdentifier:
+    Type: GS2::Identifier::Identifier
+    Properties:
       UserName: ${IdentifierAcquireGoldUserName}
+    DependsOn:
+      - IdentifierAcquireGoldUser
 
   InventoryNamespace:
     Type: GS2::Inventory::Namespace
     Properties:
       Name: ${InventoryNamespaceName}
 
-  IdentifierAcquireGoldIdentifier:
-    DependsOn:
-    - IdentifierAcquireGoldUser
-    Type: GS2::Identifier::Identifier
-    Properties:
-      UserName: ${IdentifierAcquireGoldUserName}
-
   InventorySettings:
-    DependsOn:
-    - InventoryNamespace
     Type: GS2::Inventory::CurrentItemModelMaster
     Properties:
       Settings:
@@ -69,6 +67,8 @@ Resources:
           initialCapacity: 1
           maxCapacity: 1
       NamespaceName: ${InventoryNamespaceName}
+    DependsOn:
+      - InventoryNamespace
 
 Outputs:
   IdentifierAcquireGoldUserName: ${IdentifierAcquireGoldUserName}

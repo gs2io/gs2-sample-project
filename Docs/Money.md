@@ -3,7 +3,7 @@
 [GS2-Money](https://app.gs2.io/docs/index.html#gs2-money) を使って管理されている課金通貨を、  
 [GS2-Showcase](https://app.gs2.io/docs/index.html#gs2-showcase) で販売するサンプルです。
 
-サンプルにで定義されている商品のうち１つには [GS2-Limit](https://app.gs2.io/docs/index.html#gs2-limit) による  
+サンプルで定義されている商品のうち１つには [GS2-Limit](https://app.gs2.io/docs/index.html#gs2-limit) による  
 購入回数の制限がついており、１回のみ購入が可能になっています。
 
 ![商品リスト](Products.png)

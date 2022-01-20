@@ -4,11 +4,13 @@ using Gs2.Core;
 using Gs2.Core.Exception;
 using Gs2.Core.Model;
 using Gs2.Gs2Matchmaking.Model;
+using Gs2.Sample.Friend;
 using Gs2.Unity.Gs2Matchmaking.Result;
 using Gs2.Util.LitJson;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.UI;
 
 namespace Gs2.Sample.Matchmaking
 {
@@ -29,6 +31,9 @@ namespace Gs2.Sample.Matchmaking
         private MatchmakingView _matchmakingView;
         [SerializeField]
         private JoinGatheringView _joinGatheringView;
+        
+        [SerializeField]
+        private FriendPresenter _friendPresenter;
         
         public enum State
         {
@@ -135,12 +140,13 @@ namespace Gs2.Sample.Matchmaking
 
                         foreach (var joinedPlayerId in joinedPlayerIds)
                         {
-                            var gamePlayerName = Instantiate<GameObject>(_matchmakingView.displayPlayerNamePrefab,
+                            var playerNameObject = Instantiate<GameObject>(_matchmakingView.displayPlayerNamePrefab,
                                 _matchmakingView.joinedPlayersContent.transform);
-                            var nameLabel = gamePlayerName.GetComponent<TextMeshProUGUI>();
-                            nameLabel.text = joinedPlayerId;
-                            nameLabel.enabled = true;
-                            gamePlayerName.SetActive(true);
+                            var playerNameView = playerNameObject.GetComponent<PlayerNameView>();
+                            playerNameView.userId.SetText(joinedPlayerId);
+                            playerNameView.userId.enabled = true;
+
+                            playerNameView.gameObject.SetActive(true);
                         }
                     }
                 }

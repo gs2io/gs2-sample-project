@@ -44,7 +44,6 @@ namespace Gs2.Sample.Gold
             ErrorEvent onError
         )
         {
-            EzInventoryModel inventoryModel;
             {
                 AsyncResult<EzGetInventoryModelResult> result = null;
                 yield return client.Inventory.GetInventoryModel(
@@ -61,9 +60,8 @@ namespace Gs2.Sample.Gold
                     yield break;
                 }
 
-                inventoryModel = result.Result.Item;
+                InventoryModel = result.Result.Item;
             }
-            List<EzItemModel> itemModels;
             {
                 AsyncResult<EzListItemModelsResult> result = null;
                 yield return client.Inventory.ListItemModels(
@@ -80,10 +78,10 @@ namespace Gs2.Sample.Gold
                     yield break;
                 }
 
-                itemModels = result.Result.Items;
+                ItemModels = result.Result.Items;
             }
 
-            onGetInventoryModel.Invoke(inventoryModelName, inventoryModel, itemModels);
+            onGetInventoryModel.Invoke(inventoryModelName, InventoryModel, ItemModels);
         }
 
         /// <summary>

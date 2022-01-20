@@ -4,13 +4,17 @@ using Gs2.Core;
 using Gs2.Core.Exception;
 using Gs2.Gs2Auth.Model;
 using Gs2.Sample.AccountTakeOver;
+using Gs2.Sample.Chat;
 using Gs2.Sample.Core.Runtime;
 using Gs2.Sample.Credential;
+using Gs2.Sample.Experience;
+using Gs2.Sample.Friend;
 using Gs2.Sample.Gacha;
 using Gs2.Sample.Gold;
 using Gs2.Sample.Inventory;
 using Gs2.Sample.Login;
 using Gs2.Sample.Money;
+using Gs2.Sample.News;
 using Gs2.Sample.Quest;
 using Gs2.Sample.Realtime;
 using Gs2.Sample.Stamina;
@@ -43,11 +47,14 @@ namespace Gs2.Sample
 
         private GameState gameState = GameState.START;
 
+        [Tooltip("アプリ起動時のアプリバージョンチェックをスキップします。")]
         public bool skipCheckVersion = true;
+        [Tooltip("アプリ起動時の利用規約チェックをスキップします。")]
         public bool skipCheckTerm = true;
+        
         [SerializeField] private VersionModel _versionModel;
         [SerializeField] private TermModel _termModel;
-        
+
         [SerializeField] public AccountTakeOverPresenter takeoverPresenter;
         
         [SerializeField] public StaminaPresenter staminaPresenter;
@@ -58,6 +65,10 @@ namespace Gs2.Sample
         [SerializeField] public QuestPresenter questPresenter;
         [SerializeField] public GachaStorePresenter gachaPresenter;
         [SerializeField] public UnitPresenter unitPresenter;
+        [SerializeField] public ExperiencePresenter experiencePresenter;
+        
+        [SerializeField] public ChatPresenter chatPresenter;
+        [SerializeField] public FriendPresenter friendPresenter;
         
         [SerializeField] public RealtimePresenter realtimePresenter;
         
@@ -146,7 +157,7 @@ namespace Gs2.Sample
         /// </summary>
         public void OnStart()
         {
-            UIManager.Instance.SetStateText(gameState.ToString());
+            UIManager.Instance.AddLog("GameState : " + gameState);
             UIManager.Instance.AddLog("GameManager::OnStart");
 
             InitializeCredential();
@@ -158,6 +169,7 @@ namespace Gs2.Sample
             
             UIManager.Instance.SetTapToStartInteractable(false);
             UIManager.Instance.SetTakeOverInteractable(false);
+            UIManager.Instance.SetNewsInteractable(false);
         }
 
         /// <summary>
@@ -576,10 +588,6 @@ namespace Gs2.Sample
             
             UIManager.Instance.SetAccountText(session.AccessToken.UserId);
             
-            var go = GameObject.Find("GameSession");
-            if (go != null)
-                Destroy(go);
-            
             _session.Session = session;
 
             if (!skipCheckVersion)
@@ -605,7 +613,7 @@ namespace Gs2.Sample
 
             if (result.Errors.Count > 0)
             {
-                UIManager.Instance.OpenDialog1("お知らせ", "最新のアプリがあります。");
+                UIManager.Instance.OpenDialog1("Notice", "最新のアプリがあります。");
                 UIManager.Instance.AddAcceptListner(OnRequestVersionCheck);
                 return;
             }
@@ -705,12 +713,13 @@ namespace Gs2.Sample
         {
             takeoverPresenter.Initialize();
             
-            UIManager.Instance.SetStateText(gameState.ToString());
+            UIManager.Instance.AddLog("GameState : " + gameState);
             UIManager.Instance.AddLog("GameManager::OnStartTitle");
             UIManager.Instance.CloseDialog();
             
             UIManager.Instance.SetTapToStartInteractable(true);
             UIManager.Instance.SetTakeOverInteractable(true);
+            UIManager.Instance.SetNewsInteractable(true);
         }
 
         /// <summary>
@@ -719,7 +728,7 @@ namespace Gs2.Sample
         public void OnTapToStart()
         {
             gameState = GameState.GAME_PLAY;
-            UIManager.Instance.SetStateText(gameState.ToString());
+            UIManager.Instance.AddLog("GameState : " + gameState);
             UIManager.Instance.AddLog("OnTapToStart");
 
             // ゲーム初期化
@@ -730,14 +739,17 @@ namespace Gs2.Sample
             StartCoroutine(goldPresenter.Initialize());
 
             StartCoroutine(inventoryPresenter.Initialize());
+            StartCoroutine(experiencePresenter.Initialize());
 
             StartCoroutine(questPresenter.Initialize());
-
             gachaPresenter.Initialize();
             StartCoroutine(unitPresenter.Initialize());
             
+            StartCoroutine(chatPresenter.Initialize());
+            friendPresenter.Initialize();
+            
             UIManager.Instance.SetTapToStartInteractable(false);
-            UIManager.Instance.SetTakeOverInteractable(false);
+            UIManager.Instance.SetNewsInteractable(false);
             UIManager.Instance.SetActiveGame(true);
         }
 
@@ -758,17 +770,21 @@ namespace Gs2.Sample
         public void OnLogout()
         {
             gameState = GameState.TITLE;
-            UIManager.Instance.SetStateText(gameState.ToString());
+            UIManager.Instance.AddLog("GameState : " + gameState);
             UIManager.Instance.AddLog("GameManager::OnLogout");
 
             UIManager.Instance.SetActiveGameProgress(false);
             UIManager.Instance.SetTapToStartInteractable(true);
             UIManager.Instance.SetTakeOverInteractable(true);
+            UIManager.Instance.SetNewsInteractable(true);
             UIManager.Instance.SetActiveGame(false);
             UIManager.Instance.CloseProcessing();
 
             questPresenter.Finish();
             gachaPresenter.Finish();
+            
+            chatPresenter.Finish();
+            friendPresenter.Finish();
             
             _realtimeModel.Clear();
         }

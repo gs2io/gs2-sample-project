@@ -29,16 +29,20 @@ Licensed under SIL Open Font License 1.1 ( http://scripts.sil.org/OFL )
 
 各機能を単独で動作させる方法、機能の詳細については以下のページで個別に解説しています。
 
-- [アカウントの作成・ログイン 解説](Docs/Login.md)
-- [バージョンチェック 解説](Docs/Version.md)
-- [アカウント引継ぎ 解説](Docs/Takeover.md)
-- [スタミナ/スタミナストア 解説](Docs/Stamina.md)
-- [課金通貨/課金通貨ストア 解説](Docs/Money.md)
-- [ゴールド/インベントリ 解説](Docs/Inventory.md)
-- [クエスト 解説](Docs/Quest.md)
-- [マッチメイキング 解説](Docs/Matchmaking.md)
-- [リアルタイム 解説](Docs/Realtime.md)
-- [ガチャ機能 解説](Docs/Gacha.md)
+- [アカウントの作成・ログイン 解説 (GS2-Account / GS2-Auth / GS2-Gateway)](Docs/Login.md)
+- [バージョンチェック 解説 (GS2-Version)](Docs/Version.md)
+- [アカウント引継ぎ 解説 (GS2-Account)](Docs/Takeover.md)
+- [お知らせ 解説 (GS2-News)](Docs/News.md)
+- [スタミナ/スタミナストア 解説 (GS2-Stamina)](Docs/Stamina.md)
+- [課金通貨/課金通貨ストア 解説 (GS2-Money / GS2-Showcase)](Docs/Money.md)
+- [ゴールド/インベントリ 解説 (GS2-Inventory)](Docs/Inventory.md)
+- [経験値 解説 (GS2-Experience)](Docs/Experience.md)
+- [クエスト 解説 (GS2-Quest)](Docs/Quest.md)
+- [ガチャ機能 解説 (GS2-Lottery)](Docs/Gacha.md)
+- [チャット 解説 (GS2-Chat)](Docs/Chat.md)
+- [フレンド 解説 (GS2-Friend)](Docs/Friend.md)
+- [マッチメイキング 解説 (GS2-Matchmaking)](Docs/Matchmaking.md)
+- [リアルタイム 解説 (GS2-Realtime)](Docs/Realtime.md)
 
 ## 起動の準備
 
@@ -63,25 +67,56 @@ Textの描画にTextMeshProを使用しています。
 
 Templatesフォルダの以下のファイルでスタックを作成します。  
 
-- [initialize_credential_template.yaml - クレデンシャル](Templates/initialize_credential_template.yaml)
-- [initialize_account_template.yaml - ログイン/アカウント連携・引継ぎ](Templates/initialize_account_template.yaml)
-- [initialize_stamina_template.yaml - スタミナ/スタミナストア](Templates/initialize_stamina_template.yaml)
-- [initialize_money_template.yaml - 課金通貨/課金通貨ストア](Templates/initialize_money_template.yaml)
-- [initialize_gold_template.yaml - ゴールド](Templates/initialize_gold_template.yaml)
-- [initialize_quest_template.yaml - クエスト](Templates/initialize_quest_template.yaml)
-- [initialize_realtime_template.yaml - マッチメイキング/リアルタイム対戦](Templates/initialize_realtime_template.yaml)
-- [initialize_inventory_template.yaml - インベントリ](Templates/initialize_inventory_template.yaml)
-- [initialize_gacha_template.yaml - ガチャ機能](Templates/initialize_gacha_template.yaml)
-- [initialize_jobqueue_template.yaml - JobQueue機能設定](Templates/initialize_jobqueue_template.yaml)
-- [initialize_unit_template.yaml - ガチャアイテム用インベントリ](Templates/initialize_unit_template.yaml)
+#### 必須のテンプレート
 
-※GS2-Version バージョンチェック機能を使う場合は作成
-- [initialize_version_template.yaml - アプリバージョンチェック](Templates/initialize_version_template.yaml)
-- [initialize_term_template.yaml - 利用規約チェック](Templates/initialize_term_template.yaml)
+| テンプレートファイル | 設定する機能 |
+---|---
+[initialize_credential_template.yaml](Templates/initialize_credential_template.yaml) |クレデンシャル GS2の初期化
+[initialize_account_template.yaml](Templates/initialize_account_template.yaml) |ログイン/アカウント連携・引継ぎ
 
-のスタックを作成します。  
+#### 各機能のテンプレート
+
+
+| テンプレートファイル | 設定する機能 |
+---|---
+[initialize_stamina_template.yaml](Templates/initialize_stamina_template.yaml) |スタミナ/スタミナストア
+[initialize_money_template.yaml](Templates/initialize_money_template.yaml) |課金通貨/課金通貨ストア
+[initialize_gold_template.yaml](Templates/initialize_gold_template.yaml) |ゴールド
+[initialize_inventory_template.yaml](Templates/initialize_inventory_template.yaml) |インベントリ
+[initialize_experience_template.yaml](Templates/initialize_experience_template.yaml) |経験値
+
+| テンプレートファイル | 設定する機能 |
+---|---
+[initialize_quest_template.yaml](Templates/initialize_quest_template.yaml) |クエスト
+[initialize_gacha_template.yaml](Templates/initialize_gacha_template.yaml) |ガチャ機能 
+[initialize_unit_template.yaml](Templates/initialize_unit_template.yaml) |ガチャアイテム用インベントリ ※ガチャ機能の動作に必要
+[initialize_jobqueue_template.yaml](Templates/initialize_jobqueue_template.yaml) |JobQueue機能設定 ※ガチャ機能の動作に必要
+
+| テンプレートファイル | 設定する機能 |
+---|---
+[initialize_chat_template.yaml](Templates/initialize_chat_template.yaml) |チャット
+[initialize_friend_template.yaml](Templates/initialize_friend_template.yaml) |フレンド機能
+
+| テンプレートファイル | 設定する機能 |
+---|---
+[initialize_realtime_template.yaml](Templates/initialize_realtime_template.yaml) |マッチメイキング/リアルタイム対戦
+
+#### 
+
+※GS2-News お知らせ機能を使う場合に作成
+
+| テンプレートファイル | 設定する機能 |
+---|---
+[initialize_news_template.yaml](Templates/initialize_news_template.yaml) |お知らせ
+
+※GS2-Version バージョンチェック機能を使う場合に作成
+
+| テンプレートファイル | 設定する機能 |
+---|---
+[initialize_version_template.yaml - アプリバージョンチェック](Templates/initialize_version_template.yaml)|アプリバージョンチェック
+[initialize_term_template.yaml - 利用規約チェック](Templates/initialize_term_template.yaml)|利用規約チェック
+
 しばらく待ってすべてのスタックの状態が `CREATE_COMPLETE` になればサーバ側の設定は完了です。
-
 
 ### Unity IAPの有効化、インポート
 
@@ -95,7 +130,7 @@ IAP パッケージのインポートを行います。
 ヒエラルキーウィンドウで `Gs2Settings`オブジェクト を選択します。
 
 インスペクターウィンドウで GS2-Deploy で作成したリソースの情報を登録します。  
-ダウンロード時に空欄になっている、以下の太字の項目に、  
+ダウンロード時は空欄になっている、以下の __太字__ の項目に、  
 各スタックの「アウトプット」より必要な情報をコピー・アンド・ペーストします。
 
 ![インスペクターウィンドウ](Docs/Gs2Settings.png)
@@ -105,8 +140,11 @@ IAP パッケージのインポートを行います。
 | __CredentialSetting__ | __Application Client Id__ | __GS2 にアクセスするためのクレデンシャル（クライアントID）__ |
 | __CredentialSetting__ | __Application Client Secret__ | __GS2 にアクセスするためのクレデンシャル（クライアントシークレット）__ |
 | LoginSetting | accountNamespaceName | GS2-Account のネームスペース名 |
-| LoginSetting | __accountEncryptionKeyId__ | GS2-Account でアカウント情報の暗号化に使用する GS2-Key の暗号鍵GRN |
+| __LoginSetting__ | __accountEncryptionKeyId__ | __GS2-Account でアカウント情報の暗号化に使用する GS2-Key の暗号鍵GRN__ |
 | LoginSetting | gatewayNamespaceName | GS2-Gateway のネームスペース名 |
+
+| スクリプトファイル | 設定名 | 説明 |
+-----------------|------|------
 | StaminaSetting | staminaNamespaceName | GS2-Stamina のネームスペース名 |
 | StaminaSetting | staminaModelName | GS2-Stamina のスタミナのモデル名 |
 | StaminaSetting | staminaName | GS2-Stamina のスタミナ名 |
@@ -125,23 +163,25 @@ IAP パッケージのインポートを行います。
 | GoldSetting | itemModelName | アイテムモデルの名前 |
 | __GoldSetting__ | __identifierAcquireGoldClientId__ | __ゴールドの増加が可能な権限のクライアントID__ |
 | __GoldSetting__ | __identifierAcquireGoldClientSecret__ | __ゴールドの増加が可能な権限のクライアントシークレット__ |
-| QuestSetting | questNamespaceName | GS2-Quest のネームスペース名 |
-| __QuestSetting__ | __questKeyId__ | __GS2-Quest で報酬の付与処理に発行するスタンプシートの署名計算に使用する暗号鍵__ |
-| QuestSetting | distributorNamespaceName | 報酬を配送する GS2-Distributor のネームスペース名 |
-| QuestSetting | queueNamespaceName | 報酬の付与に使用するGS2-JobQueue のネームスペース名 |
-| MatchmakingSetting | matchmakingNamespaceName | GS2-Matchmaking のネームスペース名 |
-| RealtimeSetting | realtimeNamespaceName | GS2-Realtime のネームスペース名 |
+
+| スクリプトファイル | 設定名 | 説明 |
+-----------------|------|------
 | InventorySetting | inventoryNamespaceName | GS2-Inventory のインベントリのネームスペース名 |
 | InventorySetting | inventoryModelName | GS2-Inventoryのインベントリのモデルのネームスペース名 |
 | __InventorySetting__ | __identifierAcquireItemClientId__ | __アイテムの増加が可能な権限のクライアントID__ |
 | __InventorySetting__ | __identifierAcquireItemClientSecret__ | __アイテムの増加が可能な権限のクライアントシークレット__ |
-| VersionSetting | versionNamespaceName | GS2-Version のアプリバージョンチェックのネームスペース名 |
-| VersionSetting | versionName | GS2-Version のアプリバージョンチェックのバージョン名 |
-| VersionSetting | currentVersionMajor | アプリの現在のバージョン番号　メジャー部分 |
-| VersionSetting | currentVersionMinor | アプリの現在のバージョン番号　マイナー部分 |
-| VersionSetting | currentVersionMicro | アプリの現在のバージョン番号　マイクロ部分 |
-| TermSetting | versionNamespaceName | GS2-Version の利用規約チェックのネームスペース名 |
-| TermSetting | versionName | GS2-Version の利用規約チェックのバージョン名 |
+| ExperienceSetting | experienceNamespaceName | GS2-Experience のネームスペース名 |
+| ExperienceSetting | playerExperienceModelName | GS2-Experienceのプレイヤー経験値テーブルのモデル名 |
+| ExperienceSetting | itemExperienceModelName | GS2-Experienceのアイテム経験値テーブルのモデル名 |
+| __ExperienceSetting__ | __identifierIncreaseExperienceClientId__ | __経験値の増加が可能な権限のクライアントID__ |
+| __ExperienceSetting__ | __identifierIncreaseExperienceClientSecret__ | __経験値の増加が可能な権限のクライアントシークレット__ |
+
+| スクリプトファイル | 設定名 | 説明 |
+-----------------|------|------
+| QuestSetting | questNamespaceName | GS2-Quest のネームスペース名 |
+| __QuestSetting__ | __questKeyId__ | __GS2-Quest で報酬の付与処理に発行するスタンプシートの署名計算に使用する暗号鍵__ |
+| QuestSetting | distributorNamespaceName | 報酬を配送する GS2-Distributor のネームスペース名 |
+| QuestSetting | queueNamespaceName | 報酬の付与に使用するGS2-JobQueue のネームスペース名 |
 | GachaSetting | lotteryNamespaceName | GS2-Lottery のネームスペース名 |
 | GachaSetting | jobqueueNamespaceName | GS2-JobQueue のネームスペース名 |
 | GachaSetting | showcaseNamespaceName | GS2-Showcase のネームスペース名 |
@@ -152,6 +192,28 @@ IAP パッケージのインポートを行います。
 | UnitSetting | inventoryModelName | GS2-Inventoryのガチャアイテム専用インベントリのモデルのネームスペース名 |
 | __UnitSetting__ | __identifierAcquireUnitClientId__ | __アイテムの増加が可能な権限のクライアントID__ |
 | __UnitSetting__ | __identifierAcquireUnitClientSecret__ | __アイテムの増加が可能な権限のクライアントシークレット__ |
+
+| スクリプトファイル | 設定名 | 説明 |
+-----------------|------|------
+| ChatSetting | chatNamespaceName | GS2-Chat のネームスペース名 |
+| ChatSetting | roomName | GS2-Chat のルーム名 |
+| FriendSetting | friendNamespaceName | GS2-Friend のネームスペース名 |
+
+| スクリプトファイル | 設定名 | 説明 |
+-----------------|------|------
+| MatchmakingSetting | matchmakingNamespaceName | GS2-Matchmaking のネームスペース名 |
+| RealtimeSetting | realtimeNamespaceName | GS2-Realtime のネームスペース名 |
+
+| スクリプトファイル | 設定名 | 説明 |
+-----------------|------|------
+| VersionSetting | versionNamespaceName | GS2-Version のアプリバージョンチェックのネームスペース名 |
+| VersionSetting | versionName | GS2-Version のアプリバージョンチェックのバージョン名 |
+| VersionSetting | currentVersionMajor | アプリの現在のバージョン番号　メジャー部分 |
+| VersionSetting | currentVersionMinor | アプリの現在のバージョン番号　マイナー部分 |
+| VersionSetting | currentVersionMicro | アプリの現在のバージョン番号　マイクロ部分 |
+| TermSetting | versionNamespaceName | GS2-Version の利用規約チェックのネームスペース名 |
+| TermSetting | versionName | GS2-Version の利用規約チェックのバージョン名 |
+| NewsSetting | newsNamespaceName | GS2-News のネームスペース名 |
 
 ### バージョンチェック機能の有効化
 
@@ -175,19 +237,29 @@ IAP パッケージのインポートを行います。
 
 [⇒アカウントの作成・ログイン 解説へ](Docs/Login.md)  
 [⇒バージョンチェック 解説へ](Docs/Version.md)  
-[⇒アカウント引継ぎ 解説へ](Docs/Takeover.md)  
 
 ![タイトル](Docs/Start.png)
-ログイン完了後、タイトル画面に遷移します。`アカウント連携` 機能を呼び出すことができます。  
+ログイン完了後、タイトル画面に遷移します。  
+`アカウント連携` 機能を呼び出すことができます。  
 作成ずみの匿名アカウントにメールアドレスや、  
 各プラットフォームで利用可能なGame Center/Google Play Game Service のアカウントを連携し、  
 引継ぎを実行できるようにする機能のサンプルです。
 （GS2-Account）
+`お知らせ` でWebViewを開き。お知らせのコンテンツを表示します。  
+（GS2-News）
+
+[⇒アカウント引継ぎ 解説へ](Docs/Takeover.md)  
+[⇒お知らせ 解説へ](Docs/News.md)
 
 `Tap to Start`　をタップするとゲーム内に遷移します。  
-「プレイヤー」「ゲームサイクル」「対戦」の各タブにアクセスが可能です。
+「プレイヤー」「ゲームサイクル」「コミュニティ」「対戦」の各タブにアクセスが可能です。
 
 ![プレイヤーステータス](Docs/status.png)
+
+左上に　__レベルと経験値__が表示されます。  
+（GS2-Experience）
+
+![プレイヤーステータス](Docs/status2.png)
 
 右上に　__スタミナ__、__課金通貨__、__ゴールド__ が表示されます。  
 （GS2-Stamina、GS2-Money、GS2-Inventory）
@@ -211,6 +283,10 @@ IAP パッケージのインポートを行います。
 
 [⇒ゴールド/インベントリ 解説へ](Docs/Inventory.md)
 
+`経験値を増加`　・・・　経験値を10増加させます。
+
+[⇒経験値 解説へ](Docs/Experience.md)
+ 
 ## ゲームサイクルタブ
 
 ![ゲームサイクル](Docs/GameCycle.png)
@@ -229,7 +305,29 @@ IAP パッケージのインポートを行います。
 （GS2-Inventory）
 
 [⇒ガチャストア 解説へ](Docs/Gacha.md)
-　
+
+## コミュニティタブ
+
+![コミュニティ](Docs/Community.png)
+
+`ルームを購読`　・・・　チャットのルームに対して購読を登録し、新着メッセージの投稿通知を受け取れるようにします。  
+`購読の解除`　・・・　チャットのルームの購読を解除します。
+（GS2-Chat）
+
+`プロフィール`　・・・　自プレイヤーのプロフィールの編集を行います。  
+`フレンド`　・・・　フレンドリストを表示します。  
+`送信中リクエスト`　・・・　自プレイヤーから他プレイヤーに送信中のフレンドリクエストの一覧を表示します。  
+`受信中リクエスト`　・・・　他プレイヤーから自プレイヤーに送信されたフレンドリクエストの一覧を表示します。    
+`ブラックリスト`　・・・　ブラックリストを表示します。  
+`フォロー`　・・・　フォロー中のプレイヤーの一覧を表示します。  
+（GS2-Friend）
+
+画面中央下の `＞` を押すとチャットウィンドウが開きます。
+
+![チャット](Docs/Chat.png)
+
+ChatSettingのroomNameに設定された名前のルームへのメッセージの送受信ができます。
+
 ## 対戦タブ
 
 ![対戦](Docs/Matching.png)
@@ -247,9 +345,9 @@ IAP パッケージのインポートを行います。
 
 [⇒リアルタイム 解説へ](Docs/Realtime.md)
 
-## ステータス
+## ストア
 
-![プレイヤーステータス](Docs/status.png)
+![プレイヤーステータス](Docs/status2.png)
 
 スタミナストア　（スタミナ表示の＋ボタン）・・・  
 GS2-Exchange と連携して GS2-Money を消費してスタミナ値を回復する商品の購入のサンプルです。  

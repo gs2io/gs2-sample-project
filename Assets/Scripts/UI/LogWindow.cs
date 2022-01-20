@@ -30,7 +30,7 @@ public class LogWindow : MonoBehaviour
 
         if (gameObject.activeInHierarchy)
         {
-            // スクロールバーを一番下に
+            // スクロールを一番下に
             StartCoroutine(ForceScrollDown());
         }
     }

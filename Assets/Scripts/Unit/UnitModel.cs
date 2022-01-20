@@ -17,8 +17,6 @@ namespace Gs2.Sample.Unit
 {
     public class UnitModel : MonoBehaviour
     {
-        public string InventoryNamespaceName;
-        
         public EzInventoryModel Model;
         
         public List<EzItemModel> ItemModels;

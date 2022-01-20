@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using Gs2.Sample.Core.Runtime;
 using UnityEngine;
 using UnityEngine.Assertions;
 

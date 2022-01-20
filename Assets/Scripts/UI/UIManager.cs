@@ -9,8 +9,6 @@ namespace Gs2.Sample
     public class UIManager : SingletonMonoBehaviour<UIManager>
     {
         [SerializeField]
-        public TextMeshProUGUI stateText = null;
-        [SerializeField]
         public TextMeshProUGUI saveSlotText = null;
         [SerializeField]
         public TextMeshProUGUI acountText = null;
@@ -23,6 +21,9 @@ namespace Gs2.Sample
         
         [SerializeField]
         public Dialog2 dialog2 = null;
+        
+        [SerializeField]
+        public WebViewDialog webViewDialog = null;
         
         [SerializeField]
         public GameObject processing = null;
@@ -39,6 +40,8 @@ namespace Gs2.Sample
         public Button TapToStart = null;
         [SerializeField]
         public Button TakeOver = null;
+        [SerializeField]
+        public Button News = null;
         [SerializeField]
         public GameObject titleToGame = null;
         [SerializeField]
@@ -59,6 +62,7 @@ namespace Gs2.Sample
             startToTitle.SetActive(false);
             TapToStart.interactable = false;
             TakeOver.interactable = false;
+            News.interactable = false;
             titleToGame.SetActive(false);
 
             OnTapTab(0);
@@ -70,13 +74,6 @@ namespace Gs2.Sample
 
         }
 
-        public void SetStateText(string text)
-        {
-            stateText.SetText(text);
-           
-            Debug.Log("State:" + text);
-        }
-        
         public void SetSaveSlotText(string text)
         {
             saveSlotText.SetText(text);
@@ -139,6 +136,31 @@ namespace Gs2.Sample
             dialog2.AddNegativeListener(callback);
         }
 
+        public void OpenWebViewDialog(string title, string url)
+        {
+            webViewDialog.Show(title, url);
+        }
+        
+        public void InitWebViewDialog(string title)
+        {
+            webViewDialog.Init(title);
+        }
+        
+        public void SetCookie(string key, string value)
+        {
+            webViewDialog.SetCookie(key, value);
+        }
+        
+        public bool isWebViewActiveAndEnabled()
+        {
+            return webViewDialog.isActiveAndEnabled;
+        }
+        
+        public void LoadURL(string url)
+        {
+            webViewDialog.LoadURL(url);
+        }
+        
         public void OpenProcessing()
         {
             processing.gameObject.SetActive(true);
@@ -201,6 +223,7 @@ namespace Gs2.Sample
         {
             TapToStart.interactable = enable ;
             TakeOver.interactable = enable;
+            News.interactable = enable;
         }
         
         /// <summary>
@@ -209,7 +232,16 @@ namespace Gs2.Sample
         /// <param name="enable"></param>
         public void SetTakeOverInteractable(bool enable)
         {
-            TakeOver.interactable = enable ;
+            TakeOver.interactable = enable;
+        }
+        
+        /// <summary>
+        /// お知らせボタン
+        /// </summary>
+        /// <param name="enable"></param>
+        public void SetNewsInteractable(bool enable)
+        {
+            News.interactable = enable;
         }
         
         /// <summary>
@@ -233,6 +265,11 @@ namespace Gs2.Sample
         public void OnTapTab(int value)
         {
             tabObject[value].GetComponent<RectTransform>().SetAsLastSibling();
+        }
+        
+        public void OnTapServiceLink(string url)
+        {
+            Application.OpenURL("https://app.gs2.io/docs/index.html#"+url.ToLower());
         }
     }
 }

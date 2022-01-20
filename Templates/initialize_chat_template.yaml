@@ -1,0 +1,27 @@
+﻿GS2TemplateFormatVersion: "2019-05-01"
+Description: GS2-Chat initialize template Version 2022-01-20
+
+Globals:
+  Alias:
+    ChatNamespaceName: chat
+    RoomName: chat
+    GatewayNamespaceName: gateway-0001
+
+Resources:
+
+  ChatNamespace:
+    Type: GS2::Chat::Namespace
+    Properties:
+      Name: ${ChatNamespaceName}
+      PostNotification:
+        GatewayNamespaceId: !Join
+          - ':'
+          - - 'grn'
+            - 'gs2'
+            - !GetAttr Gs2::Region
+            - !GetAttr Gs2::OwnerId
+            - 'gateway'
+            - ${GatewayNamespaceName}
+
+Outputs:
+  ChatNamespaceName: !GetAttr ChatNamespace.Item.Name
