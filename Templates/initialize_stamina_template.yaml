@@ -26,8 +26,8 @@ Resources:
         version: 2019-02-14
         staminaModels:
           - name: ${StaminaName}
-            recoverIntervalMinutes: 5
-            recoverValue: 1
+            recoverIntervalMinutes: 1
+            recoverValue: 5
             initialCapacity: 50
             isOverflow: true
             maxCapacity: 999

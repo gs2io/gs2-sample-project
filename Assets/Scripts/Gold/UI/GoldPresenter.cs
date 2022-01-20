@@ -18,15 +18,6 @@ namespace Gs2.Sample.Gold
         [SerializeField] private GoldModel _goldModel;
         [SerializeField] private GoldView _goldView;
 
-        /// <summary>
-        /// Gs2Client
-        /// </summary>
-        private Gs2Client _gs2Client;
-        /// <summary>
-        /// Gs2GameSession
-        /// </summary>
-        private Gs2GameSession _session;
-        
         // Start is called before the first frame update
         void Start()
         {
@@ -34,40 +25,12 @@ namespace Gs2.Sample.Gold
             Assert.IsNotNull(_goldModel);
         }
         
-        private void Validate()
-        {
-            if (_gs2Client == null)
-            {
-                _gs2Client = GameManager.Instance.Cllient;
-            }
-            if (_session == null)
-            {
-                _session = GameManager.Instance.Session;
-            }
-        }
-
         /// <summary>
         /// ゴールドの取得
         /// </summary>
         public IEnumerator Initialize()
         {
             UIManager.Instance.AddLog("GoldPresenter::Initialize");
-
-            Validate();
-                
-            void OnGetInventoryModel(
-                string inventoryName, 
-                EzInventoryModel inventoryModel, 
-                List<EzItemModel> itemModels
-            )
-            {
-                _goldSetting.onGetInventoryModel.RemoveListener(OnGetInventoryModel);
-                
-                _goldModel.InventoryModel = inventoryModel;
-                _goldModel.ItemModels = itemModels;
-            }
-            
-            _goldSetting.onGetInventoryModel.AddListener(OnGetInventoryModel);
         
             yield return _goldModel.GetInventoryModel(
                 GameManager.Instance.Cllient.Client,
@@ -105,7 +68,7 @@ namespace Gs2.Sample.Gold
             
             yield return _goldModel.GetInventory(
                 GameManager.Instance.Cllient.Client,
-                _session.Session,
+                GameManager.Instance.Session.Session,
                 _goldSetting.inventoryNamespaceName,
                 _goldModel.InventoryModel.Name,
                 _goldSetting.onGetInventory,
@@ -133,7 +96,7 @@ namespace Gs2.Sample.Gold
         {
             StartCoroutine(
                 _goldModel.Acquire(
-                    _session.Session,
+                    GameManager.Instance.Session.Session,
                     _goldSetting.identifierAcquireGoldClientId,
                     _goldSetting.identifierAcquireGoldClientSecret,
                     _goldSetting.inventoryNamespaceName,

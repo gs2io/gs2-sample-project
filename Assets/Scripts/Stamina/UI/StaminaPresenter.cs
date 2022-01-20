@@ -201,26 +201,6 @@ namespace Gs2.Sample.Stamina
         /// <returns></returns>
         public IEnumerator Refresh()
         {
-            void RefreshStaminaAction(
-                EzStaminaModel staminaModelTemp, 
-                EzStamina stamina
-            )
-            {
-                if (staminaModelTemp.Name != _staminaModel.staminaModel.Name)
-                {
-                    return;
-                }
-
-                _staminaModel.stamina = stamina;
-                _staminaView.SetStamina(stamina);
-                
-                _staminaSetting.onGetStamina.RemoveListener(RefreshStaminaAction);
-                
-                UIManager.Instance.AddLog("stamina.Value : " + stamina.Value);
-            }
-
-            _staminaSetting.onGetStamina.AddListener(RefreshStaminaAction);
-            
             AsyncResult<EzGetStaminaResult> result = null;
             yield return _staminaModel.GetStamina(
                 r => result = r,

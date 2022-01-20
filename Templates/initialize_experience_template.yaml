@@ -1,0 +1,104 @@
+GS2TemplateFormatVersion: "2019-05-01"
+Description: GS2-Experience initialize template Version 2022-01-20
+
+Globals:
+    Alias:
+        ExperienceNamespaceName: experience
+        ExperienceModelName: unit
+        PlayerExperienceModelName: player
+        EnableDebugIncreaseExperienceAction: 'True'
+        IdentifierIncreaseExperiencePolicyName: experience-increase
+        IdentifierIncreaseExperienceUserName: experience-increase
+
+Resources:
+    ExperienceNamespace:
+        Type: GS2::Experience::Namespace
+        Properties:
+            Name: ${ExperienceNamespaceName}
+
+    ExperienceSettings:
+        Type: GS2::Experience::CurrentExperienceMaster
+        Properties:
+            NamespaceName: ${ExperienceNamespaceName}
+            Settings:
+                version: 2019-01-11
+                experienceModels:
+                  - name: ${ExperienceModelName}
+                    defaultRankCap: 6
+                    maxRankCap: 6
+                    rankThreshold:
+                      values: 
+                        - 100
+                        - 300
+                        - 1000
+                        - 3000
+                        - 10000
+                  - name: ${PlayerExperienceModelName}
+                    defaultRankCap: 15
+                    maxRankCap: 15
+                    rankThreshold:
+                      values:
+                        - 10
+                        - 30
+                        - 60
+                        - 100
+                        - 150
+                        - 210
+                        - 280
+                        - 360
+                        - 450
+                        - 550
+                        - 660
+                        - 780
+                        - 910
+                        - 1050
+                        - 1200
+        DependsOn:
+            - ExperienceNamespace
+
+    IdentifierIncreaseExperiencePolicy:
+        Type: GS2::Identifier::SecurityPolicy
+        Properties:
+            Name: ${IdentifierIncreaseExperiencePolicyName}
+            Policy:
+                Version: "2016-04-01"
+                Statements:
+                - Effect: Allow
+                  Actions:
+                  - Gs2Experience:AddExperienceByUserId
+                  Resources: 
+                  - '*'
+
+    IdentifierIncreaseExperienceUser:
+        Type: GS2::Identifier::User
+        Properties:
+            Name: ${IdentifierIncreaseExperienceUserName}
+
+    IdentifierIncreaseExperienceUserAttachPolicy:
+        Type: GS2::Identifier::AttachSecurityPolicy
+        Properties:
+            UserName: ${IdentifierIncreaseExperienceUserName}
+            SecurityPolicyId:
+                '!GetAttr': IdentifierIncreaseExperiencePolicy.Item.SecurityPolicyId
+        DependsOn:
+            - IdentifierIncreaseExperiencePolicy
+            - IdentifierIncreaseExperienceUser
+
+    IdentifierIncreaseExperienceIdentifier:
+        Type: GS2::Identifier::Identifier
+        Properties:
+            UserName: ${IdentifierIncreaseExperienceUserName}
+        DependsOn:
+            - IdentifierIncreaseExperienceUser
+
+Outputs:
+    ExperienceNamespaceName: ${ExperienceNamespaceName}
+    ExperienceModelName: ${ExperienceModelName}
+    PlayerExperienceModelName: ${PlayerExperienceModelName}
+    EnableDebugIncreaseExperienceAction: ${EnableDebugIncreaseExperienceAction}
+    IdentifierIncreaseExperiencePolicyName: ${IdentifierIncreaseExperiencePolicyName}
+    IdentifierIncreaseExperienceUserName: ${IdentifierIncreaseExperienceUserName}
+    IdentifierIncreaseExperienceClientSecret:
+        '!GetAttr': IdentifierIncreaseExperienceIdentifier.ClientSecret
+    IdentifierIncreaseExperienceClientId:
+        '!GetAttr': IdentifierIncreaseExperienceIdentifier.Item.ClientId

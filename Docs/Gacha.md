@@ -146,8 +146,8 @@ StartCoroutine(
 ![ガチャ商品購入](GachaStore.png)
 
 発行されたスタンプシートに含まれている抽選結果をつかい、必要であればクライアントはガチャ演出等を再生したのち、  
-取得したアイテムの一覧表示可能です。  
-スタンプシートの実行後、サーバ側で [GS2-JobQueue](https://app.gs2.io/docs/index.html#gs2-jobqueue) を使用して順にインベントリーへのアイテム入手処理が実行されます。
+取得したアイテムの一覧表示が可能です。  
+スタンプシートの実行後、サーバ側で [GS2-JobQueue](https://app.gs2.io/docs/index.html#gs2-jobqueue) を使用して、順にインベントリーへのアイテム入手処理が実行されます。
 
 ```c#
 // Lottery 抽選処理の結果を取得

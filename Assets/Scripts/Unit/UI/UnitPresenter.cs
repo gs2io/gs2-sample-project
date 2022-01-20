@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Gs2.Sample.Experience;
 using Gs2.Sample.Inventory;
 using Gs2.Unity.Gs2Distributor.Result;
 using Gs2.Unity.Gs2Inventory.Model;
@@ -14,11 +15,17 @@ namespace Gs2.Sample.Unit
 {
     public class UnitPresenter : MonoBehaviour
     {
-        [SerializeField] private UnitSetting _unitSetting;
+        [SerializeField]
+        private UnitSetting _unitSetting;
         
-        [SerializeField] public UnitModel _unitModel;
-        [SerializeField] public UnitView _unitView;
-
+        [SerializeField]
+        private UnitModel _unitModel;
+        [SerializeField]
+        private UnitView _unitView;
+        
+        [SerializeField]
+        private ExperiencePresenter _experiencePresenter;
+        
         public UpdateInventoryEvent onUpdateInventoryEvent = new UpdateInventoryEvent();
 
         public enum State
@@ -132,6 +139,8 @@ namespace Gs2.Sample.Unit
             
             yield return Refresh();
 
+            yield return _experiencePresenter.RefreshItemExperience();
+            
             SetState(State.InventoryMenu);
         }
         
@@ -190,7 +199,9 @@ namespace Gs2.Sample.Unit
                     _unitModel.ItemModels.First(itemModel => itemModel.Name == itemSet.ItemName),
                     itemSet
                 );
-                item.onClickItem.AddListener(OnClickItem);
+                
+                item.onClickItem.AddListener(_experiencePresenter.OnClickItem);
+                
                 item.gameObject.SetActive(true);
             }
 
@@ -236,7 +247,7 @@ namespace Gs2.Sample.Unit
         /// アイテムを消費する リクエスト
         /// </summary>
         /// <param name="itemSet"></param>
-        public void OnClickItem(
+        public void OnClickDecreaseItem(
             EzItemSet itemSet
         )
         {

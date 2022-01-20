@@ -562,7 +562,7 @@ namespace Gs2.Sample.Quest
         /// <summary>
         /// クエスト完了ダイアログを閉じる
         /// </summary>
-        public void ClickToQuestClearClose()
+        public void ClickToCloseQuestClear()
         {
             SetState(State.MainMenu);
         }

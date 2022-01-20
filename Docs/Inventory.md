@@ -17,7 +17,7 @@
 | inventoryNamespaceName | GS2-Inventory のネームスペース名 |
 | inventoryModelName | GS2-Inventory のモデル名 |
 | ItemModelName | GS2-Inventory のCurrentItemModelMasterでのゴールドの種類名 |
-| identifierAcquireGoldClientId | ゴールドの増加が可能な権限のクライアントID__ |
+| identifierAcquireGoldClientId | ゴールドの増加が可能な権限のクライアントID |
 | identifierAcquireGoldClientSecret | ゴールドの増加が可能な権限のクライアントシークレット |
 
 | イベント | 説明 |
