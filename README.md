@@ -8,8 +8,8 @@ GS2の各種機能を使った実装サンプルです。
 
 Unity 2019.4.34f1
 
-GS2 SDK for Unity　2021.12.5  
-GS2 C# SDK　2021.12.5
+GS2 SDK for Unity　2022.1.1  
+GS2 C# SDK　2022.1.1
 
 ## 注意事項
 
@@ -113,8 +113,8 @@ Templatesフォルダの以下のファイルでスタックを作成します�
 
 | テンプレートファイル | 設定する機能 |
 ---|---
-[initialize_version_template.yaml - アプリバージョンチェック](Templates/initialize_version_template.yaml)|アプリバージョンチェック
-[initialize_term_template.yaml - 利用規約チェック](Templates/initialize_term_template.yaml)|利用規約チェック
+[initialize_version_template.yaml](Templates/initialize_version_template.yaml)|アプリバージョンチェック
+[initialize_term_template.yaml](Templates/initialize_term_template.yaml)|利用規約チェック
 
 しばらく待ってすべてのスタックの状態が `CREATE_COMPLETE` になればサーバ側の設定は完了です。
 

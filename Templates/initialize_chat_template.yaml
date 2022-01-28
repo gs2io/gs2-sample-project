@@ -4,7 +4,6 @@ Description: GS2-Chat initialize template Version 2022-01-20
 Globals:
   Alias:
     ChatNamespaceName: chat
-    RoomName: chat
     GatewayNamespaceName: gateway-0001
 
 Resources:
