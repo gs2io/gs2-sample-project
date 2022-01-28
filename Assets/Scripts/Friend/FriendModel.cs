@@ -32,7 +32,7 @@ namespace Gs2.Sample.Friend
 	    public List<string> BlackList;
 	    
 	    /// <summary>
-	    /// ブラックリスト
+	    /// フォロワーリスト
 	    /// </summary>
 	    public List<EzFollowUser> FollowUsers;
 	    

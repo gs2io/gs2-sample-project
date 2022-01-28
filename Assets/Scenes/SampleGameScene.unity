@@ -3526,6 +3526,7 @@ MonoBehaviour:
   stamina:
     StaminaName: 
     Value: 0
+    OverflowValue: 0
     MaxValue: 0
     RecoverIntervalMinutes: 0
     RecoverValue: 0
@@ -25024,6 +25025,11 @@ PrefabInstance:
     - target: {fileID: 4303174545109613964, guid: b403812372d544a42bdf13763929a058,
         type: 3}
       propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5573095999530320920, guid: b403812372d544a42bdf13763929a058,
+        type: 3}
+      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5740150210334524794, guid: b403812372d544a42bdf13763929a058,

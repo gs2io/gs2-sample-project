@@ -29,7 +29,8 @@ namespace Gs2.Sample.Friend
         [SerializeField] private FriendBlackListView _friendBlackListView;
         
         [SerializeField] private FriendFollowListView _friendFollowListView;
-
+        [SerializeField] private FollowerProfileView _followerProfileView;
+        
         /// <summary>
         /// 通知の種別
         /// </summary>
@@ -766,7 +767,7 @@ namespace Gs2.Sample.Friend
                     var friendNameView = friendNameObject.GetComponent<FriendNameView>();
                     friendNameView.userId.SetText(user.UserId);
                     friendNameView.profile.onClick.AddListener(
-                        () => { OnOpenPublicProfile(user.UserId); }
+                        () => { OnOpenFollowerProfile(user.UserId); }
                     );
                     friendNameView.delete.onClick.AddListener(
                         () => { OnClickUnfollow(user.UserId); }
@@ -776,6 +777,22 @@ namespace Gs2.Sample.Friend
             }
             
             _friendFollowListView.OnOpenEvent();
+        }
+
+        private void OnOpenFollowerProfile(string userId)
+        {
+            if (_friendModel.FollowUsers != null)
+            {
+                var followUser = _friendModel.FollowUsers.Find(f => f.UserId == userId);
+                if (followUser != null)
+                {
+                    _followerProfileView.SetUserId(followUser.UserId);
+                    _followerProfileView.SetPublicProfile(followUser.PublicProfile);
+                    _followerProfileView.SetFollowerProfile(followUser.FollowerProfile);
+
+                    _followerProfileView.OnOpenEvent();
+                }
+            }
         }
     }
 }
