@@ -7,6 +7,12 @@
       "dependencies": {},
       "hash": "50a67d8f419b6cea0398eff6c19cf0bbe11ed609"
     },
+    "com.unity.2d.sprite": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {}
+    },
     "com.unity.ext.nunit": {
       "version": "1.0.6",
       "depth": 2,
@@ -24,7 +30,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ide.visualstudio": {
-      "version": "2.0.12",
+      "version": "2.0.14",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -108,7 +114,7 @@
       }
     },
     "io.gs2.csharp.sdk": {
-      "version": "2021.12.5",
+      "version": "2022.1.1",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -117,11 +123,11 @@
       "url": "https://upm.gs2.io/npm"
     },
     "io.gs2.unity.sdk": {
-      "version": "2021.12.5",
+      "version": "2022.1.1",
       "depth": 0,
       "source": "registry",
       "dependencies": {
-        "io.gs2.csharp.sdk": "2021.12.5"
+        "io.gs2.csharp.sdk": "2022.1.1"
       },
       "url": "https://upm.gs2.io/npm"
     },
