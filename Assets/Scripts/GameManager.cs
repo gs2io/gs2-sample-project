@@ -14,7 +14,6 @@ using Gs2.Sample.Gold;
 using Gs2.Sample.Inventory;
 using Gs2.Sample.Login;
 using Gs2.Sample.Money;
-using Gs2.Sample.News;
 using Gs2.Sample.Quest;
 using Gs2.Sample.Realtime;
 using Gs2.Sample.Stamina;
@@ -170,6 +169,7 @@ namespace Gs2.Sample
             UIManager.Instance.SetTapToStartInteractable(false);
             UIManager.Instance.SetTakeOverInteractable(false);
             UIManager.Instance.SetNewsInteractable(false);
+            UIManager.Instance.SetFinishButtonInteractable(false);
         }
 
         /// <summary>
@@ -233,6 +233,28 @@ namespace Gs2.Sample
         }
 
         /// <summary>
+        /// アプリケーション終了
+        /// </summary>
+        public void OnFinish()
+        {
+            UIManager.Instance.AddLog("GameManager::OnFinish");
+
+            FinalizeCredential();
+
+            gameState = GameState.START;
+            
+            UIManager.Instance.SetStartButtonInteractable(true);
+            UIManager.Instance.SetSelectAccountButtonInteractable(true);
+            UIManager.Instance.SetRemoveAccountButtonInteractable(true);
+            UIManager.Instance.SetActiveTitleProgress(false);
+            
+            UIManager.Instance.SetTapToStartInteractable(false);
+            UIManager.Instance.SetTakeOverInteractable(false);
+            UIManager.Instance.SetNewsInteractable(false);
+            UIManager.Instance.SetFinishButtonInteractable(false);
+        }
+        
+        /// <summary>
         /// クレデンシャル　終期化
         /// </summary>
         public void FinalizeCredential()
@@ -257,12 +279,15 @@ namespace Gs2.Sample
             FinalizeGs2AccountEvent onFinalizeGs2
         )
         {
-            Assert.IsNotNull(profile, "profile != null");
-            Assert.IsNotNull(onFinalizeGs2, "onFinalizeGs2 != null");
-            
+            if (profile == null)
+                yield break;
+
             yield return profile.Finalize();
 
-            onFinalizeGs2.Invoke(profile);
+            if (onFinalizeGs2 != null)
+                onFinalizeGs2.Invoke(profile);
+
+            yield return null;
         }
 
         /// <summary>
@@ -720,6 +745,7 @@ namespace Gs2.Sample
             UIManager.Instance.SetTapToStartInteractable(true);
             UIManager.Instance.SetTakeOverInteractable(true);
             UIManager.Instance.SetNewsInteractable(true);
+            UIManager.Instance.SetFinishButtonInteractable(true);
         }
 
         /// <summary>
@@ -750,6 +776,7 @@ namespace Gs2.Sample
             
             UIManager.Instance.SetTapToStartInteractable(false);
             UIManager.Instance.SetNewsInteractable(false);
+            UIManager.Instance.SetFinishButtonInteractable(false);
             UIManager.Instance.SetActiveGame(true);
         }
 
@@ -770,6 +797,7 @@ namespace Gs2.Sample
         public void OnLogout()
         {
             gameState = GameState.TITLE;
+            
             UIManager.Instance.AddLog("GameState : " + gameState);
             UIManager.Instance.AddLog("GameManager::OnLogout");
 
@@ -777,6 +805,7 @@ namespace Gs2.Sample
             UIManager.Instance.SetTapToStartInteractable(true);
             UIManager.Instance.SetTakeOverInteractable(true);
             UIManager.Instance.SetNewsInteractable(true);
+            UIManager.Instance.SetFinishButtonInteractable(true);
             UIManager.Instance.SetActiveGame(false);
             UIManager.Instance.CloseProcessing();
 

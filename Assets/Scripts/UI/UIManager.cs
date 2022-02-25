@@ -31,6 +31,8 @@ namespace Gs2.Sample
         [SerializeField]
         public Button startButton = null;
         [SerializeField]
+        public Button finishButton = null;
+        [SerializeField]
         public Button selectAccountButton = null;
         [SerializeField]
         public Button removeAccountButton = null;
@@ -63,6 +65,7 @@ namespace Gs2.Sample
             TapToStart.interactable = false;
             TakeOver.interactable = false;
             News.interactable = false;
+            finishButton.interactable = false;
             titleToGame.SetActive(false);
 
             OnTapTab(0);
@@ -178,6 +181,15 @@ namespace Gs2.Sample
         public void SetStartButtonInteractable(bool enable)
         {
             startButton.interactable = enable;
+        }
+        
+        /// <summary>
+        /// アプリ終了ボタン
+        /// </summary>
+        /// <param name="enable"></param>
+        public void SetFinishButtonInteractable(bool enable)
+        {
+            finishButton.interactable = enable;
         }
         
         /// <summary>

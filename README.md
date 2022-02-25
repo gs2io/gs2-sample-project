@@ -6,10 +6,10 @@ GS2の各種機能を使った実装サンプルです。
 
 ## 動作環境
 
-Unity 2019.4.34f1
+Unity 2019.4.36f1
 
-GS2 SDK for Unity　2022.1.2  
-GS2 C# SDK　2022.1.2
+GS2 SDK for Unity　2022.2.6  
+GS2 C# SDK　2022.2.6
 
 ## 注意事項
 

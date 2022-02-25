@@ -179,18 +179,18 @@ namespace Gs2.Sample.Matchmaking
             if (message.issuer.EndsWith(":Join"))
             {
                 var notification = JsonMapper.ToObject<JoinNotification>(message.payload);
-                if (!_matchmakingModel.JoinedPlayerIds.Contains(notification.JoinUserId))
+                if (!_matchmakingModel.JoinedPlayerIds.Contains(notification.joinUserId))
                 {
-                    _matchmakingModel.JoinedPlayerIds.Add(notification.JoinUserId);
-                    _userId = notification.JoinUserId;
+                    _matchmakingModel.JoinedPlayerIds.Add(notification.joinUserId);
+                    _userId = notification.joinUserId;
                     _recievedNotification = true;
                 }
             }
             else if (message.issuer.EndsWith(":Leave"))
             {
                 var notification = JsonMapper.ToObject<LeaveNotification>(message.payload);
-                _matchmakingModel.JoinedPlayerIds.Remove(notification.LeaveUserId);
-                _userId = notification.LeaveUserId;
+                _matchmakingModel.JoinedPlayerIds.Remove(notification.leaveUserId);
+                _userId = notification.leaveUserId;
                 _recievedNotification = true;
             }
             else if (message.issuer.EndsWith(":Complete"))
