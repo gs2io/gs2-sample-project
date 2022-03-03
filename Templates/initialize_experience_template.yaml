@@ -98,7 +98,5 @@ Outputs:
     EnableDebugIncreaseExperienceAction: ${EnableDebugIncreaseExperienceAction}
     IdentifierIncreaseExperiencePolicyName: ${IdentifierIncreaseExperiencePolicyName}
     IdentifierIncreaseExperienceUserName: ${IdentifierIncreaseExperienceUserName}
-    IdentifierIncreaseExperienceClientSecret:
-        '!GetAttr': IdentifierIncreaseExperienceIdentifier.ClientSecret
-    IdentifierIncreaseExperienceClientId:
-        '!GetAttr': IdentifierIncreaseExperienceIdentifier.Item.ClientId
+    IdentifierIncreaseExperienceClientSecret: !GetAttr IdentifierIncreaseExperienceIdentifier.ClientSecret
+    IdentifierIncreaseExperienceClientId: !GetAttr IdentifierIncreaseExperienceIdentifier.Item.ClientId

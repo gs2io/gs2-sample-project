@@ -63,7 +63,5 @@ Outputs:
   IdentifierAcquireItemPolicyName: ${IdentifierAcquireItemPolicyName}
   IdentifierAcquireItemUserName: ${IdentifierAcquireItemUserName}
   EnableDebugAcquireItemAction: ${EnableDebugAcquireItemAction}
-  IdentifierAcquireItemClientId:
-    '!GetAttr': IdentifierAcquireItemIdentifier.Item.ClientId
-  IdentifierAcquireItemClientSecret:
-    '!GetAttr': IdentifierAcquireItemIdentifier.ClientSecret
+  IdentifierAcquireItemClientId: !GetAttr IdentifierAcquireItemIdentifier.Item.ClientId
+  IdentifierAcquireItemClientSecret: !GetAttr IdentifierAcquireItemIdentifier.ClientSecret

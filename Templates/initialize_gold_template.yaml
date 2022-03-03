@@ -74,10 +74,8 @@ Outputs:
   IdentifierAcquireGoldUserName: ${IdentifierAcquireGoldUserName}
   ItemModelName: ${ItemModelName}
   IdentifierAcquireGoldPolicyName: ${IdentifierAcquireGoldPolicyName}
-  IdentifierAcquireGoldClientSecret:
-    '!GetAttr': IdentifierAcquireGoldIdentifier.ClientSecret
-  IdentifierAcquireGoldClientId:
-    '!GetAttr': IdentifierAcquireGoldIdentifier.Item.ClientId
+  IdentifierAcquireGoldClientSecret: !GetAttr IdentifierAcquireGoldIdentifier.ClientSecret
+  IdentifierAcquireGoldClientId: !GetAttr IdentifierAcquireGoldIdentifier.Item.ClientId
   LimitOfCount: ${LimitOfCount}
   InventoryModelName: ${InventoryModelName}
   EnableDebugAcquireGoldAction: ${EnableDebugAcquireGoldAction}
