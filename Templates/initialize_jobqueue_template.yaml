@@ -13,5 +13,4 @@ Resources:
 
 Outputs:
   JobQueueNamespaceName: ${JobQueueNamespaceName}
-  JobQueueNamespaceId:
-    '!GetAttr': JobQueueNamespace.Item.NamespaceId
+  JobQueueNamespaceId: !GetAttr JobQueueNamespace.Item.NamespaceId
