@@ -13,6 +13,7 @@ using Gs2.Sample.Gacha;
 using Gs2.Sample.Gold;
 using Gs2.Sample.Inventory;
 using Gs2.Sample.Login;
+using Gs2.Sample.Matchmaking;
 using Gs2.Sample.Money;
 using Gs2.Sample.Quest;
 using Gs2.Sample.Realtime;
@@ -69,6 +70,7 @@ namespace Gs2.Sample
         [SerializeField] public ChatPresenter chatPresenter;
         [SerializeField] public FriendPresenter friendPresenter;
         
+        [SerializeField] public MatchmakingPresenter matchmakingPresenter;
         [SerializeField] public RealtimePresenter realtimePresenter;
         
         /// <summary>
@@ -774,6 +776,9 @@ namespace Gs2.Sample
             StartCoroutine(chatPresenter.Initialize());
             friendPresenter.Initialize();
             
+            matchmakingPresenter.Initialize();
+            realtimePresenter.Initialize();
+            
             UIManager.Instance.SetTapToStartInteractable(false);
             UIManager.Instance.SetNewsInteractable(false);
             UIManager.Instance.SetFinishButtonInteractable(false);
@@ -815,6 +820,8 @@ namespace Gs2.Sample
             chatPresenter.Finish();
             friendPresenter.Finish();
             
+            matchmakingPresenter.Finish();
+            realtimePresenter.Finish();
             _realtimeModel.Clear();
         }
         
@@ -825,9 +832,9 @@ namespace Gs2.Sample
         /// <param name="joinPlayerIds"></param>
         public void OnCompleteMatchmaking(EzGathering gathering, List<string> joinPlayerIds)
         {
-            _realtimeModel.gatheringId = gathering.Name;
+            _realtimeModel.gatheringName = gathering.Name;
             
-            realtimePresenter.Initialize();
+            realtimePresenter.StartGetRoom();
         }
     }
 }

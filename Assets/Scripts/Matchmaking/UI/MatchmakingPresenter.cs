@@ -32,9 +32,6 @@ namespace Gs2.Sample.Matchmaking
         [SerializeField]
         private JoinGatheringView _joinGatheringView;
         
-        [SerializeField]
-        private FriendPresenter _friendPresenter;
-        
         public enum State
         {
             MainMenu,
@@ -124,8 +121,11 @@ namespace Gs2.Sample.Matchmaking
             _matchmakingSetting.onUpdateJoinedPlayerIds.AddListener(
                 (gathering, joinedPlayerIds) =>
                 {
-                    Debug.Log("onUpdateJoinedPlayerIds");
-                    
+                    foreach (var joinedPlayerId in joinedPlayerIds)
+                    {
+                        Debug.Log("onUpdateJoinedPlayerIds : " + joinedPlayerId);
+                    }
+
                     _matchmakingView.displayPlayerNamePrefab.SetActive(false);
 
                     if (_matchmakingView.joinedPlayersContent != null)
@@ -158,7 +158,7 @@ namespace Gs2.Sample.Matchmaking
             GameManager.Instance.Cllient.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
         }
         
-        public void OnClose()
+        public void Finish()
         {
             GameManager.Instance.Cllient.Profile.Gs2Session.OnNotificationMessage -= PushNotificationHandler;
         }
@@ -178,25 +178,24 @@ namespace Gs2.Sample.Matchmaking
 
             if (message.issuer.EndsWith(":Join"))
             {
-                var notification = JsonMapper.ToObject<JoinNotification>(message.payload);
-                if (!_matchmakingModel.JoinedPlayerIds.Contains(notification.joinUserId))
+                var notification = JoinNotification.FromJson(JsonMapper.ToObject(message.payload));
+                if (!_matchmakingModel.JoinedPlayerIds.Contains(notification.JoinUserId))
                 {
-                    _matchmakingModel.JoinedPlayerIds.Add(notification.joinUserId);
-                    _userId = notification.joinUserId;
+                    _matchmakingModel.JoinedPlayerIds.Add(notification.JoinUserId);
+                    _userId = notification.JoinUserId;
                     _recievedNotification = true;
                 }
             }
             else if (message.issuer.EndsWith(":Leave"))
             {
-                var notification = JsonMapper.ToObject<LeaveNotification>(message.payload);
-                _matchmakingModel.JoinedPlayerIds.Remove(notification.leaveUserId);
-                _userId = notification.leaveUserId;
+                var notification = LeaveNotification.FromJson(JsonMapper.ToObject(message.payload));
+                _matchmakingModel.JoinedPlayerIds.Remove(notification.LeaveUserId);
+                _userId = notification.LeaveUserId;
                 _recievedNotification = true;
             }
             else if (message.issuer.EndsWith(":Complete"))
             {
                 _recievedNotification = true;
-                _complete = true;
             }
         }
         
@@ -228,8 +227,6 @@ namespace Gs2.Sample.Matchmaking
                         // DoMatchmaking の応答より先にマッチメイキング完了通知が届くことがある
                         SetState(State.Complete);
                         _matchmakingSetting.onMatchmakingComplete.Invoke(_matchmakingModel.Gathering, _matchmakingModel.JoinedPlayerIds);
-
-                        OnClose();
                     }
                 }
                 
@@ -288,8 +285,6 @@ namespace Gs2.Sample.Matchmaking
         /// </summary>
         public void OnClickToCreateGathering()
         {
-            Initialize();
-            
             SetState(State.CreateGatheringMenu);
         }
 
@@ -331,8 +326,6 @@ namespace Gs2.Sample.Matchmaking
         /// </summary>
         public void OnClickToJoinGathering()
         {
-            Initialize();
-            
             SetState(State.JoinGathering);
             
             StartCoroutine(
@@ -400,17 +393,6 @@ namespace Gs2.Sample.Matchmaking
                         SetState(result.Error == null
                             ? State.Matchmaking
                             : State.Error);
-                    }
-
-                    if (_complete)
-                    {
-                        SetState(State.Complete);
-                        
-                        _matchmakingSetting.onMatchmakingComplete.Invoke(_matchmakingModel.Gathering, _matchmakingModel.JoinedPlayerIds);
-                        
-                        OnClose();
-                        
-                        yield break;
                     }
                 }
 

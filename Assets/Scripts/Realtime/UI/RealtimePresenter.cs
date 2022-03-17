@@ -2,10 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using Google.Protobuf;
 using Gs2.Core;
+using Gs2.Core.Model;
+using Gs2.Gs2Realtime.Model;
 using Gs2.Unity.Gs2Realtime;
 using Gs2.Unity.Gs2Realtime.Model;
 using Gs2.Unity.Gs2Realtime.Result;
 using Gs2.Unity.Gs2Realtime.Util;
+using Gs2.Util.LitJson;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Events;
@@ -92,6 +95,11 @@ namespace Gs2.Sample.Realtime
         
         private State _realtimeState = State.Initialize;
 
+        /// <summary>
+        /// 通知の種別
+        /// </summary>
+        private string _issuer;
+        
         private void Start()
         {
             Assert.IsNotNull(_realtimeSetting);
@@ -128,6 +136,41 @@ namespace Gs2.Sample.Realtime
                     }
                 }
             );
+        }
+        
+        /// <summary>
+        /// 初期化処理
+        /// </summary>
+        /// <returns></returns>
+        public void Initialize()
+        {
+            UIManager.Instance.AddLog("Initialize");
+            
+            GameManager.Instance.Cllient.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
+        }
+        
+        public void Finish()
+        {
+            GameManager.Instance.Cllient.Profile.Gs2Session.OnNotificationMessage -= PushNotificationHandler;
+        }
+        
+        /// <summary>
+        /// 任意のタイミングで届く通知
+        /// ※メインスレッド外
+        /// </summary>
+        /// <param name="message"></param>
+        public void PushNotificationHandler(NotificationMessage message)
+        {
+            Debug.Log("PushNotificationHandler :" + message.issuer);
+            
+            if (!message.issuer.StartsWith("Gs2Realtime:")) return;
+
+            _issuer = message.issuer;
+            if (message.issuer.EndsWith(":Create"))
+            {
+                var notification = CreateNotification.FromJson(JsonMapper.ToObject(message.payload));
+                _realtimeModel.gatheringName = notification.RoomName;
+            }
         }
 
         private void Update()
@@ -277,15 +320,13 @@ namespace Gs2.Sample.Realtime
             }
             _realtimeState = _state;
         }
-        
+
         /// <summary>
-        /// 初期化処理
+        /// ルーム取得
         /// </summary>
         /// <returns></returns>
-        public void Initialize()
+        public void StartGetRoom()
         {
-            UIManager.Instance.AddLog("Initialize");
-            
             SetState(State.GetRoom);
         }
         
@@ -364,7 +405,6 @@ namespace Gs2.Sample.Realtime
                     _realtimeModel.realtimeSession = r.Result;
                     
                     myCharacter.Session = _realtimeModel.realtimeSession;
-                    myCharacter.Messenger = new Messenger(_realtimeModel.room.EncryptionKey);
                 },
                 _realtimeModel.room.IpAddress,
                 _realtimeModel.room.Port,
@@ -499,18 +539,24 @@ namespace Gs2.Sample.Realtime
             );
             
             _realtimeModel.Clear();
+            
+            SetState(State.Initialize);
         }
         
+        
         /// <summary>
-        /// ルームを選択
+        /// 入室
         /// </summary>
-        /// <param name="gathering"></param>
-        /// <param name="joinPlayerIds"></param>
-        public void OnSelectRoomName(string roomName)
+        public void OnEnterRoom()
         {
-            _realtimeModel.gatheringId = roomName;
-            
-            Initialize();
+            if (_realtimeModel.room != null)
+            {
+                SetState(State.ConnectRoom);
+            }
+            else
+            {
+                SetState(State.GetRoom);
+            }
         }
     }
 }

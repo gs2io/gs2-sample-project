@@ -1,15 +1,14 @@
 # GS2 Sample Project for Unity
 
 Game Server Services (https://gs2.io) の Unity 向けのサンプルプロジェクトです。  
-ゲームでの大まかな流れ（起動→アウトゲーム→インゲーム）を想定した、  
-GS2の各種機能を使った実装サンプルです。
+ゲームでの大まかな流れを想定した GS2の各種機能を使った実装サンプルです。
 
 ## 動作環境
 
 Unity 2019.4.36f1
 
-GS2 SDK for Unity　2022.2.6  
-GS2 C# SDK　2022.2.6
+GS2 SDK for Unity　2022.3.4  
+GS2 C# SDK　2022.3.4
 
 ## 注意事項
 

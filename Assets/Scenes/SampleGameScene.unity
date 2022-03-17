@@ -861,7 +861,6 @@ MonoBehaviour:
   _createGatheringView: {fileID: 2063609443}
   _matchmakingView: {fileID: 1275788173}
   _joinGatheringView: {fileID: 1648386851}
-  _friendPresenter: {fileID: 0}
 --- !u!1 &86737912
 GameObject:
   m_ObjectHideFlags: 0
@@ -3177,6 +3176,7 @@ MonoBehaviour:
   experiencePresenter: {fileID: 225052409}
   chatPresenter: {fileID: 167650902}
   friendPresenter: {fileID: 175004432}
+  matchmakingPresenter: {fileID: 76752273}
   realtimePresenter: {fileID: 1533086443}
   accountRepository: {fileID: 262177602}
   _credentialSetting: {fileID: 1317714896}
@@ -3601,7 +3601,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8f9ff154d9369b4eb4ee78bd901ec80, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gatheringId: 
+  gatheringName: 
   room:
     Name: 
     IpAddress: 
@@ -24741,6 +24741,11 @@ PrefabInstance:
       propertyPath: MaskObject
       value: 
       objectReference: {fileID: 1293795404}
+    - target: {fileID: 1161636383780068130, guid: f032f4e07d87b0f4ebfb24160df0d5f5,
+        type: 3}
+      propertyPath: enterRoomButton
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 1161636383780068131, guid: f032f4e07d87b0f4ebfb24160df0d5f5,
         type: 3}
       propertyPath: _setting
