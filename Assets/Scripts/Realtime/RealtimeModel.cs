@@ -11,9 +11,9 @@ namespace Gs2.Sample.Realtime
     public class RealtimeModel : MonoBehaviour
     {
         /// <summary>
-        /// ゲームサーバ固有のID
+        /// ギャザリングで作成されるゲームサーバ固有のID
         /// </summary>
-        public string gatheringId;
+        public string gatheringName;
 
         public EzRoom room;
         
@@ -21,8 +21,7 @@ namespace Gs2.Sample.Realtime
 
         public void Clear()
         {
-            gatheringId = string.Empty;
-            room = null;
+            gatheringName = string.Empty;
             realtimeSession = null;
         }
         
@@ -47,7 +46,7 @@ namespace Gs2.Sample.Realtime
             yield return client.Realtime.GetRoom(
                 r => { result = r; },
                 realtimeNamespaceName,
-                gatheringId
+                gatheringName
             );
             
             if (result.Error != null)

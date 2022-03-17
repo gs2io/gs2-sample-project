@@ -116,7 +116,7 @@ namespace Gs2.Sample.Chat
 
             if (message.issuer.EndsWith(":Post"))
             {
-                var notification = JsonMapper.ToObject<PostNotification>(message.payload);
+                var notification = PostNotification.FromJson(JsonMapper.ToObject(message.payload));
                 _userId = notification.UserId;
                 _recievedNotification = true;
             }

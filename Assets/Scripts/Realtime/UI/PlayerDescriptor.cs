@@ -25,7 +25,6 @@ namespace Gs2.Sample.Realtime
         private Button resetButton;
         
         public RelayRealtimeSession Session;
-        public Messenger Messenger;
 
         public RPSState state;
         public RPSType handType;
