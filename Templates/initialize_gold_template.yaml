@@ -34,8 +34,7 @@ Resources:
     Type: GS2::Identifier::AttachSecurityPolicy
     Properties:
       UserName: ${IdentifierAcquireGoldUserName}
-      SecurityPolicyId:
-        '!GetAttr': IdentifierAcquireGoldPolicy.Item.SecurityPolicyId
+      SecurityPolicyId: !GetAttr IdentifierAcquireGoldPolicy.Item.SecurityPolicyId
     DependsOn:
       - IdentifierAcquireGoldPolicy
       - IdentifierAcquireGoldUser

@@ -45,31 +45,37 @@ namespace Gs2.Sample.Inventory
     {
         /// <summary>
         /// インベントリのネームスペース名
+        /// Inventory namespace name
         /// </summary>
         public string InventoryNamespaceName;
         
         /// <summary>
         /// インベントリモデル
+        /// inventory model
         /// </summary>
         public EzInventoryModel Model;
         
         /// <summary>
         /// アイテムモデル
+        /// Item Model
         /// </summary>
         public List<EzItemModel> ItemModels;
         
         /// <summary>
         /// インベントリ
+        /// inventory
         /// </summary>
         public EzInventory Inventory;
         
         /// <summary>
         /// アイテムセット
+        /// item set
         /// </summary>
         public List<EzItemSet> ItemSets = new List<EzItemSet>();
 
         /// <summary>
         /// インベントリモデルを取得
+        /// Get Inventory Model
         /// </summary>
         /// <param name="client"></param>
         /// <param name="inventoryNamespaceName"></param>
@@ -129,6 +135,7 @@ namespace Gs2.Sample.Inventory
         
         /// <summary>
         /// インベントリの情報を取得
+        /// Retrieve inventory information
         /// </summary>
         /// <param name="client"></param>
         /// <param name="session"></param>
@@ -197,6 +204,7 @@ namespace Gs2.Sample.Inventory
         
         /// <summary>
         /// アイテムの入手
+        /// Obtaining Items
         /// </summary>
         /// <param name="session"></param>
         /// <param name="identifierAcquireItemClientId"></param>
@@ -222,6 +230,8 @@ namespace Gs2.Sample.Inventory
         {
             // ※この処理はサンプルの動作確認のためものです。
             // 実際にクライアントが直接アイテムの増加を行う実装は非推奨となります。
+            // *This process is only for sample confirmation.
+            // The actual implementation in which the client directly increases the number of items is deprecated.
             
             var restSession = new Gs2RestSession(
                 new BasicGs2Credential(
@@ -281,6 +291,7 @@ namespace Gs2.Sample.Inventory
 
         /// <summary>
         /// アイテムの消費
+        /// Item Consumption
         /// </summary>
         /// <param name="client"></param>
         /// <param name="session"></param>

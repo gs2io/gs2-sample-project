@@ -9,7 +9,7 @@ using Gs2.Sample.Core.Runtime;
 using Gs2.Sample.Credential;
 using Gs2.Sample.Experience;
 using Gs2.Sample.Friend;
-using Gs2.Sample.Gacha;
+using Gs2.Sample.Lottery;
 using Gs2.Sample.Gold;
 using Gs2.Sample.Inventory;
 using Gs2.Sample.Login;
@@ -63,7 +63,7 @@ namespace Gs2.Sample
         [SerializeField] public InventoryPresenter inventoryPresenter;
 
         [SerializeField] public QuestPresenter questPresenter;
-        [SerializeField] public GachaStorePresenter gachaPresenter;
+        [SerializeField] public LotteryStorePresenter lotteryStorePresenter;
         [SerializeField] public UnitPresenter unitPresenter;
         [SerializeField] public ExperiencePresenter experiencePresenter;
         
@@ -117,17 +117,10 @@ namespace Gs2.Sample
 
         // Realtime
         private RealtimeModel _realtimeModel;
-        
+
         /// <summary>
-        /// シーンの開始時に実行される。
-        /// GS2 SDK の初期化を行う。
-        ///
-        /// 初期化は以下の流れで処理され、コールバックにより初期化の完了を受け取る。
-        /// CredentialController::InitializeGs2
-        ///  ↓
-        /// CredentialSample::OnInitializeGs2
-        ///  ↓
-        /// this::OnCreateGs2Client
+        /// GS2 SDK の初期化
+        /// Initialize GS2 SDK.
         /// </summary>
         public void Start()
         {
@@ -155,6 +148,7 @@ namespace Gs2.Sample
 
         /// <summary>
         /// アプリケーション起動
+        /// Application Launch
         /// </summary>
         public void OnStart()
         {
@@ -175,7 +169,8 @@ namespace Gs2.Sample
         }
 
         /// <summary>
-        /// クレデンシャル　初期化
+        /// クレデンシャルの初期化
+        /// Initialize credentials
         /// </summary>
         public void InitializeCredential()
         {
@@ -191,7 +186,8 @@ namespace Gs2.Sample
         }
         
         /// <summary>
-        /// クレデンシャル　初期化
+        /// クレデンシャルの初期化
+        /// Initialize credentials
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="clientSecret"></param>
@@ -235,7 +231,8 @@ namespace Gs2.Sample
         }
 
         /// <summary>
-        /// アプリケーション終了
+        /// 想定上のアプリケーション終了
+        /// Application termination on assumption
         /// </summary>
         public void OnFinish()
         {
@@ -258,6 +255,7 @@ namespace Gs2.Sample
         
         /// <summary>
         /// クレデンシャル　終期化
+        /// Credential Termination
         /// </summary>
         public void FinalizeCredential()
         {
@@ -272,6 +270,7 @@ namespace Gs2.Sample
         
         /// <summary>
         /// クレデンシャル　終期化
+        /// Credential Termination
         /// </summary>
         /// <param name="profile"></param>
         /// <param name="onFinalizeGs2"></param>
@@ -294,6 +293,7 @@ namespace Gs2.Sample
 
         /// <summary>
         /// クレデンシャル　初期化　完了
+        /// Credential initialization complete
         /// </summary>
         /// <param name="profile"></param>
         /// <param name="client"></param>
@@ -312,6 +312,7 @@ namespace Gs2.Sample
         
         /// <summary>
         /// アカウント選択処理
+        /// account selection process
         /// </summary>
         /// <returns></returns>
         public void OnSelectAccount(int slot)
@@ -330,14 +331,24 @@ namespace Gs2.Sample
                     break;
             }
         }
-        
+
         /// <summary>
         /// アカウント削除処理
+        /// account deletion process
         /// </summary>
         /// <returns></returns>
         public void OnRemoveAccount()
         {
-            UIManager.Instance.OpenDialog2("確認", "アカウント情報を削除します。よろしいですか？");
+            switch (UIManager.Instance.Lang)
+            {
+                case  UIManager.Language.ja:
+                    UIManager.Instance.OpenDialog2("確認", "アカウント情報を削除します。よろしいですか？");
+                    break;
+                case  UIManager.Language.en:
+                    UIManager.Instance.OpenDialog2("Confirm", "Delete account information. Are you sure?");
+                    break;
+            }
+
             UIManager.Instance.AddPositiveListner(() =>
             {
                 accountRepository.DeleteAccount(_saveSlot);
@@ -346,6 +357,7 @@ namespace Gs2.Sample
         
         /// <summary>
         /// アカウント引継ぎ実行
+        /// Account takeover execution
         /// </summary>
         /// <returns></returns>
         public void OnDoTakeOverAccount(EzAccount account)
@@ -362,6 +374,7 @@ namespace Gs2.Sample
 
         /// <summary>
         /// 再ログイン
+        /// Re-login
         /// </summary>
         /// <returns></returns>
         public void ReLogin()
@@ -375,7 +388,13 @@ namespace Gs2.Sample
         /// GS2 SDK の初期化が完了し、GS2 Client の取得が終わったときに呼び出される。
         /// 受け取った GS2 Client を使用して、アカウントの新規作成・ログインを実行する。
         ///
-        /// アカウントの新規作成・ログインは以下の流れで処理され、コールバックによりログイン結果を受け取る
+        /// アカウントの新規作成・ログインは以下の流れで処理され、コールバックによりログイン結果を受け取る。
+        ///
+        /// Called when GS2 SDK initialization is complete and GS2 Client acquisition is finished.
+        /// Create a new account and login using the received GS2 Client.
+        ///
+        /// The creation of a new account and login is processed as follows, and the login result is received by callback.
+        /// 
         /// Login()
         ///  ↓
         /// AutoLogin()
@@ -396,6 +415,7 @@ namespace Gs2.Sample
 
         /// <summary>
         /// ログイン処理
+        /// Login
         /// </summary>
         /// <param name="repository"></param>
         /// <param name="client"></param>
@@ -421,6 +441,23 @@ namespace Gs2.Sample
             _loginSetting.onError.RemoveListener(OnLoginError);
         }
         
+        /// <summary>
+        /// 自動ログイン処理
+        /// 初回起動時等アカウント情報がアカウントリポジトリ（PlayerPrefs）にないときは
+        /// GS2-Accountでアカウントを新規作成します。
+        /// Automatic login process
+        /// When account information is not in the account repository (PlayerPrefs),
+        /// such as at first startup Create a new account with GS2-Account.
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="repository"></param>
+        /// <param name="accountNamespaceName"></param>
+        /// <param name="accountEncryptionKeyId"></param>
+        /// <param name="onCreateAccount"></param>
+        /// <param name="onLogin"></param>
+        /// <param name="onError"></param>
+        /// <param name="gatewayNamespaceName"></param>
+        /// <returns></returns>
         public IEnumerator AutoLogin(
             Client client,
             IAccountRepository repository,
@@ -539,7 +576,8 @@ namespace Gs2.Sample
         {
             UIManager.Instance.AddLog("Authentication");
             
-            // ゲームプレイヤーアカウントを認証
+            // ゲームプレイヤーの認証
+            // Game Player Authentication
             AsyncResult<EzAuthenticationResult> result = null;
             yield return client.Account.Authentication(
                 r =>
@@ -565,6 +603,7 @@ namespace Gs2.Sample
             UIManager.Instance.AddLog("Auth.Login");
             
             // 指定したユーザーIDでGS2にログイン
+            // Log in to GS2 with the specified user ID
             AsyncResult<EzLoginResult> result2 = null;
             yield return client.Auth.Login(
                 r =>
@@ -587,6 +626,7 @@ namespace Gs2.Sample
             UIManager.Instance.AddLog("Gateway.SetUserId");
 
 			// サーバからプッシュ通知を受けるためのユーザーIDを設定
+            // Set user ID to receive push notifications from the server
             AsyncResult<EzSetUserIdResult> result3 = null;
             yield return client.Gateway.SetUserId(
                 r => { result3 = r; },
@@ -640,7 +680,16 @@ namespace Gs2.Sample
 
             if (result.Errors.Count > 0)
             {
-                UIManager.Instance.OpenDialog1("Notice", "最新のアプリがあります。");
+                switch (UIManager.Instance.Lang)
+                {
+                    case UIManager.Language.ja:
+                        UIManager.Instance.OpenDialog1("Notice", "最新のアプリがあります。");
+                        break;
+                    case  UIManager.Language.en:
+                        UIManager.Instance.OpenDialog1("Notice", "New Update is Available");
+                        break;
+                }
+                
                 UIManager.Instance.AddAcceptListner(OnRequestVersionCheck);
                 return;
             }
@@ -698,7 +747,15 @@ namespace Gs2.Sample
 
             if (result.Errors.Count > 0)
             {
-                UIManager.Instance.OpenDialog2("利用規約", "「利用規約」への同意が必要です。", "同意する", "同意しない");
+                switch (UIManager.Instance.Lang)
+                {
+                    case  UIManager.Language.ja:
+                        UIManager.Instance.OpenDialog2("利用規約", "「利用規約」への同意が必要です。", "同意する", "同意しない");
+                        break;
+                    case  UIManager.Language.en:
+                        UIManager.Instance.OpenDialog2("Terms and Conditions", "You must agree to the Terms and Conditions.", "I Agree", "I Don't Agree ");
+                        break;
+                }
                 UIManager.Instance.AddPositiveListner(OnRequestAcceptTerm);
                 UIManager.Instance.AddNegativeListner(OnRequestVersionCheck);
             }
@@ -726,12 +783,28 @@ namespace Gs2.Sample
         {
             if (e.Errors[0].message == "account.account.account.error.notAuthorized")
             {
-                Debug.Log("アカウントの認証に失敗したため、アカウントを削除します");
+                switch (UIManager.Instance.Lang)
+                {
+                    case  UIManager.Language.ja:
+                        Debug.Log("アカウントの認証に失敗したため、アカウントを削除します。");
+                        break;
+                    case  UIManager.Language.en:
+                        Debug.Log("Delete account due to account authorization failure.");
+                        break;
+                }
                 accountRepository.DeleteAccount();
             }
             else if (e.Errors[0].message == "account.account.account.error.notFound")
             {
-                Debug.Log("アカウントが存在しないため、アカウントを削除します");
+                switch (UIManager.Instance.Lang)
+                {
+                    case UIManager.Language.ja:
+                        Debug.Log("アカウントの認証に失敗したため、アカウントを削除します。");
+                        break;
+                    case UIManager.Language.en:
+                        Debug.Log("Delete account due to account authorization failure.");
+                        break;
+                }
                 accountRepository.DeleteAccount();
             }
         }
@@ -770,7 +843,7 @@ namespace Gs2.Sample
             StartCoroutine(experiencePresenter.Initialize());
 
             StartCoroutine(questPresenter.Initialize());
-            gachaPresenter.Initialize();
+            lotteryStorePresenter.Initialize();
             StartCoroutine(unitPresenter.Initialize());
             
             StartCoroutine(chatPresenter.Initialize());
@@ -815,7 +888,7 @@ namespace Gs2.Sample
             UIManager.Instance.CloseProcessing();
 
             questPresenter.Finish();
-            gachaPresenter.Finish();
+            lotteryStorePresenter.Finish();
             
             chatPresenter.Finish();
             friendPresenter.Finish();

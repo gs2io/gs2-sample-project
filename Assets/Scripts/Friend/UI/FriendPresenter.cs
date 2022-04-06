@@ -164,7 +164,7 @@ namespace Gs2.Sample.Friend
             {
                 _friendSetting.onSendRequest.RemoveListener(OnSendRequest);
                 
-                UIManager.Instance.OpenDialog1("Notice", "フレンドリクエストを送信しました。");
+                UIManager.Instance.OpenDialog1("Notice", "FriendRequestSend");
             }
             
             _friendSetting.onSendRequest.AddListener(OnSendRequest);
@@ -194,7 +194,7 @@ namespace Gs2.Sample.Friend
             {
                 _friendSetting.onAccept.RemoveListener(OnAccept);
                 
-                UIManager.Instance.OpenDialog1("Notice", "フレンドリクエストを承認しました。");
+                UIManager.Instance.OpenDialog1("Notice", "FriendRequestAccept");
 
                 OnOpenReceiveRequests();
             }
@@ -226,7 +226,7 @@ namespace Gs2.Sample.Friend
             {
                 _friendSetting.onReject.RemoveListener(OnReject);
                 
-                UIManager.Instance.OpenDialog1("Notice", "フレンドリクエストを拒否しました。");
+                UIManager.Instance.OpenDialog1("Notice", "FriendRequestReject");
 
                 OnOpenReceiveRequests();
             }
@@ -448,7 +448,7 @@ namespace Gs2.Sample.Friend
             {
                 _friendSetting.onDeleteFriend.RemoveListener(OnDeleteFriend);
                 
-                UIManager.Instance.OpenDialog1("Notice", "フレンドから削除しました。");
+                UIManager.Instance.OpenDialog1("Notice", "FriendRemove");
 
                 OnOpenFriendList();
             }
@@ -536,7 +536,7 @@ namespace Gs2.Sample.Friend
             {
                 _friendSetting.onDeleteRequest.RemoveListener(OnDeleteRequest);
                 
-                UIManager.Instance.OpenDialog1("Notice", "フレンドリクエストを削除しました。");
+                UIManager.Instance.OpenDialog1("Notice", "FriendRequestDelete");
 
                 OnOpenSendRequests();
             }
@@ -619,7 +619,7 @@ namespace Gs2.Sample.Friend
             {
                 _friendSetting.onUnregisterBlackList.RemoveListener(OnUnregisterBlackList);
                 
-                UIManager.Instance.OpenDialog1("Notice", "ブラックリストから削除しました。");
+                UIManager.Instance.OpenDialog1("Notice", "FriendRemoveBlacklist");
 
                 OnOpenBlackList();
             }
@@ -651,7 +651,7 @@ namespace Gs2.Sample.Friend
             {
                 _friendSetting.onUnregisterBlackList.RemoveListener(OnRegisterBlackList);
                 
-                UIManager.Instance.OpenDialog1("Notice", "ブラックリストに追加しました。");
+                UIManager.Instance.OpenDialog1("Notice", "FriendAddBlacklist");
             }
             
             _friendSetting.onUnregisterBlackList.AddListener(OnRegisterBlackList);
@@ -681,7 +681,7 @@ namespace Gs2.Sample.Friend
             {
                 _friendSetting.onFollow.RemoveListener(OnFollow);
                 
-                UIManager.Instance.OpenDialog1("Notice", "フォローしました。");
+                UIManager.Instance.OpenDialog1("Notice", "Follow");
             }
             
             _friendSetting.onFollow.AddListener(OnFollow);
@@ -711,7 +711,7 @@ namespace Gs2.Sample.Friend
             {
                 _friendSetting.onUnfollow.RemoveListener(OnUnfollow);
                 
-                UIManager.Instance.OpenDialog1("Notice", "フォローを解除しました。");
+                UIManager.Instance.OpenDialog1("Notice", "Unfollow");
                 
                 OnOpenFollowList();
             }

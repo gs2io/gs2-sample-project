@@ -17,16 +17,19 @@ namespace Gs2.Sample.Stamina
     {
         /// <summary>
         /// スタミナモデル
+        /// stamina model
         /// </summary>
         public EzStaminaModel staminaModel;
         
         /// <summary>
         /// 現在のスタミナ値
+        /// Current Stamina Value
         /// </summary>
         public EzStamina stamina;
         
         /// <summary>
         /// スタミナ値を取得
+        /// Get Stamina Value
         /// </summary>
         /// <param name="callback"></param>
         /// <param name="client"></param>
@@ -75,6 +78,7 @@ namespace Gs2.Sample.Stamina
 
         /// <summary>
         /// スタミナを消費する
+        /// Consume Stamina
         /// </summary>
         /// <param name="client"></param>
         /// <param name="session"></param>
@@ -122,6 +126,7 @@ namespace Gs2.Sample.Stamina
         
         /// <summary>
         /// スタミナを購入する
+        /// Buy Stamina
         /// </summary>
         /// <param name="callback"></param>
         /// <param name="client"></param>
@@ -176,6 +181,7 @@ namespace Gs2.Sample.Stamina
                 }
 
                 // スタンプシートを取得
+                // Get Stamp Sheet
                 stampSheet = result.Result.StampSheet;
             }
             {
@@ -196,6 +202,7 @@ namespace Gs2.Sample.Stamina
                 onError.AddListener(OnError);
                 
                 // スタンプシートの実行
+                // Stamp sheet execution
                 yield return machine.Execute(onError);
                 
                 onError.RemoveListener(OnError);
@@ -203,6 +210,7 @@ namespace Gs2.Sample.Stamina
                 if (exception != null)
                 {
                     // スタンプシート実行エラー
+                    // Stamp sheet execution error
                     onError.Invoke(
                         exception
                     );
@@ -211,6 +219,7 @@ namespace Gs2.Sample.Stamina
                 }
             }
             // スタミナ購入に成功
+            // Successfully purchased stamina
             
             onBuy.Invoke();
 

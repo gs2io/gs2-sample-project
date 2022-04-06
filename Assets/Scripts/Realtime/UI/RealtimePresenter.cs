@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Google.Protobuf;
 using Gs2.Core;
 using Gs2.Core.Model;
@@ -128,11 +129,23 @@ namespace Gs2.Sample.Realtime
                         var data = player.Profile.ToByteArray();
                         var p = players[player.ConnectionId];
                         if (p != null)
-                            p.Deserialize(data);
+                            p.ProfileDeserialize(data);
                     }
                     else
                     {
                         JoinPlayerHandler(player);
+                    }
+                }
+            );
+            _realtimeSetting.onRelayMessage.AddListener(
+                message => 
+                {
+                    if (players.ContainsKey(message.ConnectionId))
+                    {
+                        var data = message.Data.ToByteArray();
+                        var p = players[message.ConnectionId];
+                        if (p != null)
+                            p.StateDeserialize(data);
                     }
                 }
             );
@@ -169,7 +182,6 @@ namespace Gs2.Sample.Realtime
             if (message.issuer.EndsWith(":Create"))
             {
                 var notification = CreateNotification.FromJson(JsonMapper.ToObject(message.payload));
-                _realtimeModel.gatheringName = notification.RoomName;
             }
         }
 
@@ -537,7 +549,7 @@ namespace Gs2.Sample.Realtime
             StartCoroutine(
                 _realtimeModel.realtimeSession.Close()
             );
-            
+
             _realtimeModel.Clear();
             
             SetState(State.Initialize);

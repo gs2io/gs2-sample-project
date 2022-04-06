@@ -32,6 +32,7 @@ namespace Gs2.Sample.Quest
         
         /// <summary>
         /// クエストグループの一覧を取得
+        /// Get a list of quest groups
         /// </summary>
         /// <param name="callback"></param>
         /// <param name="client"></param>
@@ -71,6 +72,7 @@ namespace Gs2.Sample.Quest
         
         /// <summary>
         /// クエストの一覧を取得
+        /// Get a list of quests
         /// </summary>
         /// <param name="callback"></param>
         /// <param name="client"></param>
@@ -111,6 +113,7 @@ namespace Gs2.Sample.Quest
         
         /// <summary>
         /// 完了済みのクエストを取得
+        /// Retrieve completed quests
         /// </summary>
         /// <param name="callback"></param>
         /// <param name="client"></param>
@@ -155,6 +158,7 @@ namespace Gs2.Sample.Quest
         
         /// <summary>
         /// クエストを開始する
+        /// Start a quest
         /// </summary>
         /// <param name="callback"></param>
         /// <param name="client"></param>
@@ -234,6 +238,7 @@ namespace Gs2.Sample.Quest
                 machine.OnCompleteStampSheet.AddListener(OnComplete);
 
                 // スタンプシートを実行
+                // Execute stamp sheet
                 yield return machine.Execute(onError);
                 
                 onError.RemoveListener(OnError);
@@ -257,6 +262,7 @@ namespace Gs2.Sample.Quest
                 
         /// <summary>
         /// 進行中のクエストを取得
+        /// Get quests in progress
         /// </summary>
         /// <param name="callback"></param>
         /// <param name="client"></param>
@@ -305,6 +311,7 @@ namespace Gs2.Sample.Quest
         
         /// <summary>
         /// クエストを完了する
+        /// Complete the quest
         /// </summary>
         /// <param name="callback"></param>
         /// <param name="client"></param>
@@ -363,6 +370,7 @@ namespace Gs2.Sample.Quest
                 }
 
                 // スタンプシートを取得
+                // Get Stamp Sheet
                 stampSheet = result.Result.StampSheet;
             }
             {
@@ -383,6 +391,7 @@ namespace Gs2.Sample.Quest
                 onError.AddListener(OnError);
                 
                 // スタンプシートの実行
+                // Stamp sheet execution
                 yield return machine.Execute(onError);
                 
                 onError.RemoveListener(OnError);
@@ -390,11 +399,13 @@ namespace Gs2.Sample.Quest
                 if (exception != null)
                 {
                     // スタンプシート実行エラー
+                    // Stamp sheet execution error
                     callback.Invoke(new AsyncResult<object>(null, exception));
                     yield break;
                 }
             }
             // クエストを完了
+            // Complete the quest
             
             onEnd.Invoke(Progress, rewards, isComplete);
             
