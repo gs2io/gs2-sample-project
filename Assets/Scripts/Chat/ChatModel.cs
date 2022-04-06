@@ -17,6 +17,7 @@ namespace Gs2.Sample.Chat
         
         /// <summary>
         /// ルーム情報を取得
+        /// Get room information
         /// </summary>
         /// <param name="client"></param>
         /// <param name="chatNamespaceName"></param>
@@ -52,6 +53,7 @@ namespace Gs2.Sample.Chat
         
         /// <summary>
         /// 購読しているルームの一覧を取得
+        /// Get a list of rooms to which you are subscribed
         /// </summary>
         /// <param name="client"></param>
         /// <param name="session"></param>
@@ -89,6 +91,7 @@ namespace Gs2.Sample.Chat
         
         /// <summary>
         /// ルームを作成
+        /// Create Room
         /// </summary>
         /// <param name="client"></param>
         /// <param name="session"></param>
@@ -130,6 +133,7 @@ namespace Gs2.Sample.Chat
         
         /// <summary>
         /// ルームを購読
+        /// Subscribe to Room
         /// </summary>
         /// <returns></returns>
         public IEnumerator Subscribe(
@@ -167,6 +171,7 @@ namespace Gs2.Sample.Chat
         
         /// <summary>
         /// ルームの購読を解除
+        /// Unsubscribe from Room
         /// </summary>
         /// <returns></returns>
         public IEnumerator Unsubscribe(
@@ -199,6 +204,7 @@ namespace Gs2.Sample.Chat
         
         /// <summary>
         /// メッセージを取得
+        /// Get Message
         /// </summary>
         /// <returns></returns>
         public IEnumerator ListMessages(
@@ -234,6 +240,7 @@ namespace Gs2.Sample.Chat
         
         /// <summary>
         /// メッセージを投稿
+        /// Post a message
         /// </summary>
         /// <returns></returns>
         public IEnumerator Post(

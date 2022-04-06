@@ -19,31 +19,37 @@ namespace Gs2.Sample.Experience
     {
         /// <summary>
         /// プレイヤー経験値モデル
+        /// Player Experience Model
         /// </summary>
         public EzExperienceModel playerExperienceModel;
         
         /// <summary>
         /// 現在のステータス
+        /// Current Status
         /// </summary>
         public Dictionary<string, EzStatus> playerStatuses;
         
         /// <summary>
         /// アイテム経験値モデル
+        ///  Item Experience Model
         /// </summary>
         public EzExperienceModel itemExperienceModel;
         
         /// <summary>
         /// 現在のステータス
+        /// Current Status
         /// </summary>
         public Dictionary<string, EzStatus> itemStatuses;
 
         /// <summary>
-        /// 操作中のアイテムセット
+        /// 選択中のアイテムセット
+        /// Selected Item Sets
         /// </summary>
         public EzItemSet selectedItem;
         
         /// <summary>
         /// プレイヤー経験値モデルの取得
+        /// Acquisition of player experience model
         /// </summary>
         /// <param name="client"></param>
         /// <param name="experienceNamespaceName"></param>
@@ -84,6 +90,7 @@ namespace Gs2.Sample.Experience
         
         /// <summary>
         /// アイテム経験値モデルの取得
+        /// Acquisition of item experience model
         /// </summary>
         /// <param name="client"></param>
         /// <param name="experienceNamespaceName"></param>
@@ -124,6 +131,7 @@ namespace Gs2.Sample.Experience
         
         /// <summary>
         /// プレイヤーのステータス情報の一覧を取得
+        /// Get a list of player status information
         /// </summary>
         /// <param name="client"></param>
         /// <param name="session"></param>
@@ -180,6 +188,7 @@ namespace Gs2.Sample.Experience
         
         /// <summary>
         /// アイテムのステータス情報の一覧を取得
+        /// Get a list of item status information
         /// </summary>
         /// <param name="client"></param>
         /// <param name="session"></param>
@@ -236,6 +245,7 @@ namespace Gs2.Sample.Experience
 
         /// <summary>
         /// 経験値の増加
+        /// Increased experience
         /// </summary>
         /// <param name="session"></param>
         /// <param name="identifierIncreaseExperienceClientId"></param>
@@ -261,6 +271,8 @@ namespace Gs2.Sample.Experience
         {
             // ※この処理はサンプルの動作確認のためものです。
             // 実際にクライアントが直接経験値の増加を行う実装は非推奨となります。
+            // *This process is only for sample confirmation.
+            // The actual implementation of direct experience increase by the client is deprecated.
             
             var restSession = new Gs2RestSession(
                 new BasicGs2Credential(

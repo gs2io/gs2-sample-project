@@ -33,8 +33,7 @@ Resources:
     - IdentifierAcquireItemUser
     Type: GS2::Identifier::AttachSecurityPolicy
     Properties:
-      SecurityPolicyId:
-        '!GetAttr': IdentifierAcquireItemPolicy.Item.SecurityPolicyId
+      SecurityPolicyId: !GetAttr IdentifierAcquireItemPolicy.Item.SecurityPolicyId
       UserName: ${IdentifierAcquireItemUserName}
 
   InventorySettings:

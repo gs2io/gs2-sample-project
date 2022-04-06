@@ -1,3 +1,5 @@
+[ENGLISH](README-en.md)
+
 # GS2 Sample Project for Unity
 
 Game Server Services (https://gs2.io) の Unity 向けのサンプルプロジェクトです。  
@@ -5,7 +7,7 @@ Game Server Services (https://gs2.io) の Unity 向けのサンプルプロジ�
 
 ## 動作環境
 
-Unity 2019.4.36f1
+Unity 2019.4.37f1
 
 GS2 SDK for Unity　2022.3.4  
 GS2 C# SDK　2022.3.4
@@ -37,7 +39,7 @@ Licensed under SIL Open Font License 1.1 ( http://scripts.sil.org/OFL )
 - [ゴールド/インベントリ 解説 (GS2-Inventory)](Docs/Inventory.md)
 - [経験値 解説 (GS2-Experience)](Docs/Experience.md)
 - [クエスト 解説 (GS2-Quest)](Docs/Quest.md)
-- [ガチャ機能 解説 (GS2-Lottery)](Docs/Gacha.md)
+- [抽選機能 解説 (GS2-Lottery)](Docs/Lottery.md)
 - [チャット 解説 (GS2-Chat)](Docs/Chat.md)
 - [フレンド 解説 (GS2-Friend)](Docs/Friend.md)
 - [マッチメイキング 解説 (GS2-Matchmaking)](Docs/Matchmaking.md)
@@ -68,13 +70,12 @@ Templatesフォルダの以下のファイルでスタックを作成します�
 
 #### 必須のテンプレート
 
-| テンプレートファイル | 設定する機能 |
+| Template files | Functions to be set |
 ---|---
 [initialize_credential_template.yaml](Templates/initialize_credential_template.yaml) |クレデンシャル GS2の初期化
 [initialize_account_template.yaml](Templates/initialize_account_template.yaml) |ログイン/アカウント連携・引継ぎ
 
-#### 各機能のテンプレート
-
+#### Required Templates
 
 | テンプレートファイル | 設定する機能 |
 ---|---
@@ -88,8 +89,8 @@ Templatesフォルダの以下のファイルでスタックを作成します�
 ---|---
 [initialize_quest_template.yaml](Templates/initialize_quest_template.yaml) |クエスト
 [initialize_gacha_template.yaml](Templates/initialize_gacha_template.yaml) |ガチャ機能 
-[initialize_unit_template.yaml](Templates/initialize_unit_template.yaml) |ガチャアイテム用インベントリ ※ガチャ機能の動作に必要
-[initialize_jobqueue_template.yaml](Templates/initialize_jobqueue_template.yaml) |JobQueue機能設定 ※ガチャ機能の動作に必要
+[initialize_unit_template.yaml](Templates/initialize_unit_template.yaml) |抽選アイテム用インベントリ ※抽選機能の動作に必要
+[initialize_jobqueue_template.yaml](Templates/initialize_jobqueue_template.yaml) |JobQueue機能設定 ※抽選機能の動作に必要
 
 | テンプレートファイル | 設定する機能 |
 ---|---
@@ -132,7 +133,7 @@ IAP パッケージのインポートを行います。
 ダウンロード時は空欄になっている、以下の __太字__ の項目に、  
 各スタックの「アウトプット」より必要な情報をコピー・アンド・ペーストします。
 
-![インスペクターウィンドウ](Docs/Gs2Settings.png)
+<img alt="インスペクターウィンドウ" src="Docs/Gs2Settings.png" width="70%"/>
 
 | スクリプトファイル | 設定名 | 説明 |
 -----------------|------|------
@@ -288,19 +289,17 @@ IAP パッケージのインポートを行います。
  
 ## ゲームサイクルタブ
 
-![ゲームサイクル](Docs/GameCycle.png)
-
 `クエスト開始`　・・・　クエストグループを選択、クエストを開始します。  
 `クエスト完了`　・・・　クエストを完了、もしくは失敗（破棄）します。  
 （GS2-Quest）  
 
 [⇒クエスト 解説へ](Docs/Quest.md)
 
-`ガチャをまわす`　・・・　ガチャ商品リストでガチャ商品を選択、ガチャを回します。  
+`抽選ストア`　・・・　抽選商品リストで商品を選択、商品を購入します。  
 抽選後、アイテムを入手します。アイテムは専用のインベントリに振り込まれます。  
 （GS2-Lottery、GS2-Inventory、GS2-JobQueue、スタンプシート）  
-`ガチャインベントリを開く`　・・・　ガチャで取得したアイテムを一覧表示します。  
-アイテムをタップで消費（つかう）します。  
+`抽選インベントリを開く`　・・・　抽選で取得したアイテムを一覧表示します。  
+アイテムをタップすると消費します。  
 （GS2-Inventory）
 
 [⇒ガチャストア 解説へ](Docs/Gacha.md)

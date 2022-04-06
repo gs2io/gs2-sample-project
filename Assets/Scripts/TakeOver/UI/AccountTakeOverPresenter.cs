@@ -203,7 +203,7 @@ namespace Gs2.Sample.AccountTakeOver
                         UIManager.Instance.CloseProcessing();
                         _view.OnCloseSettingTypeEvent();
                         _view.OnCloseSettingEmailEvent();
-                        UIManager.Instance.OpenDialog1("Notice","アカウントを連携しました。");
+                        UIManager.Instance.OpenDialog1("Notice","LinkAdd");
                         UIManager.Instance.AddAcceptListner(OnClickSettingSelectType);
                         break;
                     case State.AddSettingFailed:
@@ -214,7 +214,7 @@ namespace Gs2.Sample.AccountTakeOver
                     
                     case State.DeleteSettingSucceed:
                         UIManager.Instance.CloseProcessing();
-                        UIManager.Instance.OpenDialog1("Notice","アカウント連携を解除しました。");
+                        UIManager.Instance.OpenDialog1("Notice","LinkRemove");
                         UIManager.Instance.AddAcceptListner(OnClickSettingSelectType);
                         break;
                     case State.DeleteSettingFailed:
@@ -242,7 +242,7 @@ namespace Gs2.Sample.AccountTakeOver
                         _view.OnCloseSettingEmailEvent();
                         _view.OnCloseTakeOverTypeEvent();
                         _view.OnCloseTakeOverEmailEvent();
-                        UIManager.Instance.OpenDialog1("Notice","アカウント引継ぎを実行しました。");
+                        UIManager.Instance.OpenDialog1("Notice","TakeOver");
                         UIManager.Instance.AddAcceptListner(OnClickConfirmTakeOver);
                         break;
                     case State.TakeOverFailed:

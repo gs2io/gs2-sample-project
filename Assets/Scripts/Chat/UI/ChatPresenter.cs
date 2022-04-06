@@ -112,8 +112,6 @@ namespace Gs2.Sample.Chat
             
             if (!message.issuer.StartsWith("Gs2Chat")) return;
 
-            _issuer = message.issuer;
-
             if (message.issuer.EndsWith(":Post"))
             {
                 var notification = PostNotification.FromJson(JsonMapper.ToObject(message.payload));
@@ -209,6 +207,8 @@ namespace Gs2.Sample.Chat
                 _chatSetting.onSubscribe,
                 _chatSetting.onError
             );
+            
+            yield return ListMessages();
         }
         
         /// <summary>
@@ -331,7 +331,9 @@ namespace Gs2.Sample.Chat
                 _chatSetting.onError
             );
 
-            _chatView.ClearMessage();
+            _chatView.ClearSendField();
+
+            yield return ListMessages();
         }
     }
 }

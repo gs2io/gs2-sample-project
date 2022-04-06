@@ -8,7 +8,7 @@
 
 ## ログイン設定 LoginSetting
 
-![インスペクターウィンドウ](Gs2Settings.png)
+<img src="Gs2Settings.png" width="70%"/>
 
 | 設定名 | 説明 |
 --------|-----
@@ -105,8 +105,10 @@ yield return client.Gateway.SetUserId(
 );
 ```
 
-[GS2-Gateway](https://app.gs2.io/docs/index.html#gs2-gateway) で　WebSocketセッションに対してログインしたユーザIDを  
-設定してプッシュ通知を受け取れるようにしています。  
-マッチメイキング()の遷移の通知を受けとるために使用します。
+[GS2-Gateway](https://app.gs2.io/docs/index.html#gs2-gateway) にログインした自分のユーザーIDを設定し
+、このユーザークライアントに対するプッシュ通知が受け取れるようにしています。  
+チャット([GS2-Chat](Chat.md))のメッセージ投稿の通知、
+フレンド申請(GS2-Friend)](Friend.md)等の通知、
+マッチメイキング([GS2-Matchmaking](Matchmaking.md))の遷移の通知を受けとるために使用します。
 
 

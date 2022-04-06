@@ -19,6 +19,8 @@ namespace Gs2.Sample.Version
         /// <summary>
         /// サーバ側で規約のバージョンマスターと承認済みのバージョンを比較し
         /// 未承認のバージョンをErrorsとWarningsに返す
+        /// Server compares the version master of the agreement with the approved version and returns
+        /// the unapproved version to Errors and Warnings.
         /// </summary>
         /// <param name="client"></param>
         /// <param name="session"></param>

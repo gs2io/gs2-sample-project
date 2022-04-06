@@ -34,21 +34,25 @@ namespace Gs2.Sample.Unit
 
             /// <summary>
             /// インベントリ情報を取得中
+            /// Inventory information is being retrieved.
             /// </summary>
             GetInventoryProcessing,
             /// <summary>
             /// インベントリ情報の取得に失敗
+            /// Failed to retrieve inventory information
             /// </summary>
             GetInventoryFailed,
             
             /// <summary>
-            /// インベントリ
+            /// インベントリメニュー
+            /// inventory menu
             /// </summary>
             InventoryMenu,
         }
         
         /// <summary>
         /// 現在のステート
+        /// Current State
         /// </summary>
         private State _inventoryState = State.MainMenu;
         
@@ -91,6 +95,7 @@ namespace Gs2.Sample.Unit
         
         /// <summary>
         /// インベントリの初期化
+        /// Inventory initialization
         /// </summary>
         /// <param name="client"></param>
         /// <param name="session"></param>
@@ -245,6 +250,7 @@ namespace Gs2.Sample.Unit
         
         /// <summary>
         /// アイテムを消費する リクエスト
+        /// Consume Item Request
         /// </summary>
         /// <param name="itemSet"></param>
         public void OnClickDecreaseItem(
@@ -293,6 +299,7 @@ namespace Gs2.Sample.Unit
         
         /// <summary>
         /// JobQueueの実行結果を受け取り
+        /// Receives the results of JobQueue execution
         /// </summary>
         /// <returns></returns>
         public UnityAction<EzJob, EzJobResultBody> GetJobQueueAction()

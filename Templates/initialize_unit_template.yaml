@@ -29,8 +29,7 @@ Resources:
     - IdentifierAcquireUnitUser
     Type: GS2::Identifier::AttachSecurityPolicy
     Properties:
-      SecurityPolicyId:
-        '!GetAttr': IdentifierAcquireUnitPolicy.Item.SecurityPolicyId
+      SecurityPolicyId: !GetAttr IdentifierAcquireUnitPolicy.Item.SecurityPolicyId
       UserName: ${IdentifierAcquireUnitUserName}
 
   IdentifierAcquireUnitPolicy:

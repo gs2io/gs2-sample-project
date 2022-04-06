@@ -14,11 +14,13 @@ namespace Gs2.Sample.Matchmaking
     {
         /// <summary>
         /// 自分を含む募集人数
+        /// Number of applicants including player
         /// </summary>
         public int Capacity;
         
         /// <summary>
         /// 参加しているギャザリング
+        /// Participating Gatherings
         /// </summary>
         public EzGathering Gathering;
         
@@ -40,6 +42,7 @@ namespace Gs2.Sample.Matchmaking
             ErrorEvent onError
             )
         {
+            Gathering = null;
             AsyncResult<EzCreateGatheringResult> result = null;
             yield return client.Matchmaking.CreateGathering(
                 r => { result = r; },
@@ -93,6 +96,7 @@ namespace Gs2.Sample.Matchmaking
             ErrorEvent onError
         )
         {
+            Gathering = null;
             AsyncResult<EzDoMatchmakingResult> result = null;
 
             yield return client.Matchmaking.DoMatchmaking(
@@ -114,6 +118,9 @@ namespace Gs2.Sample.Matchmaking
                 callback.Invoke(result);
                 yield break;
             }
+            
+            JoinedPlayerIds.Clear();
+            Gathering = result.Result.Item;
             
             callback.Invoke(result);
         }
@@ -153,6 +160,7 @@ namespace Gs2.Sample.Matchmaking
             );
 
             Gathering = null;
+            JoinedPlayerIds.Clear();
             
             callback.Invoke(result);
         }
