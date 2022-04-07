@@ -1,14 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Google.Protobuf;
 using Gs2.Core;
 using Gs2.Core.Model;
 using Gs2.Gs2Realtime.Model;
 using Gs2.Unity.Gs2Realtime;
-using Gs2.Unity.Gs2Realtime.Model;
 using Gs2.Unity.Gs2Realtime.Result;
-using Gs2.Unity.Gs2Realtime.Util;
 using Gs2.Util.LitJson;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -170,6 +167,8 @@ namespace Gs2.Sample.Realtime
         /// <summary>
         /// 任意のタイミングで届く通知
         /// ※メインスレッド外
+        /// Notification delivered at any given time
+        /// *Outside the main thread
         /// </summary>
         /// <param name="message"></param>
         public void PushNotificationHandler(NotificationMessage message)
@@ -319,7 +318,7 @@ namespace Gs2.Sample.Realtime
                         UIManager.Instance.CloseProcessing();
                         _realtimeView.OnEnableEvent();
                         
-                        StartCoroutine(myCharacter.SendStatus());
+                        StartCoroutine(myCharacter.UpdateProfile());
                         
                         break;
                     
@@ -334,7 +333,8 @@ namespace Gs2.Sample.Realtime
         }
 
         /// <summary>
-        /// ルーム取得
+        /// ルーム取得を開始
+        /// Start acquiring rooms
         /// </summary>
         /// <returns></returns>
         public void StartGetRoom()
@@ -367,6 +367,7 @@ namespace Gs2.Sample.Realtime
 
         /// <summary>
         /// GS2-Realtime のルーム情報を取得
+        /// Get GS2-Realtime room information
         /// </summary>
         /// <returns></returns>
         private IEnumerator GetRoom()
@@ -403,6 +404,7 @@ namespace Gs2.Sample.Realtime
         
         /// <summary>
         /// GS2-Realtime のルームに接続
+        /// Connect to GS2-Realtime room
         /// </summary>
         /// <returns></returns>
         private IEnumerator ConnectRoom()
@@ -426,6 +428,7 @@ namespace Gs2.Sample.Realtime
         
         /// <summary>
         /// GS2-Realtime のルームに接続
+        /// Connect to GS2-Realtime room
         /// </summary>
         /// <param name="callback"></param>
         /// <param name="ipAddress"></param>
@@ -509,6 +512,7 @@ namespace Gs2.Sample.Realtime
                 
         /// <summary>
         /// 他プレイヤーと情報を同期
+        /// Synchronize information with other players
         /// </summary>
         /// <returns></returns>
         private IEnumerator SyncPlayerProfiles()
@@ -525,6 +529,7 @@ namespace Gs2.Sample.Realtime
         
         /// <summary>
         /// 他プレイヤーと情報を同期
+        /// Synchronize information with other players
         /// </summary>
         /// <param name="callback"></param>
         /// <returns></returns>
@@ -538,6 +543,7 @@ namespace Gs2.Sample.Realtime
 
         /// <summary>
         /// 退室
+        /// exit from a room
         /// </summary>
         public void OnLeaveRoom()
         {
@@ -556,9 +562,6 @@ namespace Gs2.Sample.Realtime
         }
         
         
-        /// <summary>
-        /// 入室
-        /// </summary>
         public void OnEnterRoom()
         {
             if (_realtimeModel.room != null)

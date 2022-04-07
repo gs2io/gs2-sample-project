@@ -8,7 +8,7 @@ Sample function to login using [GS2-Account](https://app.gs2.io/docs/en/index.ht
 
 ## LoginSetting LoginSetting
 
-<img src="Gs2Settings.png" width="70%"/>
+![Login](Gs2Settings.png)
 
 | Setting Name | Description |
 --------|-----

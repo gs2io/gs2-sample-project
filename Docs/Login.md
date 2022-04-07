@@ -8,7 +8,7 @@
 
 ## ログイン設定 LoginSetting
 
-<img src="Gs2Settings.png" width="70%"/>
+![Login](Gs2Settings.png)
 
 | 設定名 | 説明 |
 --------|-----

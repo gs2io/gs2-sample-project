@@ -43,7 +43,9 @@ yield return _realtimeModel.GetRoom(
 
 ### Connecting to a room
 
-Connects to the `IP address` `port` of the game server listed in the room information.
+Connect to the `IP address` `port` of the game server listed in the room information.  
+After creating a RelayRealtimeSession, set up various callbacks  
+Connect to the room `realtimeSession.Connect` function.
 
 ```c#
 var realtimeSession = new RelayRealtimeSession(
@@ -95,9 +97,53 @@ result = r;
 
 ### Synchronization during game play
 
-The entered name and rock-paper-scissors selection information is periodically sent and received by other players.  
-When information is received from another player, the player information is synchronized.
+The name entered in the Inputfield is periodically sent and received by other players as part of the player's profile information.  
+When profile information is received from another player, the player information is synchronized.
 
+> Send
+```c#
+public IEnumerator UpdateProfile()
+{
+    while (true)
+    {
+        yield return new WaitForSeconds(0.3f);
+
+        ByteString binary = null;
+        try
+        {
+            binary = ByteString.CopyFrom(ProfileSerialize());
+        }
+        catch (Exception e)
+        {
+            Debug.Log(e);
+            continue;
+        }
+
+        if (Session != null)
+        {
+            bool lockWasTaken = false;
+            try
+            {
+                System.Threading.Monitor.TryEnter(this, ref lockWasTaken);
+
+                if (lockWasTaken)
+                {
+                    yield return Session.UpdateProfile(
+                        r => { },
+                        binary
+                    );
+                }
+            }
+            finally
+            {
+                if (lockWasTaken) System.Threading.Monitor.Exit(this);
+            }
+        }
+    }
+}
+```
+
+> Receive
 ```c#
 _realtimeSetting.onUpdateProfile.AddListener(
     player => 
@@ -106,7 +152,7 @@ _realtimeSetting.onUpdateProfile.AddListener(
         {
             var data = player.Profile.ToByteArray();
             var p = players[player.ConnectionId];
-            if (p ! = null)
+            if (p != null)
                 p.Deserialize(data);
         }
         else
@@ -117,9 +163,45 @@ _realtimeSetting.onUpdateProfile.AddListener(
 );
 ```
 
+### Sending binary data
+
+`Send` sends information such as the selected rock-paper-scissors move to other players.  
+If you specify an array of destination `connection ID` as the third argument of `Send`, the data will be sent to the specified player.  
+If information is received from another player, the UI is updated with that player's information.
+
+> Send
 ```c#
-realtimeSession.OnUpdateProfile += player =>
+public IEnumerator Send()
 {
-    _realtimeSetting.onUpdateProfile.Invoke(player);
-};
+    ByteString binary = null;
+    try
+    {
+        binary = ByteString.CopyFrom(StateSerialize());
+    }
+    catch (Exception e)
+    {
+        Debug.Log(e);
+    }
+
+    yield return Session.Send(
+        r => { },
+        binary
+    );
+}
+```
+
+> Receive
+```c#
+_realtimeSetting.onRelayMessage.AddListener(
+    message => 
+    {
+        if (players.ContainsKey(message.ConnectionId))
+        {
+            var data = message.Data.ToByteArray();
+            var p = players[message.ConnectionId];
+            if (p != null)
+                p.StateDeserialize(data);
+        }
+    }
+);
 ```

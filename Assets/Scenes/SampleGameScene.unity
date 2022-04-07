@@ -9293,7 +9293,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   chatNamespaceName: chat
-  roomName: chat2
+  roomName: chat
   onGetRoom:
     m_PersistentCalls:
       m_Calls: []

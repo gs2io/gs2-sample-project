@@ -9,7 +9,7 @@ This sample uses [GS2-Version](https://app.gs2.io/docs/en/index.html#gs2-version
 
 ## VersionSetting VersionSetting
 
-! [Inspector Window](Version.png)
+![Inspector Window](Version.png)
 
 | Setting Name | Description |
 ---|---

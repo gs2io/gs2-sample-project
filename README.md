@@ -1,4 +1,4 @@
-[ENGLISH](README-en.md)
+[⇒README in English](README-en.md)
 
 # GS2 Sample Project for Unity
 
@@ -9,8 +9,8 @@ Game Server Services (https://gs2.io) の Unity 向けのサンプルプロジ�
 
 Unity 2019.4.37f1
 
-GS2 SDK for Unity　2022.3.4  
-GS2 C# SDK　2022.3.4
+GS2 SDK for Unity　2022.4.1  
+GS2 C# SDK　2022.4.1
 
 ## 注意事項
 
@@ -75,7 +75,7 @@ Templatesフォルダの以下のファイルでスタックを作成します�
 [initialize_credential_template.yaml](Templates/initialize_credential_template.yaml) |クレデンシャル GS2の初期化
 [initialize_account_template.yaml](Templates/initialize_account_template.yaml) |ログイン/アカウント連携・引継ぎ
 
-#### Required Templates
+#### 各機能の動作に必要なテンプレート
 
 | テンプレートファイル | 設定する機能 |
 ---|---
@@ -100,8 +100,6 @@ Templatesフォルダの以下のファイルでスタックを作成します�
 | テンプレートファイル | 設定する機能 |
 ---|---
 [initialize_realtime_template.yaml](Templates/initialize_realtime_template.yaml) |マッチメイキング/リアルタイム対戦
-
-#### 
 
 ※GS2-News お知らせ機能を使う場合に作成
 
@@ -133,7 +131,7 @@ IAP パッケージのインポートを行います。
 ダウンロード時は空欄になっている、以下の __太字__ の項目に、  
 各スタックの「アウトプット」より必要な情報をコピー・アンド・ペーストします。
 
-<img alt="インスペクターウィンドウ" src="Docs/Gs2Settings.png" width="70%"/>
+![Gs2Settings](Docs/Gs2Settings.png)
 
 | スクリプトファイル | 設定名 | 説明 |
 -----------------|------|------
@@ -220,13 +218,14 @@ IAP パッケージのインポートを行います。
 デフォルトでは「アプリ起動」後にアプリバージョンチェック、利用規約のチェック機能は無効化されています。
 有効にするには、ヒエラルキーのGameManager → GameManagerコンポーネントの以下のチェックをそれぞれ外します。
 
-![インスペクターウィンドウ](Docs/VersionCheck.png)
+![VersionCheck](Docs/VersionCheck.png)
 
 設定が完了したら、Unity上での起動の準備は完了です。
 
 ## サンプルの流れ
 
-![起動](Docs/GameStart.png)
+![GameStart](Docs/GameStart.png)
+
 サンプルを起動すると　`アプリ起動` のボタンが有効になります。  
 `アプリ起動`をタップすると、GS2 SDKの初期化（GS2-Identifier）、  
 有効化されていればアプリのバージョンチェック、利用規約のユーザー確認、  
@@ -238,7 +237,8 @@ IAP パッケージのインポートを行います。
 [⇒アカウントの作成・ログイン 解説へ](Docs/Login.md)  
 [⇒バージョンチェック 解説へ](Docs/Version.md)  
 
-![タイトル](Docs/Start.png)
+![Start](Docs/Start.png)
+
 ログイン完了後、タイトル画面に遷移します。  
 `アカウント連携` 機能を呼び出すことができます。  
 作成ずみの匿名アカウントにメールアドレスや、  
@@ -254,19 +254,19 @@ IAP パッケージのインポートを行います。
 `Tap to Start`　をタップするとゲーム内に遷移します。  
 「プレイヤー」「ゲームサイクル」「コミュニティ」「対戦」の各タブにアクセスが可能です。
 
-![プレイヤーステータス](Docs/status.png)
+![status](Docs/status.png)
 
 左上に　__レベルと経験値__が表示されます。  
 （GS2-Experience）
 
-![プレイヤーステータス](Docs/status2.png)
+![status2](Docs/status2.png)
 
 右上に　__スタミナ__、__課金通貨__、__ゴールド__ が表示されます。  
 （GS2-Stamina、GS2-Money、GS2-Inventory）
 
 ## プレイヤータブ
 
-![プレイヤー](Docs/Player.png)
+![Player](Docs/Player.png)
 
 `スタミナ消費`　・・・　スタミナを減少し、一定時間で回復します。
 （GS2-Stamina）
@@ -289,6 +289,8 @@ IAP パッケージのインポートを行います。
  
 ## ゲームサイクルタブ
 
+![GameCycle](Docs/GameCycle.png)
+
 `クエスト開始`　・・・　クエストグループを選択、クエストを開始します。  
 `クエスト完了`　・・・　クエストを完了、もしくは失敗（破棄）します。  
 （GS2-Quest）  
@@ -306,7 +308,7 @@ IAP パッケージのインポートを行います。
 
 ## コミュニティタブ
 
-![コミュニティ](Docs/Community.png)
+![Community](Docs/Community.png)
 
 `ルームを購読`　・・・　チャットのルームに対して購読を登録し、新着メッセージの投稿通知を受け取れるようにします。  
 `購読の解除`　・・・　チャットのルームの購読を解除します。
@@ -328,7 +330,7 @@ ChatSettingのroomNameに設定された名前のルームへのメッセージ�
 
 ## 対戦タブ
 
-![対戦](Docs/Matching.png)
+![Matching](Docs/Matching.png)
 
 `ギャザリング作成`　・・・　参加人数を設定してギャザリング（マッチングの単位）を作成します。  
 `ギャザリング待機`　・・・　ギャザリングへの参加をリクエストします。  
@@ -345,7 +347,7 @@ ChatSettingのroomNameに設定された名前のルームへのメッセージ�
 
 ## ストア
 
-![プレイヤーステータス](Docs/status2.png)
+![status2](Docs/status2.png)
 
 スタミナストア　（スタミナ表示の＋ボタン）・・・  
 GS2-Exchange と連携して GS2-Money を消費してスタミナ値を回復する商品の購入のサンプルです。  

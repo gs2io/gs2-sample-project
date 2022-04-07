@@ -158,7 +158,7 @@ namespace Gs2.Sample.AccountTakeOver
 
                         if (_accountTakeOverModel.GetEmailSetting() != null)
                         {
-                            _view.emailTakeOverButtonLabel.SetText("Email - 登録済み");
+                            _view.emailTakeOverButtonLabel.SetText("Email - Registered");
                         }
                         else
                         {
@@ -170,7 +170,7 @@ namespace Gs2.Sample.AccountTakeOver
 #if UNITY_ANDROID
                             _view.platformTakeOverButtonLabel.SetText("Google Play - Registered");
 #else
-                            _view.platformTakeOverButtonLabel.SetText("Game Center - 登録済み");
+                            _view.platformTakeOverButtonLabel.SetText("Game Center - Registered");
 #endif
                         }
                         else

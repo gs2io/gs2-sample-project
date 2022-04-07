@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using Google.Protobuf;
 using Gs2.Unity.Gs2Realtime;
-using Gs2.Unity.Gs2Realtime.Util;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -59,7 +58,7 @@ namespace Gs2.Sample.Realtime
             StartCoroutine(Send());
         }
 
-        public IEnumerator SendStatus()
+        public IEnumerator UpdateProfile()
         {
             while (true)
             {

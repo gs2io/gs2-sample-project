@@ -25,6 +25,8 @@ This is a sample of using [GS2-Matchmaking](https://app.gs2.io/docs/en/index.htm
 
 ## Matchmaking flow
 
+![Matching](Matching_en.png)
+
 Create a gathering (unit of matching) by setting the number of participants at `Gathering creation`.  
 Request to join the Gathering with `Gathering Waiting`.
 

@@ -2,6 +2,8 @@
 
 This is a sample of using [GS2-Chat](https://app.gs2.io/docs/en/index.html#gs2-chat) to chat, send and receive messages.
 
+![Chat](Chat_en.png)
+
 ## GS2-Deploy template
 
 - [initialize_chat_template.yaml - chat](../Templates/initialize_chat_template.yaml)

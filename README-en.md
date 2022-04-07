@@ -1,4 +1,4 @@
-[日本語](README.md)
+[⇒日本語のREADMEへ](README.md)
 
 # GS2 Sample Project for Unity
 
@@ -10,8 +10,8 @@ This is a sample implementation using various GS2 functions.
 
 Unity 2019.4.37f1
 
-GS2 SDK for Unity 2022.3.4  
-GS2 C# SDK 2022.3.4
+GS2 SDK for Unity 2022.4.1  
+GS2 C# SDK 2022.4.1
 
 ## Notes
 
@@ -76,8 +76,7 @@ Create a stack with the following files in the Templates folder
 [initialize_credential_template.yaml](Templates/initialize_credential_template.yaml) | initialize credential GS2
 [initialize_account_template.yaml](Templates/initialize_account_template.yaml) |login/account linkage and transfer
 
-#### Templates for each function
-
+#### Template required for each function to work
 
 | Template file | Function to be set up |
 ---|---
@@ -102,8 +101,6 @@ Create a stack with the following files in the Templates folder
 | Template files | Functions to set up |
 ---|---
 [initialize_realtime_template.yaml](Templates/initialize_realtime_template.yaml) | matchmaking/realtime competition
-
-#### 
 
 Created when using the GS2-News notification function.
 
@@ -135,11 +132,11 @@ In the inspector window, register the information of the resource created by GS2
 Fill in the following __bolded__ fields, which are blank when downloaded  
 Copy and paste the necessary information from the "output" of each stack.
 
-<img src="Docs/Gs2Settings.png" width="70%"/>
+![Gs2Settings](Docs/Gs2Settings.png)
 
 | Script File | Setting Name | Description |
 -----------------|------|------
-| __CredentialSetting__ | __Application Client Id__ | __Credential to access GS2 (Client ID) |
+| __CredentialSetting__ | __Application Client Id__ | __Credential to access GS2 (Client ID)__ |
 | __CredentialSetting__ | __Application Client Secret__ | __Credential to access GS2 (Client Secret)__ |
 | LoginSetting | accountNamespaceName | GS2-Account namespace name |
 | __LoginSetting__ | __accountEncryptionKeyId__ | __GRN of the encryption key of the GS2-Key used to encrypt account information in the GS2-Account__ |
@@ -164,31 +161,31 @@ Copy and paste the necessary information from the "output" of each stack.
 | GoldSetting | inventoryModelName | GS2-Inventory's gold model namespace name |
 | GoldSetting | itemModelName | Item Model Name |
 | __GoldSetting__ | __identifierAcquireGoldClientId__ | __Client ID of the authority that can increase gold__ |
-| __GoldSetting__ | __identifierAcquireGoldClientSecret__ | __Client Secret__ of the authority that can increase gold |
+| __GoldSetting__ | __identifierAcquireGoldClientSecret__ | __Client Secret of the authority that can increase gold__ |
 
 | script file | setting name | description |
 -----------------|------|------
 | InventorySetting | inventoryNamespaceName | inventory namespace name for GS2-Inventory |
 | InventorySetting | inventoryModelName | GS2-Inventory's inventory model namespace name |
 | __InventorySetting__ | __identifierAcquireItemClientId__ | __Client ID of the authority that can increase the item__ |
-| __InventorySetting__ | __identifierAcquireItemClientSecret__ | __Client Secret__ of the authority that can increase the item |
+| __InventorySetting__ | __identifierAcquireItemClientSecret__ | __Client Secret of the authority that can increase the item__ |
 | ExperienceSetting | experienceNamespaceName | GS2-Experience namespace name |
 | ExperienceSetting | playerExperienceModelName | model name of player experience table in GS2-Experience |
 | ExperienceSetting | itemExperienceModelName | Model name of the item experience table in GS2-Experience |
 | __ExperienceSetting__ | __identifierIncreaseExperienceClientId__ | __Client ID of the authority that can increase experience__ |
-| __ExperienceSetting__ | __identifierIncreaseExperienceClientSecret__ | __Client Secret__ of the authority that can increase experience |
+| __ExperienceSetting__ | __identifierIncreaseExperienceClientSecret__ | __Client Secret of the authority that can increase experience__ |
 
 | Script File | Setting Name | Description |
 -----------------|------|------
 | QuestSetting | questNamespaceName | Namespace name of GS2-Quest
-| __QuestSetting__ | __questKeyId__ | Cryptographic key used for signature calculation of stamp sheets issued for reward granting process in __GS2-Quest__ |
+| __QuestSetting__ | __questKeyId__ | __Cryptographic key used for signature calculation of stamp sheets issued for reward granting process in GS2-Quest__ |
 | QuestSetting | distributorNamespaceName | namespace name of GS2-Distributor who delivers the reward |
 | QuestSetting | queueNamespaceName | Namespace name of GS2-JobQueue used for granting the reward |
 | GachaSetting | lotteryNamespaceName | Namespace Name of GS2-Lottery |
 | GachaSetting | jobqueueNamespaceName | namespace name of GS2-JobQueue |
 | GachaSetting | showcaseNamespaceName | GS2-Showcase namespace name |
 | GachaSetting | showcaseName | GS2-Showcase display shelf name |
-| __GachaSetting__ | __showcaseKeyId__ | Cryptographic key used for signature calculation of stamp sheets issued by __GS2-Showcase for merchandise purchases__ |
+| __GachaSetting__ | __showcaseKeyId__ | __Cryptographic key used for signature calculation of stamp sheets issued by GS2-Showcase for merchandise purchases__ |
 | __GachaSetting__ | __lotteryKeyId__ | __GS2-Lottery cryptographic key used for signature calculation of stamp sheets issued at the time of purchase of goods__ |
 | UnitSetting | inventoryNamespaceName | Namespace name of inventory dedicated to gacha items in GS2-Inventory |
 | UnitSetting | inventoryModelName | namespace name of the model of the inventory dedicated to the gacha item in GS2-Inventory |
@@ -222,9 +219,13 @@ Copy and paste the necessary information from the "output" of each stack.
 By default, the app version check and Terms of Use check functions are disabled after "app launch".
 To enable it, uncheck each of the following in the GameManager → GameManager component of the hierarchy
 
+![VersionCheck](Docs/VersionCheck_en.png)
+
 Once configured, you are ready to launch on Unity.
 
 ## Sample flow
+
+![GameStart](Docs/GameStart_en.png)
 
 When the sample is launched, the `App Launch` button will be enabled.  
 Tapping `Appli Launch` will initialize the GS2 SDK (GS2-Identifier), the  
@@ -236,6 +237,8 @@ When launched for the first time, an anonymous account is automatically created.
 
 [⇒Account creation and login Explanation](Docs/Login_en.md)  
 [⇒Version check Explanation](Docs/Version_en.md)  
+
+![Start](Docs/Start_en.png)
 
 After login is completed, the user is taken to the title screen.  
 You can invoke the `account linking` function.  
@@ -257,10 +260,14 @@ You can access the Player, Game Cycle, Community, and Competitive tabs.
 The __level and experience__ are displayed in the upper left corner.  
 (GS2-Experience)
 
+![status2](Docs/status2_en.png)
+
 The __Stamina__, __Currency Charged__, and __Gold__ are displayed in the upper right corner.  
 (GS2-Stamina, GS2-Money, GS2-Inventory)
 
 ## Player Tab
+
+![Player](Docs/Player_en.png)
 
 `Stamina consumption` - Stamina is reduced and recovered in a certain time.
 (GS2-Stamina)
@@ -283,8 +290,10 @@ Increases experience ・・・ Increases experience by 10.
  
 ## Game Cycle Tab
 
-Starts a quest.  
-Complete `Quest Completion` ・・・ Completes or fails (discards) a quest.  
+![GameCycle](Docs/GameCycle_en.png)
+
+`Start Quest ` ・・・ Starts a quest.  
+`Quest Completed` ・・・ Completes or fails (discards) a quest.  
 (GS2-Quest)  
 
 [⇒Quest Explanation](Docs/Quest_en.md)
@@ -300,6 +309,8 @@ Tap an item to consume it.
 
 ## Community tab
 
+![Community](Docs/Community_en.png)
+
 `Subscribe room` - Subscribe to a chat room so that you can receive notifications of new messages posted to the room.  
 `Unsubscribe` -- Unsubscribe from a chat room.
 (GS2-Chat)
@@ -314,9 +325,13 @@ Tap an item to consume it.
 
 Press `>` at the bottom center of the screen to open the chat window.
 
+![チャット](Docs/Chat_en.png)
+
 Messages can be sent and received to and from the room with the name set in roomName in ChatSetting.
 
-## Competitive tab
+## Matching tab
+
+![Matching](Docs/Matching_en.png)
 
 Create Gathering -- Create a gathering (unit of matching) by setting the number of participants.  
 Waiting for `gathering` ・・・ It requests participation in a gathering.  
@@ -332,6 +347,8 @@ In the sample, a simple game of rock-paper-scissors can be played.
 [⇒Real Time Explanation](Docs/Realtime_en.md)
 
 ## Store
+
+![status2](Docs/status2_en.png)
 
 Stamina Store (+ button on stamina display) ...  
 This is a sample of purchasing products that work with GS2-Exchange to spend GS2-Money to restore stamina values.  

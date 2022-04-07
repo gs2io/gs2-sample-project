@@ -9,6 +9,8 @@ Tap the message balloon of another player's message you received.
 You can follow, friend request, or blacklist the target player.  
 The UserId of other players is obtained by sending and receiving chat messages.
 
+![PlayerInfo](PlayerInfo_en.png)
+
 ## GS2-Deploy template
 
 - [initialize_friend_template.yaml - friend feature](../Templates/initialize_friend_template.yaml)

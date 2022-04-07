@@ -6,6 +6,8 @@ This is a sample of selling on [GS2-Showcase](https://app.gs2.io/docs/en/index.h
 One of the products defined in the sample has a [GS2-Limit](https://app.gs2.io/docs/en/index.html#gs2-limit)  
 The number of purchases is limited, allowing only one purchase.
 
+![Products](Products_en.png)
+
 ## GS2-Deploy template
 
 - [initialize_money_template.yaml - Billing Currency/Billing Currency Store](../Templates/initialize_money_template.yaml)
@@ -39,6 +41,8 @@ Import the IAP package.
 
 ## Get Wallet
 
+![Wallet](Wallet_en.png)
+
 After login, the latest wallet status is retrieved below.
 
 ```c#
@@ -55,6 +59,8 @@ yield return client.Money.Get(
 ```
 
 ## Retrieve items from the billing currency store
+
+![Products2](Products2_en.png)
 
 Retrieves the product list and displays the store.
 
