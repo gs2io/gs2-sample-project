@@ -38,7 +38,7 @@ namespace Gs2.Sample.MoneyStore
         public GetShowcaseEvent onGetShowcase = new GetShowcaseEvent();
         
         /// <summary>
-        /// 販売中のガチャ一覧を取得したとき
+        /// 販売中の商品一覧を取得したとき
         /// </summary>
         [SerializeField]
         public GetProductsEvent onGetProducts = new GetProductsEvent();

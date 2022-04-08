@@ -89,7 +89,9 @@ namespace Gs2.Sample.Money
                     
                     case State.BuySucceed:
                         UIManager.Instance.CloseProcessing();
-                        UIManager.Instance.OpenDialog1("Notice","商品を購入しました。");
+                        
+                        UIManager.Instance.OpenDialog1("Notice", "ProductPurchase");
+
                         _moneyPresenter.OnUpdateWallet();
                         break;
                     

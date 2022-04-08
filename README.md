@@ -1,3 +1,5 @@
+[⇒README in English](README-en.md)
+
 # GS2 Sample Project for Unity
 
 Game Server Services (https://gs2.io) の Unity 向けのサンプルプロジェクトです。  
@@ -5,10 +7,10 @@ Game Server Services (https://gs2.io) の Unity 向けのサンプルプロジ�
 
 ## 動作環境
 
-Unity 2019.4.36f1
+Unity 2019.4.37f1
 
-GS2 SDK for Unity　2022.3.4  
-GS2 C# SDK　2022.3.4
+GS2 SDK for Unity　2022.4.1  
+GS2 C# SDK　2022.4.1
 
 ## 注意事項
 
@@ -37,7 +39,7 @@ Licensed under SIL Open Font License 1.1 ( http://scripts.sil.org/OFL )
 - [ゴールド/インベントリ 解説 (GS2-Inventory)](Docs/Inventory.md)
 - [経験値 解説 (GS2-Experience)](Docs/Experience.md)
 - [クエスト 解説 (GS2-Quest)](Docs/Quest.md)
-- [ガチャ機能 解説 (GS2-Lottery)](Docs/Gacha.md)
+- [抽選機能 解説 (GS2-Lottery)](Docs/Lottery.md)
 - [チャット 解説 (GS2-Chat)](Docs/Chat.md)
 - [フレンド 解説 (GS2-Friend)](Docs/Friend.md)
 - [マッチメイキング 解説 (GS2-Matchmaking)](Docs/Matchmaking.md)
@@ -68,13 +70,12 @@ Templatesフォルダの以下のファイルでスタックを作成します�
 
 #### 必須のテンプレート
 
-| テンプレートファイル | 設定する機能 |
+| Template files | Functions to be set |
 ---|---
 [initialize_credential_template.yaml](Templates/initialize_credential_template.yaml) |クレデンシャル GS2の初期化
 [initialize_account_template.yaml](Templates/initialize_account_template.yaml) |ログイン/アカウント連携・引継ぎ
 
-#### 各機能のテンプレート
-
+#### 各機能の動作に必要なテンプレート
 
 | テンプレートファイル | 設定する機能 |
 ---|---
@@ -87,9 +88,9 @@ Templatesフォルダの以下のファイルでスタックを作成します�
 | テンプレートファイル | 設定する機能 |
 ---|---
 [initialize_quest_template.yaml](Templates/initialize_quest_template.yaml) |クエスト
-[initialize_gacha_template.yaml](Templates/initialize_gacha_template.yaml) |ガチャ機能 
-[initialize_unit_template.yaml](Templates/initialize_unit_template.yaml) |ガチャアイテム用インベントリ ※ガチャ機能の動作に必要
-[initialize_jobqueue_template.yaml](Templates/initialize_jobqueue_template.yaml) |JobQueue機能設定 ※ガチャ機能の動作に必要
+[initialize_lottery_template.yaml](Templates/initialize_lottery_template.yaml) |抽選機能
+[initialize_unit_template.yaml](Templates/initialize_unit_template.yaml) |抽選アイテム用インベントリ ※抽選機能の動作に必要
+[initialize_jobqueue_template.yaml](Templates/initialize_jobqueue_template.yaml) |JobQueue機能設定 ※抽選機能の動作に必要
 
 | テンプレートファイル | 設定する機能 |
 ---|---
@@ -99,8 +100,6 @@ Templatesフォルダの以下のファイルでスタックを作成します�
 | テンプレートファイル | 設定する機能 |
 ---|---
 [initialize_realtime_template.yaml](Templates/initialize_realtime_template.yaml) |マッチメイキング/リアルタイム対戦
-
-#### 
 
 ※GS2-News お知らせ機能を使う場合に作成
 
@@ -132,7 +131,7 @@ IAP パッケージのインポートを行います。
 ダウンロード時は空欄になっている、以下の __太字__ の項目に、  
 各スタックの「アウトプット」より必要な情報をコピー・アンド・ペーストします。
 
-![インスペクターウィンドウ](Docs/Gs2Settings.png)
+![Gs2Settings](Docs/Gs2Settings.png)
 
 | スクリプトファイル | 設定名 | 説明 |
 -----------------|------|------
@@ -181,14 +180,14 @@ IAP パッケージのインポートを行います。
 | __QuestSetting__ | __questKeyId__ | __GS2-Quest で報酬の付与処理に発行するスタンプシートの署名計算に使用する暗号鍵__ |
 | QuestSetting | distributorNamespaceName | 報酬を配送する GS2-Distributor のネームスペース名 |
 | QuestSetting | queueNamespaceName | 報酬の付与に使用するGS2-JobQueue のネームスペース名 |
-| GachaSetting | lotteryNamespaceName | GS2-Lottery のネームスペース名 |
-| GachaSetting | jobqueueNamespaceName | GS2-JobQueue のネームスペース名 |
-| GachaSetting | showcaseNamespaceName | GS2-Showcase のネームスペース名 |
-| GachaSetting | showcaseName | GS2-Showcase の陳列棚名 |
-| __GachaSetting__ | __showcaseKeyId__ | __GS2-Showcase で商品購入時に発行するスタンプシートの署名計算に使用する暗号鍵__ |
-| __GachaSetting__ | __lotteryKeyId__ | __GS2-Lottery で商品購入時に発行するスタンプシートの署名計算に使用する暗号鍵__ |
-| UnitSetting | inventoryNamespaceName | GS2-Inventory のガチャアイテム専用インベントリのネームスペース名 |
-| UnitSetting | inventoryModelName | GS2-Inventoryのガチャアイテム専用インベントリのモデルのネームスペース名 |
+| LotterySetting | lotteryNamespaceName | GS2-Lottery のネームスペース名 |
+| LotterySetting | jobqueueNamespaceName | GS2-JobQueue のネームスペース名 |
+| LotterySetting | showcaseNamespaceName | GS2-Showcase のネームスペース名 |
+| LotterySetting | showcaseName | GS2-Showcase の陳列棚名 |
+| __LotterySetting__ | __showcaseKeyId__ | __GS2-Showcase で商品購入時に発行するスタンプシートの署名計算に使用する暗号鍵__ |
+| __LotterySetting__ | __lotteryKeyId__ | __GS2-Lottery で商品購入時に発行するスタンプシートの署名計算に使用する暗号鍵__ |
+| UnitSetting | inventoryNamespaceName | GS2-Inventory の抽選アイテム専用インベントリのネームスペース名 |
+| UnitSetting | inventoryModelName | GS2-Inventoryの抽選アイテム専用インベントリのモデルのネームスペース名 |
 | __UnitSetting__ | __identifierAcquireUnitClientId__ | __アイテムの増加が可能な権限のクライアントID__ |
 | __UnitSetting__ | __identifierAcquireUnitClientSecret__ | __アイテムの増加が可能な権限のクライアントシークレット__ |
 
@@ -219,13 +218,14 @@ IAP パッケージのインポートを行います。
 デフォルトでは「アプリ起動」後にアプリバージョンチェック、利用規約のチェック機能は無効化されています。
 有効にするには、ヒエラルキーのGameManager → GameManagerコンポーネントの以下のチェックをそれぞれ外します。
 
-![インスペクターウィンドウ](Docs/VersionCheck.png)
+![VersionCheck](Docs/VersionCheck.png)
 
 設定が完了したら、Unity上での起動の準備は完了です。
 
 ## サンプルの流れ
 
-![起動](Docs/GameStart.png)
+![GameStart](Docs/GameStart.png)
+
 サンプルを起動すると　`アプリ起動` のボタンが有効になります。  
 `アプリ起動`をタップすると、GS2 SDKの初期化（GS2-Identifier）、  
 有効化されていればアプリのバージョンチェック、利用規約のユーザー確認、  
@@ -237,7 +237,8 @@ IAP パッケージのインポートを行います。
 [⇒アカウントの作成・ログイン 解説へ](Docs/Login.md)  
 [⇒バージョンチェック 解説へ](Docs/Version.md)  
 
-![タイトル](Docs/Start.png)
+![Start](Docs/Start.png)
+
 ログイン完了後、タイトル画面に遷移します。  
 `アカウント連携` 機能を呼び出すことができます。  
 作成ずみの匿名アカウントにメールアドレスや、  
@@ -253,19 +254,19 @@ IAP パッケージのインポートを行います。
 `Tap to Start`　をタップするとゲーム内に遷移します。  
 「プレイヤー」「ゲームサイクル」「コミュニティ」「対戦」の各タブにアクセスが可能です。
 
-![プレイヤーステータス](Docs/status.png)
+![status](Docs/status.png)
 
 左上に　__レベルと経験値__が表示されます。  
 （GS2-Experience）
 
-![プレイヤーステータス](Docs/status2.png)
+![status2](Docs/status2.png)
 
 右上に　__スタミナ__、__課金通貨__、__ゴールド__ が表示されます。  
 （GS2-Stamina、GS2-Money、GS2-Inventory）
 
 ## プレイヤータブ
 
-![プレイヤー](Docs/Player.png)
+![Player](Docs/Player.png)
 
 `スタミナ消費`　・・・　スタミナを減少し、一定時間で回復します。
 （GS2-Stamina）
@@ -288,7 +289,7 @@ IAP パッケージのインポートを行います。
  
 ## ゲームサイクルタブ
 
-![ゲームサイクル](Docs/GameCycle.png)
+![GameCycle](Docs/GameCycle.png)
 
 `クエスト開始`　・・・　クエストグループを選択、クエストを開始します。  
 `クエスト完了`　・・・　クエストを完了、もしくは失敗（破棄）します。  
@@ -296,18 +297,18 @@ IAP パッケージのインポートを行います。
 
 [⇒クエスト 解説へ](Docs/Quest.md)
 
-`ガチャをまわす`　・・・　ガチャ商品リストでガチャ商品を選択、ガチャを回します。  
+`抽選ストア`　・・・　抽選商品リストで商品を選択、商品を購入します。  
 抽選後、アイテムを入手します。アイテムは専用のインベントリに振り込まれます。  
 （GS2-Lottery、GS2-Inventory、GS2-JobQueue、スタンプシート）  
-`ガチャインベントリを開く`　・・・　ガチャで取得したアイテムを一覧表示します。  
-アイテムをタップで消費（つかう）します。  
+`抽選インベントリを開く`　・・・　抽選で取得したアイテムを一覧表示します。  
+アイテムをタップすると消費します。  
 （GS2-Inventory）
 
-[⇒ガチャストア 解説へ](Docs/Gacha.md)
+[⇒抽選機能 解説へ](Docs/Lottery.md)
 
 ## コミュニティタブ
 
-![コミュニティ](Docs/Community.png)
+![Community](Docs/Community.png)
 
 `ルームを購読`　・・・　チャットのルームに対して購読を登録し、新着メッセージの投稿通知を受け取れるようにします。  
 `購読の解除`　・・・　チャットのルームの購読を解除します。
@@ -329,7 +330,7 @@ ChatSettingのroomNameに設定された名前のルームへのメッセージ�
 
 ## 対戦タブ
 
-![対戦](Docs/Matching.png)
+![Matching](Docs/Matching.png)
 
 `ギャザリング作成`　・・・　参加人数を設定してギャザリング（マッチングの単位）を作成します。  
 `ギャザリング待機`　・・・　ギャザリングへの参加をリクエストします。  
@@ -346,7 +347,7 @@ ChatSettingのroomNameに設定された名前のルームへのメッセージ�
 
 ## ストア
 
-![プレイヤーステータス](Docs/status2.png)
+![status2](Docs/status2.png)
 
 スタミナストア　（スタミナ表示の＋ボタン）・・・  
 GS2-Exchange と連携して GS2-Money を消費してスタミナ値を回復する商品の購入のサンプルです。  

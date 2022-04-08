@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -55,6 +56,18 @@ namespace Gs2.Sample
         [SerializeField]
         public TextMeshProUGUI questStateText = null;
         
+        public enum Language
+        {
+            ja = 0,
+            en = 1
+        }
+        
+        [SerializeField] private Language lang = Language.ja;
+        public Language Lang
+        {
+            get { return lang; }
+        }
+        
         // Start is called before the first frame update
         void Start()
         {
@@ -106,9 +119,46 @@ namespace Gs2.Sample
             logWindow.gameObject.SetActive(!logWindow.gameObject.activeSelf);
         }
 
+        public string GetLocalizationText(string text)
+        {
+            var EnglishDic = new Dictionary<string, List<string>>
+            { 
+                {"LinkAdd", new List<string>{"アカウントを連携しました。","Linked accounts."}},
+                {"LinkRemove", new List<string>{"アカウント連携を解除しました。","Account linkage has been removed."}},
+                {"TakeOver", new List<string>{"アカウント引継ぎを実行しました。","Account transfer has been executed."}},
+                {"FriendRequestSend", new List<string>{"フレンドリクエストを送信しました。","Friend request sent."}},
+                {"FriendRequestAccept", new List<string>{"フレンドリクエストを承認しました。","Friend request approved."}},
+                {"FriendRequestReject", new List<string>{"フレンドリクエストを拒否しました。","Friend request denied."}},
+                {"FriendRemove", new List<string>{"フレンドから削除しました。","Removed from Friends."}},
+                {"FriendRequestDelete", new List<string>{"フレンドリクエストを削除しました。","Friend request deleted."}},
+                {"FriendRemoveBlacklist", new List<string>{"ブラックリストから削除しました。","Removed from blacklist."}},
+                {"FriendAddBlacklist", new List<string>{"ブラックリストに追加しました。","Added to blacklist."}},
+                {"Follow", new List<string>{"フォローしました。","Followed."}},
+                {"Unfollow", new List<string>{"フォローを解除しました。","Unfollowed."}},
+                {"ProductPurchase", new List<string>{"商品を購入しました。","Products purchased."}},
+                {"QuestStart", new List<string>{"クエストを開始","Start Quest."}},
+                {"QuestComp", new List<string>{"クエスト完了","Quest Completed."}},
+                {"QuestFailed", new List<string>{"クエスト失敗","Quest Failure."}},
+                {"StaminaPurchase", new List<string>{"スタミナ回復を購入しました。","Stamina recovery was purchased."}},
+                {"UnitObtain", new List<string>{"入手しました。", "obtained."}},
+                {"Fire", new List<string>{"炎", "Fire"}},
+                {"Water", new List<string>{"水", "Water"}},
+            };
+
+            if (EnglishDic.ContainsKey(text))
+            {
+                var list = EnglishDic[text];
+                return list[(int)Lang];
+            }
+
+            return text;
+        }
+        
         public void OpenDialog1(string title, string text, string buttonText = "OK")
         {
-            dialog1.Initialize(title, text, buttonText);
+            var localizedtext = GetLocalizationText(text);
+
+            dialog1.Initialize(title, localizedtext, buttonText);
             dialog1.gameObject.SetActive(true);
         }
 
@@ -281,7 +331,15 @@ namespace Gs2.Sample
         
         public void OnTapServiceLink(string url)
         {
-            Application.OpenURL("https://app.gs2.io/docs/index.html#"+url.ToLower());
+            switch (Lang)
+            {
+                case  Language.ja:
+                    Application.OpenURL("https://app.gs2.io/docs/index.html#"+url.ToLower());
+                    break;
+                case  Language.en:
+                    Application.OpenURL("https://app.gs2.io/docs/en/index.html#"+url.ToLower());
+                    break;
+            }
         }
     }
 }

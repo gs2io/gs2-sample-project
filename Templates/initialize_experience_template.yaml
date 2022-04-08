@@ -78,8 +78,7 @@ Resources:
         Type: GS2::Identifier::AttachSecurityPolicy
         Properties:
             UserName: ${IdentifierIncreaseExperienceUserName}
-            SecurityPolicyId:
-                '!GetAttr': IdentifierIncreaseExperiencePolicy.Item.SecurityPolicyId
+            SecurityPolicyId: !GetAttr IdentifierIncreaseExperiencePolicy.Item.SecurityPolicyId
         DependsOn:
             - IdentifierIncreaseExperiencePolicy
             - IdentifierIncreaseExperienceUser

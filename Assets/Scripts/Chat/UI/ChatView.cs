@@ -60,7 +60,7 @@ namespace Gs2.Sample.Chat
             return InputField.text;
         }
         
-        public string ClearMessage()
+        public string ClearSendField()
         {
             return InputField.text = String.Empty;
         }

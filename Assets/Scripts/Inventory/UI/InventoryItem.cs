@@ -31,12 +31,12 @@ namespace Gs2.Sample.Inventory
         {
             if (_itemSet.ItemName == "fire_element")
             {
-                icon.SetText("炎");
+                icon.SetText(UIManager.Instance.GetLocalizationText("Fire"));
                 image.color = Color.red;
             }
             else if (_itemSet.ItemName == "water_element")
             {
-                icon.SetText("水");
+                icon.SetText(UIManager.Instance.GetLocalizationText("Water"));
                 image.color = Color.blue;
             }
             else

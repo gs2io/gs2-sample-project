@@ -224,12 +224,12 @@ namespace Gs2.Sample.Quest
                 case QuestState.None:
                     _selectQuestView.questStart.interactable = true;
                     _selectQuestView.questEnd.interactable = false;
-                    UIManager.Instance.SetQuestStateText("未受注");
+                    UIManager.Instance.SetQuestStateText("Quest not received");
                     break;
                 case QuestState.QuestStarted:
                     _selectQuestView.questStart.interactable = false;
                     _selectQuestView.questEnd.interactable = true;
-                    UIManager.Instance.SetQuestStateText("クエスト進行中");
+                    UIManager.Instance.SetQuestStateText("Quest in progress");
                     break;
             }
 
@@ -543,7 +543,7 @@ namespace Gs2.Sample.Quest
             
             SetQuestState(QuestState.QuestStarted);
             
-            UIManager.Instance.OpenDialog1("Notice", "クエストを開始");
+            UIManager.Instance.OpenDialog1("Notice", "QuestStart");
         }
         
         /// <summary>
@@ -669,11 +669,11 @@ namespace Gs2.Sample.Quest
 
             if (isComplete)
             {
-                UIManager.Instance.OpenDialog1("Notice", "クエスト完了");
+                UIManager.Instance.OpenDialog1("Notice", "QuestComp");
             }
             else
             {
-                UIManager.Instance.OpenDialog1("Notice", "クエスト失敗");
+                UIManager.Instance.OpenDialog1("Notice", "QuestFailed");
             }
         }
     }

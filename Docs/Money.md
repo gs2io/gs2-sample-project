@@ -40,7 +40,8 @@ IAP パッケージのインポートを行います。
 | OnError(Gs2Exception error) | エラーが発生したときに呼び出されます。 |
 
 ## ウォレットの取得
-![プレイヤーステータス](Wallet.png)
+
+![Wallet](Wallet.png)
 
 ログイン後、以下で最新のウォレットの状態を取得します。
 
@@ -58,7 +59,8 @@ yield return client.Money.Get(
 ```
 
 ## 課金通貨ストアの商品取得
-![商品リスト](Products2.png)
+
+![Products2](Products2.png)
 
 商品リストを取得し、ストアを表示します。
 

@@ -209,6 +209,10 @@ namespace Gs2.Sample.Matchmaking
                     {
                         _matchmakingSetting.onJoinPlayer.Invoke(_matchmakingModel.Gathering, _userId);
                         _matchmakingSetting.onUpdateJoinedPlayerIds.Invoke(_matchmakingModel.Gathering, _matchmakingModel.JoinedPlayerIds);
+                        
+                        _issuer = String.Empty;
+                        _userId = String.Empty;
+                        _recievedNotification = false;
                     }
                 }
                 else if (_issuer.EndsWith(":Leave"))
@@ -217,6 +221,10 @@ namespace Gs2.Sample.Matchmaking
                     {
                         _matchmakingSetting.onLeavePlayer.Invoke(_matchmakingModel.Gathering, _userId);
                         _matchmakingSetting.onUpdateJoinedPlayerIds.Invoke(_matchmakingModel.Gathering, _matchmakingModel.JoinedPlayerIds);
+                        
+                        _issuer = String.Empty;
+                        _userId = String.Empty;
+                        _recievedNotification = false;
                     }
                 }
                 else if (_issuer.EndsWith(":Complete"))
@@ -227,12 +235,12 @@ namespace Gs2.Sample.Matchmaking
                         // DoMatchmaking の応答より先にマッチメイキング完了通知が届くことがある
                         SetState(State.Complete);
                         _matchmakingSetting.onMatchmakingComplete.Invoke(_matchmakingModel.Gathering, _matchmakingModel.JoinedPlayerIds);
+                        
+                        _issuer = String.Empty;
+                        _userId = String.Empty;
+                        _recievedNotification = false;
                     }
                 }
-                
-                _issuer = String.Empty;
-                _userId = String.Empty;
-                _recievedNotification = false;
             }
         }
         
@@ -375,24 +383,31 @@ namespace Gs2.Sample.Matchmaking
                                     if (!_matchmakingModel.JoinedPlayerIds.Contains(player.UserId))
                                     {
                                         _matchmakingModel.JoinedPlayerIds.Add(player.UserId);
-                                        _matchmakingSetting.onJoinPlayer.Invoke(_matchmakingModel.Gathering, _userId);
+                                        _matchmakingSetting.onJoinPlayer.Invoke(_matchmakingModel.Gathering,
+                                            _userId);
                                     }
                                 }
                             }
                         }
                     }
                     _matchmakingSetting.onJoinPlayer.Invoke(_matchmakingModel.Gathering, _userId);
-                    _matchmakingSetting.onUpdateJoinedPlayerIds.Invoke(_matchmakingModel.Gathering, _matchmakingModel.JoinedPlayerIds);
-                    
+                    _matchmakingSetting.onUpdateJoinedPlayerIds.Invoke(_matchmakingModel.Gathering,
+                        _matchmakingModel.JoinedPlayerIds);
+
                     if (result.Error is NotFoundException)
                     {
                         SetState(State.GatheringNotFound);
                     }
                     else
                     {
-                        SetState(result.Error == null
-                            ? State.Matchmaking
-                            : State.Error);
+                        if (result.Error != null)
+                        {
+                            SetState(State.Error);
+                        }
+                        else if (matchmakingState != State.Complete)
+                        {
+                            SetState(State.Matchmaking);
+                        }
                     }
                 }
 

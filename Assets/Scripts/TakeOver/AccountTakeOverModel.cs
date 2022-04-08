@@ -20,26 +20,31 @@ namespace Gs2.Sample.AccountTakeOver
     {
         /// <summary>
         /// 現在有効な引継ぎ設定一覧
+        /// List of currently active transfer settings
         /// </summary>
         public List<EzTakeOver> takeOverSettings = new List<EzTakeOver>();
 
         /// <summary>
         /// 引継ぎの種類
+        /// Type of takeover
         /// </summary>
         public int type;
         
         /// <summary>
         /// ユーザ識別子
+        /// user identifier
         /// </summary>
         public string userIdentifier;
         
         /// <summary>
         /// パスワード
+        /// password
         /// </summary>
         public string password;
         
         /// <summary>
         /// Email設定の取得
+        /// Retrieving Email Settings
         /// </summary>
         /// <returns></returns>
         public EzTakeOver GetEmailSetting()
@@ -49,6 +54,7 @@ namespace Gs2.Sample.AccountTakeOver
         
         /// <summary>
         /// プラットフォーム設定の取得
+        /// Retrieving Platform Settings
         /// </summary>
         /// <returns></returns>
         public EzTakeOver GetPlatformSetting()
@@ -58,11 +64,11 @@ namespace Gs2.Sample.AccountTakeOver
 
         /// <summary>
         /// 設定済みの引継ぎ設定一覧を取得
+        /// Retrieve list of transfer settings that have been set up
         /// </summary>
         /// <param name="callback"></param>
         /// <param name="client"></param>
         /// <param name="session"></param>
-        /// <param name="callback"></param>
         /// <param name="accountNamespaceName"></param>
         /// <param name="onError"></param>
         /// <returns></returns>
@@ -99,6 +105,7 @@ namespace Gs2.Sample.AccountTakeOver
 
         /// <summary>
         /// 引継ぎ設定を追加
+        /// Added takeover settings
         /// </summary>
         /// <param name="client"></param>
         /// <param name="session"></param>
@@ -143,6 +150,7 @@ namespace Gs2.Sample.AccountTakeOver
 
         /// <summary>
         /// 引継ぎ実行
+        /// taking over
         /// </summary>
         /// <param name="client"></param>
         /// <param name="callback"></param>
@@ -184,6 +192,7 @@ namespace Gs2.Sample.AccountTakeOver
         
         /// <summary>
         /// 引継ぎ設定を削除
+        /// Delete takeover settings
         /// </summary>
         /// <param name="client"></param>
         /// <param name="session"></param>

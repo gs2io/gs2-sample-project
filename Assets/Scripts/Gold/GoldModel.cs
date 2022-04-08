@@ -18,24 +18,38 @@ namespace Gs2.Sample.Gold
     {
         /// <summary>
         /// ゴールドのインベントリモデル
+        /// Gold inventory model
         /// </summary>
         public EzInventoryModel InventoryModel;
 
         /// <summary>
         /// ゴールドのインベントリ
+        /// Gold Inventory
         /// </summary>
         public EzInventory Inventory;
 
         /// <summary>
         /// ゴールドのアイテムモデル
+        /// Gold Item Model
         /// </summary>
         public List<EzItemModel> ItemModels = new List<EzItemModel>();
 
         /// <summary>
         /// ゴールドのアイテムセット
+        /// Gold Item Sets
         /// </summary>
         public List<EzItemSet> ItemSets = new List<EzItemSet>();
 
+        /// <summary>
+        /// インベントリモデルを取得
+        /// Get Inventory Model
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="inventoryNamespaceName"></param>
+        /// <param name="inventoryModelName"></param>
+        /// <param name="onGetInventoryModel"></param>
+        /// <param name="onError"></param>
+        /// <returns></returns>
         public IEnumerator GetInventoryModel(
             Client client,
             string inventoryNamespaceName,
@@ -86,6 +100,7 @@ namespace Gs2.Sample.Gold
 
         /// <summary>
         /// インベントリの情報を取得
+        /// Retrieve inventory information
         /// </summary>
         /// <param name="client"></param>
         /// <param name="session"></param>
@@ -154,6 +169,7 @@ namespace Gs2.Sample.Gold
 
         /// <summary>
         /// ゴールドの入手
+        /// Obtaining Gold
         /// </summary>
         /// <param name="session"></param>
         /// <param name="identifierAcquireItemClientId"></param>
@@ -179,7 +195,9 @@ namespace Gs2.Sample.Gold
         {
             // ※この処理はサンプルの動作確認のためものです。
             // 実際にクライアントが直接ゴールドの増加を行う実装は非推奨となります。
-
+            // *This process is only for sample confirmation.
+            // The actual implementation in which the client directly increases the gold is deprecated.
+            
             var restSession = new Gs2RestSession(
                 new BasicGs2Credential(
                     identifierAcquireItemClientId,
@@ -238,6 +256,7 @@ namespace Gs2.Sample.Gold
 
         /// <summary>
         /// ゴールドの消費
+        /// Gold Consumption
         /// </summary>
         /// <param name="client"></param>
         /// <param name="session"></param>

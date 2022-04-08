@@ -34,16 +34,19 @@ namespace Gs2.Sample.Money
         
         /// <summary>
         /// 販売中の課金通貨
+        /// Billing Currency on Sale
         /// </summary>
         public List<Product> products = new List<Product>();
         
         /// <summary>
         /// 購入メニューで選択した課金通貨
+        /// Billing currency selected in the purchase menu
         /// </summary>
         public Product selectedProduct;
         
         /// <summary>
         /// 現在の課金通貨の取得
+        /// Obtain current billing currency
         /// </summary>
         /// <param name="client"></param>
         /// <param name="moneyNamespaceName"></param>
@@ -85,6 +88,7 @@ namespace Gs2.Sample.Money
         
         /// <summary>
         /// 販売中の課金通貨一覧を取得
+        /// Get a list of billable currencies on sale
         /// </summary>
         /// <returns></returns>
         public IEnumerator GetListProducts(
@@ -172,6 +176,7 @@ namespace Gs2.Sample.Money
              
         /// <summary>
         /// 入手アクション取得
+        /// Obtain aquire action
         /// </summary>
         /// <param name="salesItem"></param>
         /// <param name="action"></param>
@@ -192,6 +197,7 @@ namespace Gs2.Sample.Money
 
         /// <summary>
         /// 消費アクション取得
+        /// Consumption Action Acquisition
         /// </summary>
         /// <param name="salesItem"></param>
         /// <param name="action"></param>
@@ -212,6 +218,7 @@ namespace Gs2.Sample.Money
         
         /// <summary>
         /// 課金通貨を購入する
+        /// Purchase billable currency
         /// </summary>
         /// <param name="callback"></param>
         /// <param name="client"></param>
@@ -253,6 +260,7 @@ namespace Gs2.Sample.Money
                 }
 
                 // 課金通貨商品購入 レシート情報
+                // Billed Currency Product Purchase Receipt Information
                 receipt = result.Result.receipt;
 #endif
             }
@@ -260,6 +268,7 @@ namespace Gs2.Sample.Money
             string stampSheet = null;
             {
                 // Showcase 商品の購入をリクエスト
+                // Request to purchase an item
                 AsyncResult<EzBuyResult> result = null;
                 yield return client.Showcase.Buy(
                     r => { result = r; },
@@ -292,10 +301,12 @@ namespace Gs2.Sample.Money
                 }
 
                 // スタンプシートを取得
+                // Get Stamp Sheet
                 stampSheet = result.Result.StampSheet;
             }
             {
                 // スタンプシート ステートマシンを生成
+                // Generate Stamp Sheet State Machine
                 var machine = new StampSheetStateMachine(
                     stampSheet,
                     client,
@@ -312,6 +323,7 @@ namespace Gs2.Sample.Money
                 onError.AddListener(OnError);
                 
                 // スタンプシートの実行
+                // Stamp sheet execution
                 yield return machine.Execute(onError);
                 
                 onError.RemoveListener(OnError);
@@ -319,11 +331,13 @@ namespace Gs2.Sample.Money
                 if (exception != null)
                 {
                     // スタンプシート実行エラー
+                    // Stamp sheet execution error
                     callback.Invoke(new AsyncResult<object>(null, exception));
                     yield break;
                 }
             }
             // 商品購入に成功
+            // Successful product purchase
 
             onBuy.Invoke(selectedProduct);
             
