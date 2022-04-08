@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using Google.Protobuf;
 using Gs2.Unity.Gs2Realtime;
-using Gs2.Unity.Gs2Realtime.Util;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,19 +10,14 @@ namespace Gs2.Sample.Realtime
 {
     public class PlayerDescriptor : MonoBehaviour
     {
-        [SerializeField]
-        private TMP_InputField PlayerName;
-        
-        [SerializeField]
-        private Button stone;
-        [SerializeField]
-        private Button scissors;
-        [SerializeField]
-        private Button paper;
-        
-        [SerializeField]
-        private Button resetButton;
-        
+        [SerializeField] private TMP_InputField PlayerName;
+
+        [SerializeField] private Button stone;
+        [SerializeField] private Button scissors;
+        [SerializeField] private Button paper;
+
+        [SerializeField] private Button resetButton;
+
         public RelayRealtimeSession Session;
 
         public RPSState state;
@@ -33,24 +27,26 @@ namespace Gs2.Sample.Realtime
         {
             switch (type)
             {
-                case (int)RPSType.Stone :
+                case (int) RPSType.Stone:
                     scissors.interactable = false;
                     paper.interactable = false;
                     break;
-                case (int)RPSType.Scissors :
+                case (int) RPSType.Scissors:
                     stone.interactable = false;
                     paper.interactable = false;
                     break;
-                case (int)RPSType.Paper :
+                case (int) RPSType.Paper:
                     stone.interactable = false;
                     scissors.interactable = false;
                     break;
             }
 
-            handType = (RPSType)type;
+            handType = (RPSType) type;
             state = RPSState.Decide;
+            
+            StartCoroutine(Send());
         }
-        
+
         public void OnTapReset()
         {
             stone.interactable = true;
@@ -58,18 +54,20 @@ namespace Gs2.Sample.Realtime
             paper.interactable = true;
 
             state = RPSState.Select;
+
+            StartCoroutine(Send());
         }
 
-        public IEnumerator SendStatus()
+        public IEnumerator UpdateProfile()
         {
             while (true)
             {
                 yield return new WaitForSeconds(0.3f);
-                
+
                 ByteString binary = null;
                 try
                 {
-                    binary = ByteString.CopyFrom(Serialize());
+                    binary = ByteString.CopyFrom(ProfileSerialize());
                 }
                 catch (Exception e)
                 {
@@ -100,20 +98,45 @@ namespace Gs2.Sample.Realtime
             }
         }
 
-        public byte[] Serialize()
+        public IEnumerator Send()
         {
-            var s = BitConverter.GetBytes((int)state);
-            var t = BitConverter.GetBytes((int)handType);
+            ByteString binary = null;
+            try
+            {
+                binary = ByteString.CopyFrom(StateSerialize());
+            }
+            catch (Exception e)
+            {
+                Debug.Log(e);
+            }
+
+            yield return Session.Send(
+                r => { },
+                binary
+            );
+        }
+        
+        public byte[] ProfileSerialize()
+        {
             var n = System.Text.Encoding.UTF8.GetBytes(PlayerName.text);
 
             int pos = 0;
-            byte[] buffer = new byte[s.Length + t.Length + n.Length];
+            byte[] buffer = new byte[n.Length];
+            Buffer.BlockCopy(n, 0, buffer, pos, n.Length);
+
+            return buffer;
+        }
+        
+		public byte[] StateSerialize()
+        {
+            var s = BitConverter.GetBytes((int)state);
+            var t = BitConverter.GetBytes((int)handType);
+
+            int pos = 0;
+            byte[] buffer = new byte[s.Length + t.Length];
             Buffer.BlockCopy(s, 0, buffer, pos, s.Length);
             pos += s.Length;
             Buffer.BlockCopy(t, 0, buffer, pos, t.Length);
-            pos += t.Length;
-            Buffer.BlockCopy(n, 0, buffer, pos, n.Length);
-            pos += n.Length;
 
             return buffer;
         }

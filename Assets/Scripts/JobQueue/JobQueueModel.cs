@@ -33,10 +33,13 @@ namespace Gs2.Sample.JobQueue
         
         /// <summary>
         /// ジョブ実行 リクエスト
+        /// Job Execution Request
         /// </summary>
         private PushJobEvent _onPushJob = new PushJobEvent();
+        
         /// <summary>
         /// ジョブ実行後に実行
+        /// Run after job execution
         /// </summary>
         public ExecJobEvent onExecJob = new ExecJobEvent();
         
@@ -61,6 +64,7 @@ namespace Gs2.Sample.JobQueue
 
         /// <summary>
         /// ジョブキューの実行
+        /// Job Queue Execution
         /// </summary>
         void OnPushJob()
         {
@@ -71,6 +75,7 @@ namespace Gs2.Sample.JobQueue
         
         /// <summary>
         /// ジョブキューの実行 リクエスト
+        /// Job Queue Execution Request
         /// </summary>
         /// <returns></returns>
         public IEnumerator Run()
@@ -101,15 +106,18 @@ namespace Gs2.Sample.JobQueue
             if (job != null)
             {
                 // ジョブキュー実行後に実行するコールバックの呼び出し
+                // Callback invocation to be performed after job queue execution
                 onExecJob.Invoke(job, body);
             }
             
             // JobQueueの実行間隔は1秒以上で
+            // JobQueue execution interval must be at least 1 second.
             yield return new WaitForSeconds(1);
             
             if (!isLastJob)
             {
                 // 次のジョブ実行をリクエスト
+                // Request next job execution
                 _onPushJob.Invoke();
             }
         }
@@ -136,7 +144,8 @@ namespace Gs2.Sample.JobQueue
             {
                 Debug.Log("JobQueueModel::StateMachineOnCompleteStampSheet");
 
-                //スタンプシートによるジョブ登録
+                // スタンプシートによるジョブ登録
+                // Job registration by stamp sheet
                 if (sheet.Action == "Gs2JobQueue:PushByUserId")
                 {
                     OnPushJob();

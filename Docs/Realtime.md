@@ -16,9 +16,9 @@
 
 | イベント | 説明 |
 ---------|------
-| OnRelayMessage(RelayBinaryMessage message) | リアルタイムゲームサーバからメッセージを受信したときに呼び出されます。 |
+| OnRelayMessage(RelayBinaryMessage message) | Realtimeゲームサーバからメッセージを受信したときに呼び出されます。 |
 | OnGetRoom(EzRoom room) | リアルタイムゲームサーバのIPアドレス・ポート情報を取得したときに呼び出されます。 |
-| OnJoinPlayer(Player player) | リアルタイムゲームサーバに新しいプレイヤーが参加したときに呼び出されます。 |
+| OnJoinPlayer(Player player) | リアルタイムゲームサーバに新しいプレイヤーが参加したときに呼び出されます。ルームに参加した直後にはそれまでに参加済みのプレイヤーの分が呼び出されます。 |
 | OnLeavePlayer(Player player) | リアルタイムゲームサーバからプレイヤーが離脱したときに呼び出されます。 このコールバックは必ず OnJoinPlayer / OnLeavePlayer のいずれかと同じタイミングで呼び出されます。 |
 | OnUpdateProfile(Player player) | 誰かがプレイヤープロフィールを更新したときに呼び出されます。 |
 | OnRelayError(Error error) | リアルタイムゲームサーバでエラーが発生したときに呼び出されます。 |
@@ -43,7 +43,9 @@ yield return _realtimeModel.GetRoom(
 
 ### ルームへの接続
 
-ルーム情報に記載されたゲームサーバの `IPアドレス` `ポート` に接続します。  
+ルーム情報に記載されたゲームサーバの `IPアドレス` `ポート` へ接続します。  
+RelayRealtimeSessionを生成したのち、各種イベントハンドラを設定、  
+ルームへの接続 `realtimeSession.Connect` を実行します。
 
 ```c#
 var realtimeSession = new RelayRealtimeSession(
@@ -95,9 +97,53 @@ yield return realtimeSession.Connect(
 
 ### ゲームプレイ中の同期
 
-入力された名前とじゃんけん選択の情報を定期的に送信し、他のプレイヤーで受け取ります。  
-他プレイヤーから情報を受け取った場合、そのプレイヤー情報の同期を行います。
+プレイヤーのプロフィール情報として、Inputfieldに入力された名前を定期的に送信し、他のプレイヤーで受け取ります。  
+他プレイヤーからプロフィール情報を受け取った場合は、そのプレイヤー情報の同期を行います。
 
+> 送信
+```c#
+public IEnumerator UpdateProfile()
+{
+    while (true)
+    {
+        yield return new WaitForSeconds(0.3f);
+
+        ByteString binary = null;
+        try
+        {
+            binary = ByteString.CopyFrom(ProfileSerialize());
+        }
+        catch (Exception e)
+        {
+            Debug.Log(e);
+            continue;
+        }
+
+        if (Session != null)
+        {
+            bool lockWasTaken = false;
+            try
+            {
+                System.Threading.Monitor.TryEnter(this, ref lockWasTaken);
+
+                if (lockWasTaken)
+                {
+                    yield return Session.UpdateProfile(
+                        r => { },
+                        binary
+                    );
+                }
+            }
+            finally
+            {
+                if (lockWasTaken) System.Threading.Monitor.Exit(this);
+            }
+        }
+    }
+}
+```
+
+> 受信
 ```c#
 _realtimeSetting.onUpdateProfile.AddListener(
     player => 
@@ -117,9 +163,45 @@ _realtimeSetting.onUpdateProfile.AddListener(
 );
 ```
 
+### バイナリーデータの送信
+
+`Send` で他のプレイヤーに選択しているじゃんけんの手等の情報を送信します。  
+`Send` の第三引数に宛先の `コネクションID` の配列を指定した場合は、指定したプレイヤーにデータを送信します。  
+他プレイヤーから情報を受け取った場合は、そのプレイヤーの情報でUIを更新します。
+
+> 送信
 ```c#
-realtimeSession.OnUpdateProfile += player =>
+public IEnumerator Send()
 {
-    _realtimeSetting.onUpdateProfile.Invoke(player);
-};
+    ByteString binary = null;
+    try
+    {
+        binary = ByteString.CopyFrom(StateSerialize());
+    }
+    catch (Exception e)
+    {
+        Debug.Log(e);
+    }
+
+    yield return Session.Send(
+        r => { },
+        binary
+    );
+}
+```
+
+> 受信
+```c#
+_realtimeSetting.onRelayMessage.AddListener(
+    message => 
+    {
+        if (players.ContainsKey(message.ConnectionId))
+        {
+            var data = message.Data.ToByteArray();
+            var p = players[message.ConnectionId];
+            if (p != null)
+                p.StateDeserialize(data);
+        }
+    }
+);
 ```

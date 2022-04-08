@@ -76,7 +76,8 @@ namespace Gs2.Sample.Unit
         }
         
         /// <summary>
-        /// インベントリ名を指定してインベントリの情報を取得<
+        /// インベントリ名を指定してインベントリの情報を取得
+        /// Get inventory information by specifying the inventory name
         /// </summary>
         /// <param name="client"></param>
         /// <param name="session"></param>
@@ -157,7 +158,9 @@ namespace Gs2.Sample.Unit
         {
             // ※この処理はサンプルの動作確認のためものです。
             // 実際にクライアントが直接ゴールドの増加を行う実装は非推奨となります。
-
+            // *This process is only for sample confirmation.
+            // The actual implementation in which the client directly increases the gold is deprecated.
+            
             var restSession = new Gs2RestSession(
                 new BasicGs2Credential(
                     identifierAcquireItemClientId,

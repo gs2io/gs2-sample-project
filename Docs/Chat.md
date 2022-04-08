@@ -2,7 +2,7 @@
 
 [GS2-Chat](https://app.gs2.io/docs/index.html#gs2-chat) を使ってチャット、メッセージの送受信を行うサンプルです。　　
 
-![チャット](Chat.png)
+![Chat](Chat.png)
 
 ## GS2-Deploy テンプレート
 

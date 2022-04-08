@@ -9,7 +9,7 @@
 対象となる他プレイヤーへのフォロー、フレンドリクエスト、ブラックリストへの追加が行えます。  
 他プレイヤーのUserIdの取得に、チャットの送受信を利用しています。
 
-![プレイヤー](PlayerInfo.png)
+![PlayerInfo](PlayerInfo.png)
 
 ## GS2-Deploy テンプレート
 

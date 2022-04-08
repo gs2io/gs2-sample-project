@@ -28,6 +28,7 @@ namespace Gs2.Sample.News
 
         /// <summary>
         /// お知らせの初期化
+        /// Initialization of Notices
         /// </summary>
         /// <returns></returns>
         public IEnumerator Initialize()
@@ -53,6 +54,7 @@ namespace Gs2.Sample.News
         
         /// <summary>
         /// お知らせを開く
+        /// Open Notification
         /// </summary>
         /// <returns></returns>
         public IEnumerator OpenWebView()
@@ -67,7 +69,7 @@ namespace Gs2.Sample.News
                 _newsSetting.onError
             );
 
-            UIManager.Instance.InitWebViewDialog("お知らせ");
+            UIManager.Instance.InitWebViewDialog("Notice");
             while (UIManager.Instance.isWebViewActiveAndEnabled())
             {
                 yield return new WaitForSeconds(0.5f);
@@ -82,6 +84,7 @@ namespace Gs2.Sample.News
         
         /// <summary>
         /// お知らせを開く
+        /// Open Notification
         /// </summary>
         public void OnClickNews()
         {

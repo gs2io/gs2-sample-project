@@ -59,19 +59,22 @@ namespace Gs2.Sample.Realtime
             }
         }
 
-        public void Deserialize(byte[] data)
+        public void ProfileDeserialize(byte[] data)
         {
             var pos = 0;
-
-            state = (RPSState)BitConverter.ToInt32(data, pos);
-            handType = (RPSType)BitConverter.ToInt32(data, pos + 4);
-
-            pos += 8;
 
             if (playerName != null)
             {
                 playerName.SetText(Encoding.UTF8.GetString(data, pos, data.Length - pos));
             }
+        }
+
+        public void StateDeserialize(byte[] data)
+        {
+            var pos = 0;
+
+            state = (RPSState)BitConverter.ToInt32(data, pos);
+            handType = (RPSType)BitConverter.ToInt32(data, pos + 4);
         }
         
         public void SetMembersState(RPSState state)

@@ -101,7 +101,7 @@ namespace Gs2.Sample.Stamina
                         
                         _moneyPresenter.OnUpdateWallet();
                         
-                        UIManager.Instance.OpenDialog1("Notice","スタミナ回復を購入しました。");
+                        UIManager.Instance.OpenDialog1("Notice","StaminaPurchase");
                         _staminaPresenter.OnUpdateStamina();
                         break;
 

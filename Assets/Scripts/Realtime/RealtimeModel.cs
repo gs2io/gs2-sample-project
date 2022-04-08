@@ -12,6 +12,7 @@ namespace Gs2.Sample.Realtime
     {
         /// <summary>
         /// ギャザリングで作成されるゲームサーバ固有のID
+        /// Unique game server ID created by the Gathering
         /// </summary>
         public string gatheringName;
 
@@ -22,11 +23,13 @@ namespace Gs2.Sample.Realtime
         public void Clear()
         {
             gatheringName = string.Empty;
+            room = null;
             realtimeSession = null;
         }
         
         /// <summary>
         /// GS2-Matchmaking のギャザリング情報から GS2-Realtime のルーム情報を取得
+        /// Get GS2-Realtime room information from GS2-Matchmaking gathering information
         /// </summary>
         /// <param name="callback"></param>
         /// <param name="client"></param>

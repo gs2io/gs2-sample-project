@@ -13,31 +13,37 @@ namespace Gs2.Sample.Friend
     {
 	    /// <summary>
 	    /// 自分のプロフィール
+	    /// My Profile
 	    /// </summary>
 	    public EzProfile myProfile;
 	    
 	    /// <summary>
 	    /// フレンドリスト
+	    /// Friends List
 	    /// </summary>
 	    public List<EzFriendUser> Friends;
 	    
 	    /// <summary>
 	    /// 送信済みフレンドリクエスト
+	    /// Friend Requests Sent
 	    /// </summary>
 	    public List<EzFriendRequest> Requests;
 	    
 	    /// <summary>
 	    /// ブラックリスト
+	    /// blacklist
 	    /// </summary>
 	    public List<string> BlackList;
 	    
 	    /// <summary>
 	    /// フォロワーリスト
+	    /// follower list
 	    /// </summary>
 	    public List<EzFollowUser> FollowUsers;
 	    
 	    /// <summary>
 	    /// 自分のプロフィールを取得
+	    /// Get your own profile
 	    /// </summary>
 	    /// <param name="client"></param>
 	    /// <param name="session"></param>
@@ -73,6 +79,7 @@ namespace Gs2.Sample.Friend
 	    
 	    /// <summary>
 	    /// 自分のプロフィールを更新
+	    /// Update own profile
 	    /// </summary>
 	    /// <param name="client"></param>
 	    /// <param name="session"></param>
@@ -117,6 +124,7 @@ namespace Gs2.Sample.Friend
 	    
 	    /// <summary>
 	    /// フレンドの一覧を取得
+	    /// Get a list of friends
 	    /// </summary>
 	    /// <param name="client"></param>
 	    /// <param name="session"></param>
@@ -155,6 +163,7 @@ namespace Gs2.Sample.Friend
 	    
 	    /// <summary>
 	    /// 送信したフレンドリクエストの一覧を取得
+	    /// Get a list of friend requests you have sent
 	    /// </summary>
 	    /// <param name="client"></param>
 	    /// <param name="session"></param>
@@ -190,6 +199,7 @@ namespace Gs2.Sample.Friend
 	    
 	    /// <summary>
 	    /// 受信したフレンドリクエスト一覧を取得
+	    /// Get a list of received friend requests
 	    /// </summary>
 	    /// <param name="client"></param>
 	    /// <param name="session"></param>
@@ -225,6 +235,7 @@ namespace Gs2.Sample.Friend
 	    
 	    /// <summary>
 	    /// フレンド情報を取得
+	    /// Get friend information
 	    /// </summary>
 	    /// <param name="client"></param>
 	    /// <param name="session"></param>
@@ -248,7 +259,7 @@ namespace Gs2.Sample.Friend
 			    session,
 			    friendNamespaceName,
 			    targetUserId,
-			    true // プロフィールも一緒に取得するか
+			    true // プロフィールも一緒に取得するか / get a profile together?
 		    );
 
 		    if (result.Error != null)
@@ -264,6 +275,7 @@ namespace Gs2.Sample.Friend
 	    
 	    /// <summary>
 	    /// フレンドを削除
+	    /// Remove Friend
 	    /// </summary>
 	    /// <param name="client"></param>
 	    /// <param name="session"></param>
@@ -301,6 +313,7 @@ namespace Gs2.Sample.Friend
 	    
 	    /// <summary>
 	    /// 他プレイヤーの公開プロフィールを取得
+	    /// Get public profiles of other players
 	    /// </summary>
 	    /// <param name="client"></param>
 	    /// <param name="friendNamespaceName"></param>
@@ -335,6 +348,7 @@ namespace Gs2.Sample.Friend
 	    
 	    /// <summary>
 	    /// フレンドリクエストを送信
+	    /// Send a friend request
 	    /// </summary>
 	    /// <param name="client"></param>
 	    /// <param name="session"></param>
@@ -372,6 +386,7 @@ namespace Gs2.Sample.Friend
         
 	    /// <summary>
 	    /// フレンドリクエストを承諾
+	    /// Accept Friend Request
 	    /// </summary>
 	    /// <param name="client"></param>
 	    /// <param name="session"></param>
@@ -409,6 +424,7 @@ namespace Gs2.Sample.Friend
         
 	    /// <summary>
 	    /// フレンドリクエストを拒否
+	    /// Deny friend request
 	    /// </summary>
 	    /// <param name="client"></param>
 	    /// <param name="session"></param>
@@ -446,6 +462,7 @@ namespace Gs2.Sample.Friend
         
 	    /// <summary>
 	    /// 送信したフレンドリクエストを削除
+	    /// Delete a friend request you have sent
 	    /// </summary>
 	    /// <param name="client"></param>
 	    /// <param name="session"></param>
@@ -483,6 +500,7 @@ namespace Gs2.Sample.Friend
         
         /// <summary>
         /// ブラックリストを取得
+        /// Get Blacklist
         /// </summary>
         /// <param name="client"></param>
         /// <param name="session"></param>
@@ -518,6 +536,7 @@ namespace Gs2.Sample.Friend
         
         /// <summary>
         /// ブラックリストにユーザーを登録
+        /// Register users on the blacklist
         /// </summary>
         /// <param name="client"></param>
         /// <param name="session"></param>
@@ -555,6 +574,7 @@ namespace Gs2.Sample.Friend
         
         /// <summary>
         /// ブラックリストからユーザーを削除
+        /// Remove users from blacklist
         /// </summary>
         /// <param name="client"></param>
         /// <param name="session"></param>
@@ -592,6 +612,7 @@ namespace Gs2.Sample.Friend
         
         /// <summary>
         /// 他プレイヤーをフォローする
+        /// Follow other players
         /// </summary>
         /// <param name="client"></param>
         /// <param name="session"></param>
@@ -629,6 +650,7 @@ namespace Gs2.Sample.Friend
         
         /// <summary>
         /// フォローしている相手をアンフォローする
+        /// Unfollowing someone you are following
         /// </summary>
         /// <param name="client"></param>
         /// <param name="session"></param>
@@ -666,6 +688,7 @@ namespace Gs2.Sample.Friend
         
         /// <summary>
         /// フォローしているユーザー一覧を取得
+        /// Get a list of users you are following
         /// </summary>
         /// <param name="client"></param>
         /// <param name="session"></param>
