@@ -1,4 +1,4 @@
-﻿# リアルタイム対戦
+﻿# リアルタイム対戦 解説
 
 [GS2-Realtime](https://app.gs2.io/docs/index.html#gs2-realtime) を使用してプレイヤー間で通信対戦するサンプルです。
 

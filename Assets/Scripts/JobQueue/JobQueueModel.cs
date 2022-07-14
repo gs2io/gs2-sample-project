@@ -80,8 +80,8 @@ namespace Gs2.Sample.JobQueue
         /// <returns></returns>
         public IEnumerator Run()
         {
-            Client _client = GameManager.Instance.Cllient.Client;
-            GameSession _gameSession = GameManager.Instance.Session.Session;
+            Client _client = GameManager.Instance.Client;
+            GameSession _gameSession = GameManager.Instance.Session;
             
             AsyncResult<EzRunResult> result = null;
             yield return _client.JobQueue.Run(

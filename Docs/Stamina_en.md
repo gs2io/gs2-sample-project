@@ -1,4 +1,4 @@
-﻿# Stamina/Stamina Store Description
+﻿# Stamina/Stamina Store Explanation
 
 This is a sample of using [GS2-Stamina](https://app.gs2.io/docs/en/index.html#gs2-stamina) to manage stamina values.  
 It is linked to [GS2-Exchange](https://app.gs2.io/docs/en/index.html#gs2-exchange) and uses the billing currency of [GS2-Money](https://app.gs2.io/docs/en/index.html#gs2-money) to manage stamina values. The following is a sample of a store function that consumes and recovers stamina values.

@@ -36,16 +36,16 @@ namespace Gs2.Sample.News
             UIManager.Instance.AddLog("NewsPresenter::Initialize");
             
             yield return _newsModel.GetContentsUrl(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _newsSetting.newsNamespaceName,
                 _newsSetting.onGetContentsUrl,
                 _newsSetting.onError
             );
 
             yield return _newsModel.ListNewses(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _newsSetting.newsNamespaceName,
                 _newsSetting.onGetListNewses,
                 _newsSetting.onError
@@ -62,8 +62,8 @@ namespace Gs2.Sample.News
             UIManager.Instance.AddLog("NewsPresenter::Initialize");
             
             yield return _newsModel.GetContentsUrl(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _newsSetting.newsNamespaceName,
                 _newsSetting.onGetContentsUrl,
                 _newsSetting.onError

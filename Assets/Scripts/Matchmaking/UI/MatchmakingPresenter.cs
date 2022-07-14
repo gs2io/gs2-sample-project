@@ -82,11 +82,6 @@ namespace Gs2.Sample.Matchmaking
         private State matchmakingState = State.MainMenu;
         
         /// <summary>
-        /// マッチメイキングが完了したか
-        /// </summary>
-        private bool _complete;
-        
-        /// <summary>
         /// 通知が届いたか
         /// </summary>
         private bool _recievedNotification;
@@ -116,7 +111,6 @@ namespace Gs2.Sample.Matchmaking
             _joinGatheringView.OnCloseEvent();
             
             _recievedNotification = false;
-            _complete = false;
             
             _matchmakingSetting.onUpdateJoinedPlayerIds.AddListener(
                 (gathering, joinedPlayerIds) =>
@@ -155,12 +149,12 @@ namespace Gs2.Sample.Matchmaking
 
         public void Initialize()
         {
-            GameManager.Instance.Cllient.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
+            GameManager.Instance.Client.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
         }
         
         public void Finish()
         {
-            GameManager.Instance.Cllient.Profile.Gs2Session.OnNotificationMessage -= PushNotificationHandler;
+            GameManager.Instance.Client.Profile.Gs2Session.OnNotificationMessage -= PushNotificationHandler;
         }
         
         /// <summary>
@@ -312,8 +306,8 @@ namespace Gs2.Sample.Matchmaking
         {
             AsyncResult<EzCreateGatheringResult> result = null;
             yield return _matchmakingModel.CreateGathering(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 r => result = r,
                 _matchmakingSetting.matchmakingNamespaceName,
                 _matchmakingSetting.onUpdateJoinedPlayerIds,
@@ -356,8 +350,8 @@ namespace Gs2.Sample.Matchmaking
                 string contextToken = null;
                 yield return _matchmakingModel.JoinGathering(
                     r => { result = r; },
-                    GameManager.Instance.Cllient.Client,
-                    GameManager.Instance.Session.Session,
+                    GameManager.Instance.Client,
+                    GameManager.Instance.Session,
                     _matchmakingSetting.matchmakingNamespaceName,
                     contextToken,
                     _matchmakingSetting.onError
@@ -454,8 +448,8 @@ namespace Gs2.Sample.Matchmaking
             AsyncResult<EzCancelMatchmakingResult> result = null;
             yield return _matchmakingModel.CancelMatchmaking(
                 r => { result = r; },
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _matchmakingSetting.matchmakingNamespaceName,
                 _matchmakingSetting.onMatchmakingCancel,
                 _matchmakingSetting.onError

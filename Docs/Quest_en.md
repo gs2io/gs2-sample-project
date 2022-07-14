@@ -1,4 +1,4 @@
-﻿# Quest Description
+﻿# Quest Explanation
 
 This is a sample of using [GS2-Quest](https://app.gs2.io/docs/en/index.html#gs2-quest) to manage quests.
 

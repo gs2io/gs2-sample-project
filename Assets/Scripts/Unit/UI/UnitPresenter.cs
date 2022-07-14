@@ -121,7 +121,7 @@ namespace Gs2.Sample.Unit
             _unitSetting.onGetInventoryModel.AddListener(OnGetInventoryModel);
         
             yield return _unitModel.GetInventoryModel(
-                GameManager.Instance.Cllient.Client,
+                GameManager.Instance.Client,
                 _unitSetting.inventoryNamespaceName,
                 _unitSetting.inventoryModelName,
                 _unitSetting.onGetInventoryModel,
@@ -173,8 +173,8 @@ namespace Gs2.Sample.Unit
             _unitSetting.onGetInventory.AddListener(RefreshInventoryAction);
             
             yield return _unitModel.GetInventory(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _unitSetting.inventoryNamespaceName,
                 _unitSetting.inventoryModelName,
                 _unitSetting.onGetInventory,
@@ -235,7 +235,7 @@ namespace Gs2.Sample.Unit
         {
             StartCoroutine(
                 _unitModel.Acquire(
-                    GameManager.Instance.Session.Session,
+                    GameManager.Instance.Session,
                     _unitSetting.identifierAcquireUnitClientId,
                     _unitSetting.identifierAcquireUnitClientSecret,
                     _unitSetting.inventoryNamespaceName,
@@ -259,8 +259,8 @@ namespace Gs2.Sample.Unit
         {
             StartCoroutine(
                 _unitModel.Consume(
-                    GameManager.Instance.Cllient.Client,
-                    GameManager.Instance.Session.Session,
+                    GameManager.Instance.Client,
+                    GameManager.Instance.Session,
                     _unitSetting.inventoryNamespaceName,
                     _unitSetting.inventoryModelName,
                     itemSet.ItemName,

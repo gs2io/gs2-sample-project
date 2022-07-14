@@ -54,8 +54,8 @@ namespace Gs2.Sample.Money
             _moneySetting.onGetWallet.AddListener(RefreshMoneyAction);
             
             yield return _moneyModel.GetWallet(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _moneySetting.moneyNamespaceName,
                 _moneySetting.onGetWallet,
                 _moneySetting.onError

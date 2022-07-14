@@ -48,12 +48,12 @@ namespace Gs2.Sample.Friend
         /// <returns></returns>
         public void Initialize()
         {
-            GameManager.Instance.Cllient.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
+            GameManager.Instance.Client.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
         }
         
         public void Finish()
         {
-            GameManager.Instance.Cllient.Profile.Gs2Session.OnNotificationMessage -= PushNotificationHandler;
+            GameManager.Instance.Client.Profile.Gs2Session.OnNotificationMessage -= PushNotificationHandler;
         }
 
         /// <summary>
@@ -104,8 +104,8 @@ namespace Gs2.Sample.Friend
             _friendSetting.onGetProfile.AddListener(OnGetProfile);
             
             yield return _friendModel.GetProfile(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 _friendSetting.onGetProfile,
                 _friendSetting.onError
@@ -133,8 +133,8 @@ namespace Gs2.Sample.Friend
             _friendSetting.onGetProfile.AddListener(OnUpdateProfile);
             
             yield return _friendModel.UpdateProfile(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 _friendProfileEditView.publicProfile.text,
                 _friendProfileEditView.followerProfile.text,
@@ -170,8 +170,8 @@ namespace Gs2.Sample.Friend
             _friendSetting.onSendRequest.AddListener(OnSendRequest);
             
             yield return _friendModel.SendRequest(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 targetUserId,
                 _friendSetting.onSendRequest,
@@ -202,8 +202,8 @@ namespace Gs2.Sample.Friend
             _friendSetting.onAccept.AddListener(OnAccept);
             
             yield return _friendModel.Accept(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 targetUserId,
                 _friendSetting.onAccept,
@@ -234,8 +234,8 @@ namespace Gs2.Sample.Friend
             _friendSetting.onReject.AddListener(OnReject);
             
             yield return _friendModel.Reject(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 targetUserId,
                 _friendSetting.onReject,
@@ -253,8 +253,8 @@ namespace Gs2.Sample.Friend
         private IEnumerator OpenFriendList()
         {
             yield return _friendModel.DescribeFriends(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 _friendSetting.onDescribeFriends,
                 _friendSetting.onError
@@ -304,8 +304,8 @@ namespace Gs2.Sample.Friend
         private IEnumerator OpenSendRequests()
         {
             yield return _friendModel.DescribeSendRequests(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 _friendSetting.onDescribeSendRequests,
                 _friendSetting.onError
@@ -355,8 +355,8 @@ namespace Gs2.Sample.Friend
         private IEnumerator OpenReceiveRequests()
         {
             yield return _friendModel.DescribeReceiveRequests(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 _friendSetting.onDescribeReceiveRequests,
                 _friendSetting.onError
@@ -424,8 +424,8 @@ namespace Gs2.Sample.Friend
             _friendSetting.onGetFriend.AddListener(OnGetFriend);
             
             yield return _friendModel.GetFriend(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 userId,
                 _friendSetting.onGetFriend,
@@ -456,8 +456,8 @@ namespace Gs2.Sample.Friend
             _friendSetting.onDeleteFriend.AddListener(OnDeleteFriend);
             
             yield return _friendModel.DeleteFriend(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 userId,
                 _friendSetting.onDeleteFriend,
@@ -513,7 +513,7 @@ namespace Gs2.Sample.Friend
             _friendSetting.onGetPublicProfile.AddListener(OnGetPublicProfile);
             
             yield return _friendModel.GetPublicProfile(
-                GameManager.Instance.Cllient.Client,
+                GameManager.Instance.Client,
                 _friendSetting.friendNamespaceName,
                 userId,
                 _friendSetting.onGetPublicProfile,
@@ -544,8 +544,8 @@ namespace Gs2.Sample.Friend
             _friendSetting.onDeleteRequest.AddListener(OnDeleteRequest);
             
             yield return _friendModel.DeleteRequest(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 userId,
                 _friendSetting.onDeleteRequest,
@@ -563,8 +563,8 @@ namespace Gs2.Sample.Friend
         private IEnumerator OpenBlackList()
         {
             yield return _friendModel.GetBlackList(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 _friendSetting.onGetBlackList,
                 _friendSetting.onError
@@ -627,8 +627,8 @@ namespace Gs2.Sample.Friend
             _friendSetting.onUnregisterBlackList.AddListener(OnUnregisterBlackList);
             
             yield return _friendModel.UnregisterBlackList(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 userId,
                 _friendSetting.onUnregisterBlackList,
@@ -657,8 +657,8 @@ namespace Gs2.Sample.Friend
             _friendSetting.onUnregisterBlackList.AddListener(OnRegisterBlackList);
             
             yield return _friendModel.RegisterBlackList(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 userId,
                 _friendSetting.onRegisterBlackList,
@@ -687,8 +687,8 @@ namespace Gs2.Sample.Friend
             _friendSetting.onFollow.AddListener(OnFollow);
             
             yield return _friendModel.Follow(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 targetUserId,
                 _friendSetting.onFollow,
@@ -719,8 +719,8 @@ namespace Gs2.Sample.Friend
             _friendSetting.onUnfollow.AddListener(OnUnfollow);
             
             yield return _friendModel.Unfollow(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 targetUserId,
                 _friendSetting.onUnfollow,
@@ -738,8 +738,8 @@ namespace Gs2.Sample.Friend
         private IEnumerator OpenFollowList()
         {
             yield return _friendModel.DescribeFollowUsers(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 _friendSetting.onDescribeFollowUsers,
                 _friendSetting.onError

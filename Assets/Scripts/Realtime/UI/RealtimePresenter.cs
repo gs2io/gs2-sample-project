@@ -156,12 +156,12 @@ namespace Gs2.Sample.Realtime
         {
             UIManager.Instance.AddLog("Initialize");
             
-            GameManager.Instance.Cllient.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
+            GameManager.Instance.Client.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
         }
         
         public void Finish()
         {
-            GameManager.Instance.Cllient.Profile.Gs2Session.OnNotificationMessage -= PushNotificationHandler;
+            GameManager.Instance.Client.Profile.Gs2Session.OnNotificationMessage -= PushNotificationHandler;
         }
         
         /// <summary>
@@ -381,7 +381,7 @@ namespace Gs2.Sample.Realtime
                 AsyncResult<EzGetRoomResult> result = null;
                 yield return _realtimeModel.GetRoom(
                     r => { result = r; },
-                    GameManager.Instance.Cllient.Client,
+                    GameManager.Instance.Client,
                     _realtimeSetting.realtimeNamespaceName,
                     _realtimeSetting.onGetRoom,
                     _realtimeSetting.onError
@@ -445,7 +445,7 @@ namespace Gs2.Sample.Realtime
             UIManager.Instance.AddLog("RealtimePresenter::ConnectRoom");
             
             var realtimeSession = new RelayRealtimeSession(
-                GameManager.Instance.Session.Session.AccessToken.Token,
+                GameManager.Instance.Session.AccessToken.Token,
                 ipAddress,
                 port,
                 encryptionKey,

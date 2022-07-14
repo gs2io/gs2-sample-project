@@ -148,8 +148,8 @@ namespace Gs2.Sample.Stamina
             AsyncResult<EzGetStaminaResult> result = null;
             yield return _staminaModel.GetStamina(
                 r => result = r,
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _staminaSetting.staminaNamespaceName,
                 _staminaSetting.staminaName,
                 _staminaSetting.onGetStamina,
@@ -184,8 +184,8 @@ namespace Gs2.Sample.Stamina
                                 ? State.BuySucceed
                                 : State.BuyFailed);
                         },
-                        GameManager.Instance.Cllient.Client,
-                        GameManager.Instance.Session.Session,
+                        GameManager.Instance.Client,
+                        GameManager.Instance.Session,
                         _staminaSetting.exchangeNamespaceName,
                         _staminaSetting.exchangeRateName,
                         MoneyModel.Slot,

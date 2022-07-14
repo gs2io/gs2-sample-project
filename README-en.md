@@ -8,10 +8,10 @@ This is a sample implementation using various GS2 functions.
 
 ## Operating Environment
 
-Unity 2019.4.37f1
+Unity 2019.4.40f1
 
-GS2 SDK for Unity 2022.4.1  
-GS2 C# SDK 2022.4.1
+GS2 SDK for Unity 2022.7.3  
+GS2 C# SDK 2022.7.3
 
 ## Notes
 

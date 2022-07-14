@@ -3,7 +3,11 @@ using Gs2.Unity.Gs2Realtime.Model;
 using Gs2.Unity.Util;
 using UnityEngine;
 using UnityEngine.Events;
+#if UNITY_WEBGL && !UNITY_EDITOR
+using Gs2.HybridWebSocket;
+#else
 using Gs2.Util.WebSocketSharp;
+#endif
 
 namespace Gs2.Sample.Realtime
 {

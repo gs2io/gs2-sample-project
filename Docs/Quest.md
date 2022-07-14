@@ -180,7 +180,9 @@ yield return client.Quest.End(
         }
     }
 );
-``````c#
+```
+
+```c#
 var machine = new StampSheetStateMachine(
     stampSheet,
     client,

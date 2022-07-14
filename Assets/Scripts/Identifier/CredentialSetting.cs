@@ -7,7 +7,7 @@ using UnityEngine.Events;
 namespace Gs2.Sample.Credential
 {
     [Serializable]
-    public class InitializeGs2AccountEvent : UnityEvent<Profile, Client>
+    public class InitializeGs2AccountEvent : UnityEvent<Client>
     {
     }
 

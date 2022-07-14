@@ -146,7 +146,7 @@ namespace Gs2.Sample.Lottery
             // 抽選処理のスタンプシート
             // Stamp sheet for lottery processing
             _stampSheetRunner = new StampSheetRunner(
-                GameManager.Instance.Cllient.Client
+                GameManager.Instance.Client
             );
             _stampSheetRunner.AddDoneStampTaskEventHandler(
                 _moneyPresenter.GetTaskCompleteAction(),
@@ -206,8 +206,8 @@ namespace Gs2.Sample.Lottery
                             SetState(State.GetShowcaseFailed);
                         }
                     },
-                    GameManager.Instance.Cllient.Client,
-                    GameManager.Instance.Session.Session,
+                    GameManager.Instance.Client,
+                    GameManager.Instance.Session,
                     _lotterySetting.showcaseNamespaceName,
                     _lotterySetting.showcaseName,
                     _lotterySetting.onGetShowcase,
@@ -264,8 +264,8 @@ namespace Gs2.Sample.Lottery
             
             StartCoroutine(
                 _lotteryStoreModel.Buy(
-                    GameManager.Instance.Cllient.Client,
-                    GameManager.Instance.Session.Session,
+                    GameManager.Instance.Client,
+                    GameManager.Instance.Session,
                     _lotterySetting.showcaseNamespaceName,
                     _lotterySetting.showcaseName,
                     salesItem.DisplayItemId,

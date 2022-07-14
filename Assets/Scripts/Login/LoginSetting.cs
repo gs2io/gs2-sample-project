@@ -22,7 +22,7 @@ using UnityEngine.Events;
     }
     
     [System.Serializable]
-    public class LoginEvent : UnityEvent<EzAccount, GameSession>
+    public class LoginEvent : UnityEvent<GameSession>
     {
     }
     

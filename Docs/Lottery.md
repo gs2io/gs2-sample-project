@@ -30,17 +30,18 @@ IAP パッケージのインポートを行います。
 | イベント | 説明 |
 |---|---|
 | OnGetShowcase(EzShowcase) | 商品棚情報を取得したときに呼び出されます。 |
-| OnBuy(EzRoom room) | リアルタイムゲームサーバのIPアドレス・ポート情報を取得したときに呼び出されます。 |
-| OnJoinPlayer(Player player) | リアルタイムゲームサーバに新しいプレイヤーが参加したときに呼び出されます。 |
+| OnIssueBuyStampSheet(string) | 商品購入のスタンプシートが発行されたときに呼び出されます。 |
+| onAcquireInventoryItem(List<AcquireItemSetByUserIdRequest>) | 抽選でアイテムを入手したときに呼び出されます。 |
 | OnError(Gs2Exception error) | エラーが発生したときに呼び出されます。 |
 
 ## 抽選商品購入処理の流れ
 
 ### ストアの表示
 
-![商品リスト](GachaList.png)
+![LotteryList](LotteryList.png)
 
 商品リストを取得し、ストアを表示します。
+
 ```c#
 AsyncResult<EzGetShowcaseResult> result = null;
 yield return client.Showcase.GetShowcase(
@@ -60,6 +61,7 @@ yield return client.Showcase.GetShowcase(
 （商品の登録、設定が必要になります）。  
 エディター環境ではFake Storeのレシートが発行されます。  
 得られたレシートを後続の処理で参照できるよう保持しておきます。
+
 ```c#
 IStoreController controller = null;
 UnityEngine.Purchasing.Product product = null;
@@ -136,17 +138,17 @@ GS2 SDK for Unity ではスタンプシート実行用のステートマシン�
 StartCoroutine(
     _stampSheetRunner.Run(
     stampSheet,
-    _gachaSetting.showcaseKeyId,
-    _gachaSetting.onError
+    _lotterySetting.showcaseKeyId,
+    _lotterySetting.onError
     )
 );
 ```
 
 通常の課金通貨商品の購入スタンプシートの流れは以下になります。
 
-![LotteryList](LotteryList.png)
+![LotteryStore](GachaStore.png)
 
-発行されたスタンプシートに含まれている抽選結果をつかい、必要であればクライアントはガチャ演出等を再生したのち、  
+発行されたスタンプシートに含まれている抽選結果をつかい、必要であればクライアントは抽選演出等を再生したのち、  
 取得したアイテムの一覧表示が可能です。  
 スタンプシートの実行後、サーバ側で [GS2-JobQueue](https://app.gs2.io/docs/index.html#gs2-jobqueue) を使用して、順にインベントリーへのアイテム入手処理が実行されます。
 

@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Gs2.Sample.Core.Runtime;
 using Gs2.Unity.Gs2Inventory.Model;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -116,7 +115,7 @@ namespace Gs2.Sample.Inventory
             _inventorySetting.onGetInventoryModel.AddListener(OnGetInventoryModel);
 
             yield return _inventoryModel.GetInventoryModel(
-                GameManager.Instance.Cllient.Client,
+                GameManager.Instance.Client,
                 _inventorySetting.inventoryNamespaceName,
                 _inventorySetting.inventoryModelName,
                 _inventorySetting.onGetInventoryModel,
@@ -166,8 +165,8 @@ namespace Gs2.Sample.Inventory
 
             _inventorySetting.onGetInventory.AddListener(RefreshInventoryAction);
             yield return _inventoryModel.GetInventory(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _inventorySetting.inventoryNamespaceName,
                 _inventorySetting.inventoryModelName,
                 _inventorySetting.onGetInventory,
@@ -259,7 +258,7 @@ namespace Gs2.Sample.Inventory
         {
             StartCoroutine(
                 _inventoryModel.Acquire(
-                    GameManager.Instance.Session.Session,
+                    GameManager.Instance.Session,
                     _inventorySetting.identifierAcquireItemClientId,
                     _inventorySetting.identifierAcquireItemClientSecret,
                     _inventorySetting.inventoryNamespaceName,
@@ -282,8 +281,8 @@ namespace Gs2.Sample.Inventory
         {
             StartCoroutine(
                 _inventoryModel.Consume(
-                    GameManager.Instance.Cllient.Client,
-                    GameManager.Instance.Session.Session,
+                    GameManager.Instance.Client,
+                    GameManager.Instance.Session,
                     _inventorySetting.inventoryNamespaceName,
                     _inventorySetting.inventoryModelName,
                     itemSet.ItemName,

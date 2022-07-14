@@ -67,7 +67,7 @@ namespace Gs2.Sample.Chat
         /// <returns></returns>
         public IEnumerator Initialize()
         {
-            GameManager.Instance.Cllient.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
+            GameManager.Instance.Client.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
 
             bool roomNotFound = false;
             void OnError(Gs2Exception e)
@@ -82,7 +82,7 @@ namespace Gs2.Sample.Chat
             _onError.AddListener(OnError);
 
             yield return _chatModel.GetRoom(
-                GameManager.Instance.Cllient.Client,
+                GameManager.Instance.Client,
                 _chatSetting.chatNamespaceName,
                 _chatSetting.roomName,
                 _chatSetting.onGetRoom,
@@ -98,7 +98,7 @@ namespace Gs2.Sample.Chat
 
         public void Finish()
         {
-            GameManager.Instance.Cllient.Profile.Gs2Session.OnNotificationMessage -= PushNotificationHandler;
+            GameManager.Instance.Client.Profile.Gs2Session.OnNotificationMessage -= PushNotificationHandler;
         }
         
         /// <summary>
@@ -139,7 +139,7 @@ namespace Gs2.Sample.Chat
             UIManager.Instance.AddLog("ChatPresenter::GetRoom");
 
             yield return _chatModel.GetRoom(
-                GameManager.Instance.Cllient.Client,
+                GameManager.Instance.Client,
                 _chatSetting.chatNamespaceName,
                 _chatSetting.roomName,
                 _chatSetting.onGetRoom,
@@ -156,8 +156,8 @@ namespace Gs2.Sample.Chat
             UIManager.Instance.AddLog("ChatPresenter::ListSubscribeRooms");
 
             yield return _chatModel.ListSubscribeRooms(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _chatSetting.chatNamespaceName,
                 _chatSetting.onListSubscribeRooms,
                 _chatSetting.onError
@@ -173,8 +173,8 @@ namespace Gs2.Sample.Chat
             UIManager.Instance.AddLog("ChatPresenter::CreateRoom");
 
             yield return _chatModel.CreateRoom(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _chatSetting.chatNamespaceName,
                 _chatSetting.roomName,
                 _chatSetting.onCreateRoom,
@@ -200,8 +200,8 @@ namespace Gs2.Sample.Chat
             UIManager.Instance.AddLog("ChatPresenter::SubscribeRoom");
             
             yield return _chatModel.Subscribe(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _chatSetting.chatNamespaceName,
                 _chatSetting.roomName,
                 _chatSetting.onSubscribe,
@@ -238,7 +238,7 @@ namespace Gs2.Sample.Chat
                     foreach (var message in messages)
                     {
                         GameObject balloonObject;
-                        if (message.UserId == GameManager.Instance.Session.Session.AccessToken.UserId)
+                        if (message.UserId == GameManager.Instance.Session.AccessToken.UserId)
                         {
                             balloonObject = Instantiate<GameObject>(_chatView.myMessagePrefab,
                                 _chatView.messagesContent.transform);
@@ -270,8 +270,8 @@ namespace Gs2.Sample.Chat
             _chatSetting.onListMessages.AddListener(AddMessageAction);
             
             yield return _chatModel.ListMessages(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _chatSetting.chatNamespaceName,
                 _chatSetting.roomName,
                 _chatSetting.onListMessages,
@@ -297,8 +297,8 @@ namespace Gs2.Sample.Chat
             UIManager.Instance.AddLog("ChatPresenter::Unsubscribe");
             
             yield return _chatModel.Unsubscribe(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _chatSetting.chatNamespaceName,
                 _chatSetting.roomName,
                 _chatSetting.onUnsubscribe,
@@ -322,8 +322,8 @@ namespace Gs2.Sample.Chat
             UIManager.Instance.AddLog("ChatPresenter::Post");
             
             yield return _chatModel.Post(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _chatSetting.chatNamespaceName,
                 _chatSetting.roomName,
                 _chatView.GetMessage(),

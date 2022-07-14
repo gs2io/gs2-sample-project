@@ -3,16 +3,16 @@ Description: GS2-Quest initialize template Version 2021-12-03
 
 Globals:
   Alias:
-    QuestNamespaceName: quest-0001
-    QuestKeyNamespaceName: quest-key              # 報酬処理のスタンプシートの署名計算に使用する暗号鍵
-    QuestKeyName: stamp-sheet-key                 # 報酬処理のスタンプシートの署名計算に使用する暗号鍵
-    StaminaNamespaceName: stamina-0001            # クエストの対価に設定するスタミナのネームスペース名
-    StaminaName: main                             # クエストの対価に設定するスタミナ名
-    MoneyNamespaceName: money-0001                # クエストの報酬に設定する課金通貨のネームスペース名
-    QueueNamespaceName: quest-queue               # クエストの報酬の反映に使用するジョブキュー
-    DistributorNamespaceName: quest-distributor   # リソースの入手処理 を GS2-Distributor を経由することで所持数量制限で溢れた場合の GS2-Inbox への転送処理が自動的に行われる
-    DeliveryUserName: quest-distribute-user       # リソースの入手処理を実行する権限を持つ GS2-Identifier ユーザ
-    GatewayNamespaceName: gateway-0001
+    QuestNamespaceName: quest-0001                # GS2-Quest ネームスペース名
+    QuestKeyNamespaceName: quest-key              # 報酬処理のスタンプシートの署名計算に使用する暗号鍵のネームスペース名 Namespace name of the cryptographic key used to calculate signatures on the stamp sheet of the reward process.
+    QuestKeyName: stamp-sheet-key                 # 報酬処理のスタンプシートの署名計算に使用する暗号鍵名 Name of the cryptographic key used to calculate signatures on the stamp sheet for the reward process.
+    StaminaNamespaceName: stamina-0001            # クエストの対価に設定するスタミナのネームスペース名 Stamina namespace name to be set for the consideration of the quest
+    StaminaName: main                             # クエストの対価に設定するスタミナ名 Stamina name to be set for the price of the quest
+    MoneyNamespaceName: money-0001                # クエストの報酬に設定する課金通貨のネームスペース名 Namespace name of the charged currency to be set as the reward for the quest
+    QueueNamespaceName: quest-queue               # クエストの報酬の反映に使用するジョブキュー Job queue used to reflect quest rewards
+    DistributorNamespaceName: quest-distributor   # リソースの入手処理を GS2-Distributor を経由することで、所持数量制限で溢れた場合の GS2-Inbox への転送処理が自動的に行われる By processing resource acquisition through GS2-Distributor, the transfer process to GS2-Inbox in case of overflow due to possession quantity limit is automatically performed.
+    DeliveryUserName: quest-distribute-user       # リソースの入手処理を実行する権限を持つ GS2-Identifier ユーザ－ GS2-Identifier user authorized to perform the resource acquisition process
+    GatewayNamespaceName: gateway-0001            # 通知を行う GS2-Gateway ネームスペース名 GS2-Gateway namespace name for notification
 
 Resources:
   QuestKeyNamespace:

@@ -1,5 +1,4 @@
 using System.Collections;
-using Gs2.Sample.Core.Runtime;
 using Gs2.Sample.Login;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -278,8 +277,8 @@ namespace Gs2.Sample.AccountTakeOver
                         ? State.Setting_SelectTypeMenu
                         : State.GetTakeOverSettingsFailed);
                 },
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _loginSetting.accountNamespaceName,
                 _takeOverSetting.onError
             );
@@ -293,8 +292,8 @@ namespace Gs2.Sample.AccountTakeOver
         private IEnumerator AddTakeOverSetting()
         {
             yield return _accountTakeOverModel.AddAccountTakeOverSetting(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 r =>
                 {
                     SetState(r.Error == null
@@ -326,7 +325,7 @@ namespace Gs2.Sample.AccountTakeOver
         private IEnumerator DoTakeOver()
         {
             yield return _accountTakeOverModel.DoAccountTakeOver(
-                GameManager.Instance.Cllient.Client,
+                GameManager.Instance.Client,
                 r =>
                 {
                     if (r.Error == null)
@@ -363,8 +362,8 @@ namespace Gs2.Sample.AccountTakeOver
         private IEnumerator DeleteTakeOverSetting()
         {
             yield return _accountTakeOverModel.DeleteAccountTakeOverSetting(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 r =>
                 {
                     SetState(r.Error == null

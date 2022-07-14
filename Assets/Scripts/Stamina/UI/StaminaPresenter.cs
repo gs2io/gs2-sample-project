@@ -50,7 +50,7 @@ namespace Gs2.Sample.Stamina
             _staminaSetting.onGetStaminaModel.AddListener(OnGetStaminaModel);
         
             yield return GetStaminaModel(
-                GameManager.Instance.Cllient.Client,
+                GameManager.Instance.Client,
                 _staminaSetting.staminaNamespaceName,
                 _staminaSetting.staminaModelName,
                 _staminaSetting.onGetStaminaModel,
@@ -132,8 +132,8 @@ namespace Gs2.Sample.Stamina
             _staminaSetting.onGetStamina.AddListener(RefreshStaminaAction);
 
             yield return _staminaModel.ConsumeStamina(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _staminaSetting.staminaNamespaceName,
                 consumeValue,
                 _staminaSetting.onConsumeStamina,
@@ -204,8 +204,8 @@ namespace Gs2.Sample.Stamina
             AsyncResult<EzGetStaminaResult> result = null;
             yield return _staminaModel.GetStamina(
                 r => result = r,
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _staminaSetting.staminaNamespaceName,
                 _staminaSetting.staminaName,
                 _staminaSetting.onGetStamina,

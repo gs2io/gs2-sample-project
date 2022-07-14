@@ -193,6 +193,7 @@ namespace Gs2.Sample.Lottery
                     showcaseNamespaceName,
                     showcaseName,
                     displayItemId,
+                    null,
                     tempConfig
                 );
 

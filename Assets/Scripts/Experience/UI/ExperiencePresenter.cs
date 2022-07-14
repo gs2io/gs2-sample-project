@@ -42,7 +42,7 @@ namespace Gs2.Sample.Experience
             UIManager.Instance.AddLog("ExperiencePresenter::Initialize");
             
             yield return _experienceModel.GetPlayerExperienceModel(
-                GameManager.Instance.Cllient.Client,
+                GameManager.Instance.Client,
                 _experienceSetting.experienceNamespaceName,
                 _experienceSetting.playerExperienceModelName,
                 _experienceSetting.onGetExperienceModel,
@@ -50,7 +50,7 @@ namespace Gs2.Sample.Experience
             );
 
             yield return _experienceModel.GetItemExperienceModel(
-                GameManager.Instance.Cllient.Client,
+                GameManager.Instance.Client,
                 _experienceSetting.experienceNamespaceName,
                 _experienceSetting.itemExperienceModelName,
                 _experienceSetting.onGetExperienceModel,
@@ -95,12 +95,12 @@ namespace Gs2.Sample.Experience
             _experienceSetting.onIncreaseExperience.AddListener(RefreshStaminaAction);
             
             yield return _experienceModel.IncreaseExperience(
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Session,
                 _experienceSetting.identifierIncreaseExperienceClientId,
                 _experienceSetting.identifierIncreaseExperienceClientSecret,
                 _experienceSetting.experienceNamespaceName,
                 _experienceModel.playerExperienceModel,
-                GameManager.Instance.Session.Session.AccessToken.UserId, // プレイヤーのUserId
+                GameManager.Instance.Session.AccessToken.UserId, // プレイヤーのUserId
                 _increaseValue,
                 _experienceSetting.onIncreaseExperience, 
                 _experienceSetting.onError
@@ -132,7 +132,7 @@ namespace Gs2.Sample.Experience
                 {
                     foreach (var status in _statuses)
                     {
-                        if (status.PropertyId == GameManager.Instance.Session.Session.AccessToken.UserId)
+                        if (status.PropertyId == GameManager.Instance.Session.AccessToken.UserId)
                         {
                             _experienceView.SetRank(status);
                             long nextRankExperience;
@@ -153,8 +153,8 @@ namespace Gs2.Sample.Experience
             _experienceSetting.onGetStatuses.AddListener(RefreshStatuesAction);
             
             yield return _experienceModel.GetPlayerStatuses(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _experienceSetting.experienceNamespaceName,
                 _experienceSetting.onGetStatuses,
                 _experienceSetting.onError
@@ -246,7 +246,7 @@ namespace Gs2.Sample.Experience
         )
         {
             yield return _experienceModel.IncreaseExperience(
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Session,
                 _experienceSetting.identifierIncreaseExperienceClientId,
                 _experienceSetting.identifierIncreaseExperienceClientSecret,
                 _experienceSetting.experienceNamespaceName,
@@ -269,8 +269,8 @@ namespace Gs2.Sample.Experience
         public IEnumerator RefreshItemExperience()
         {
             yield return _experienceModel.GetItemStatuses(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _experienceSetting.experienceNamespaceName,
                 _experienceSetting.onGetStatuses,
                 _experienceSetting.onError

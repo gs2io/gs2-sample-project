@@ -1,4 +1,4 @@
-﻿# Gold/Inventory Description
+﻿# Gold/Inventory Explanation
 
 Inventory by [GS2-Inventory](https://app.gs2.io/docs/en/index.html#gs2-inventory), implementation of a bag to store items and  
 This sample is used to manage gold (in-game currency).

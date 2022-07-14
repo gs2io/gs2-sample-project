@@ -1,4 +1,4 @@
-# News Description
+# News Explanation
 
 This sample shows how to display notices in WebView (in-app browser) using [GS2-News](https://app.gs2.io/docs/en/index.html#gs2-news).
 
