@@ -1,11 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Gs2.Core;
 using Gs2.Core.Exception;
-using Gs2.Gs2Auth.Model;
 using Gs2.Sample.AccountTakeOver;
 using Gs2.Sample.Chat;
-using Gs2.Sample.Core.Runtime;
 using Gs2.Sample.Credential;
 using Gs2.Sample.Experience;
 using Gs2.Sample.Friend;
@@ -23,7 +22,6 @@ using Gs2.Sample.Version;
 using Gs2.Unity;
 using Gs2.Unity.Gs2Account.Model;
 using Gs2.Unity.Gs2Account.Result;
-using Gs2.Unity.Gs2Auth.Result;
 using Gs2.Unity.Gs2Gateway.Result;
 using Gs2.Unity.Gs2Matchmaking.Model;
 using Gs2.Unity.Gs2Version.Model;
@@ -80,11 +78,11 @@ namespace Gs2.Sample
 
         private int _saveSlot = 0;
         
-        private Gs2Client _client = new Gs2Client();
-        public Gs2Client Cllient => _client;
+        private Gs2.Unity.Client _client;
+        public Gs2.Unity.Client Client => _client;
         
-        private Gs2GameSession _session = new Gs2GameSession();
-        public Gs2GameSession Session => _session;
+        private Gs2.Unity.Util.GameSession _session;
+        public Gs2.Unity.Util.GameSession Session => _session;
     
         // Credential
         [SerializeField]
@@ -227,7 +225,7 @@ namespace Gs2.Sample
 
             var client = new Client(profile);
 
-            onInitializeGs2.Invoke(profile, client);
+            onInitializeGs2.Invoke(client);
         }
 
         /// <summary>
@@ -295,19 +293,16 @@ namespace Gs2.Sample
         /// クレデンシャル　初期化　完了
         /// Credential initialization complete
         /// </summary>
-        /// <param name="profile"></param>
         /// <param name="client"></param>
         public void OnInitializeGs2(
-            Profile profile,
             Client client
         )
         {
             UIManager.Instance.AddLog("OnInitializeGs2");
             
-            _client.Client = client;
-            _client.Profile = profile;
+            _client = client;
             
-            OnCreateGs2Client(_client);
+            OnCreateGs2Client();
         }
         
         /// <summary>
@@ -402,11 +397,9 @@ namespace Gs2.Sample
         /// Authentication()
         /// </summary>
         /// <param name="client"></param>
-        public void OnCreateGs2Client(Gs2Client client)
+        public void OnCreateGs2Client()
         {
             UIManager.Instance.AddLog("OnCreateGs2Client");
-
-            _client = client;
 
             StartCoroutine(
                 Login()
@@ -427,7 +420,7 @@ namespace Gs2.Sample
             _loginSetting.onError.AddListener(OnError);
             
             yield return AutoLogin(
-                _client.Client,
+                _client,
                 accountRepository,
                 _loginSetting.accountNamespaceName,
                 _loginSetting.accountEncryptionKeyId,
@@ -574,20 +567,23 @@ namespace Gs2.Sample
             string gatewayNamespaceName
         )
         {
-            UIManager.Instance.AddLog("Authentication");
+            UIManager.Instance.AddLog("Profile.Login");
             
-            // ゲームプレイヤーの認証
-            // Game Player Authentication
-            AsyncResult<EzAuthenticationResult> result = null;
-            yield return client.Account.Authentication(
+            // ユーザーの認証
+            // User Authentication
+            AsyncResult<GameSession> result = null;
+            yield return client.Profile.Login(
+                new Gs2AccountAuthenticator(
+                    client.Profile.Gs2RestSession,
+                    accountNamespaceName,
+                    accountEncryptionKeyId,
+                    userId,
+                    password
+                ),
                 r =>
                 {
                     result = r;
-                },
-                accountNamespaceName,
-                userId,
-                accountEncryptionKeyId,
-                password
+                }
             );
             
             if (result.Error != null)
@@ -598,30 +594,7 @@ namespace Gs2.Sample
                 yield break;
             }
 
-            var account = result.Result.Item;
-
-            UIManager.Instance.AddLog("Auth.Login");
-            
-            // 指定したユーザーIDでGS2にログイン
-            // Log in to GS2 with the specified user ID
-            AsyncResult<EzLoginResult> result2 = null;
-            yield return client.Auth.Login(
-                r =>
-                {
-                    result2 = r;
-                },
-                userId,
-                accountEncryptionKeyId,
-                result.Result.Body,
-                result.Result.Signature
-            );
-
-            var session = new GameSession(
-                new AccessToken()
-                    .WithToken(result2.Result.Token)
-                    .WithExpire(result2.Result.Expire)
-                    .WithUserId(result2.Result.UserId)
-            );
+            var session = result.Result;
 
             UIManager.Instance.AddLog("Gateway.SetUserId");
 
@@ -643,19 +616,19 @@ namespace Gs2.Sample
                 yield break;
             }
             
-            onLogin.Invoke(account, session);
+            onLogin.Invoke(session);
         }
 
-        public void OnLogin(EzAccount account, GameSession session)
+        public void OnLogin(GameSession session)
         {
             UIManager.Instance.AddLog("OnLogin");
-            UIManager.Instance.AddLog("session.userId : " + session.AccessToken.UserId);
-            UIManager.Instance.AddLog("session.token : " + session.AccessToken.Token);
-            UIManager.Instance.AddLog("session.AccessToken : " + session.AccessToken.Expire);
+            UIManager.Instance.AddLog("AccessToken.UserId : " + session.AccessToken.UserId);
+            UIManager.Instance.AddLog("AccessToken.Token : " + session.AccessToken.Token);
+            UIManager.Instance.AddLog("AccessToken.Expire : " + DateTimeOffset.FromUnixTimeMilliseconds((long)session.AccessToken.Expire).LocalDateTime);
             
             UIManager.Instance.SetAccountText(session.AccessToken.UserId);
             
-            _session.Session = session;
+            _session = session;
 
             if (!skipCheckVersion)
             {
@@ -709,8 +682,8 @@ namespace Gs2.Sample
         {
             StartCoroutine(
                 _versionModel.CheckVersion(
-                    _client.Client,
-                    _session.Session,
+                    _client,
+                    _session,
                     _versionSetting.versionNamespaceName,
                     _versionSetting.versionName,
                     _versionSetting.currentVersionMajor,
@@ -726,8 +699,8 @@ namespace Gs2.Sample
         {
             StartCoroutine(
                 _termModel.CheckTerm(
-                    _client.Client,
-                    _session.Session,
+                    _client,
+                    _session,
                     _termSetting.versionNamespaceName,
                     _termSetting.versionName,
                     _termSetting.onCheckVersion,
@@ -769,8 +742,8 @@ namespace Gs2.Sample
         {
             StartCoroutine(
                 _termModel.AcceptTerm(
-                    _client.Client,
-                    _session.Session,
+                    _client,
+                    _session,
                     _termSetting.versionNamespaceName,
                     _termSetting.versionName,
                     _termSetting.onAcceptTerm,

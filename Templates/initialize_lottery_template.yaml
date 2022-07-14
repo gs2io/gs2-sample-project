@@ -18,83 +18,110 @@ Resources:
     Properties:
       Name: ${KeyNamespaceName}
 
-  ShowcaseSettings:
+  ShowcaseKey:
+    Type: GS2::Key::Key
+    Properties:
+      NamespaceName: ${KeyNamespaceName}
+      Name: ${ShowcaseKeyName}
     DependsOn:
-    - ShowcaseNamespace
+      - KeyNamespace
+
+  ShowcaseNamespace:
+    Type: GS2::Showcase::Namespace
+    Properties:
+      KeyId: !GetAttr ShowcaseKey.Item.KeyId
+      Name: ${ShowcaseNamespaceName}
+    DependsOn:
+      - ShowcaseKey
+
+  ShowcaseSettings:
     Type: GS2::Showcase::CurrentShowcaseMaster
     Properties:
       Settings:
         version: "2019-04-04"
         showcases:
-        - name: ${ShowcaseName}
-          displayItems:
-          - type: salesItem
-            salesItem:
-              name: lottery_10
-              metadata: ''
-              acquireActions:
-              - action: Gs2Lottery:DrawByUserId
-                request:
-                  namespaceName: ${LotteryNamespaceName}
-                  lotteryName: ${ShowcaseName}
-                  userId: "#{userId}"
-                  count: 10
-              consumeActions:
-              - action: Gs2Money:WithdrawByUserId
-                request:
-                  namespaceName: ${MoneyNamespaceName}
-                  userId: "#{userId}"
-                  slot: "#{slot}"
-                  count: 50
-                  paidOnly: false
-          - type: salesItem
-            salesItem:
-              name: lottery_1
-              metadata: ''
-              acquireActions:
-              - action: Gs2Lottery:DrawByUserId
-                request:
-                  namespaceName: ${LotteryNamespaceName}
-                  lotteryName: ${ShowcaseName}
-                  userId: "#{userId}"
-                  count: 1
-              consumeActions:
-              - action: Gs2Money:WithdrawByUserId
-                request:
-                  namespaceName: ${MoneyNamespaceName}
-                  userId: "#{userId}"
-                  slot: "#{slot}"
-                  count: 5
-                  paidOnly: false
+          - name: ${ShowcaseName}
+            displayItems:
+              - type: salesItem
+                salesItem:
+                  name: lottery_10
+                  metadata: ''
+                  acquireActions:
+                    - action: Gs2Lottery:DrawByUserId
+                      request:
+                        namespaceName: ${LotteryNamespaceName}
+                        lotteryName: ${ShowcaseName}
+                        userId: "#{userId}"
+                        count: 10
+                  consumeActions:
+                    - action: Gs2Money:WithdrawByUserId
+                      request:
+                        namespaceName: ${MoneyNamespaceName}
+                        userId: "#{userId}"
+                        slot: "#{slot}"
+                        count: 50
+                        paidOnly: false
+              - type: salesItem
+                salesItem:
+                  name: lottery_1
+                  metadata: ''
+                  acquireActions:
+                    - action: Gs2Lottery:DrawByUserId
+                      request:
+                        namespaceName: ${LotteryNamespaceName}
+                        lotteryName: ${ShowcaseName}
+                        userId: "#{userId}"
+                        count: 1
+                  consumeActions:
+                    - action: Gs2Money:WithdrawByUserId
+                      request:
+                        namespaceName: ${MoneyNamespaceName}
+                        userId: "#{userId}"
+                        slot: "#{slot}"
+                        count: 5
+                        paidOnly: false
       NamespaceName: ${ShowcaseNamespaceName}
-
-  ShowcaseKey:
     DependsOn:
-    - KeyNamespace
-    Type: GS2::Key::Key
-    Properties:
-      NamespaceName: ${KeyNamespaceName}
-      Name: ${ShowcaseKeyName}
-
-  ShowcaseNamespace:
-    DependsOn:
-    - ShowcaseKey
-    Type: GS2::Showcase::Namespace
-    Properties:
-      KeyId: !GetAttr ShowcaseKey.Item.KeyId
-      Name: ${ShowcaseNamespaceName}
+      - ShowcaseNamespace
 
   LotteryKey:
-    DependsOn:
-    - KeyNamespace
     Type: GS2::Key::Key
     Properties:
       NamespaceName: ${KeyNamespaceName}
       Name: ${LotteryKeyName}
+    DependsOn:
+      - KeyNamespace
+
+  LotteryNamespace:
+    Type: GS2::Lottery::Namespace
+    Properties:
+      Name: ${LotteryNamespaceName}
+      TransactionSetting:
+        EnableAutoRun: false
+        QueueNamespaceId:
+          '!Join':
+            - ':'
+            - - grn
+              - gs2
+              - '!GetAttr': Gs2::Region
+              - '!GetAttr': Gs2::OwnerId
+              - queue
+              - ${JobQueueNamespaceName}
+        KeyId: !GetAttr LotteryKey.Item.KeyId
+      QueueNamespaceId:
+        '!Join':
+          - ':'
+          - - grn
+            - gs2
+            - '!GetAttr': Gs2::Region
+            - '!GetAttr': Gs2::OwnerId
+            - queue
+            - ${JobQueueNamespaceName}
+      KeyId: !GetAttr LotteryKey.Item.KeyId
+    DependsOn:
+      - LotteryKey
 
   LotterySettings:
-    DependsOn:
-    - LotteryNamespace
     Type: GS2::Lottery::CurrentLotteryMaster
     Properties:
       Settings: 
@@ -250,22 +277,8 @@ Resources:
             weight: 1
           name: 'n'
       NamespaceName: ${LotteryNamespaceName}
-  LotteryNamespace:
     DependsOn:
-    - LotteryKey
-    Type: GS2::Lottery::Namespace
-    Properties:
-      QueueNamespaceId:
-        '!Join':
-        - ':'
-        - - grn
-          - gs2
-          - '!GetAttr': Gs2::Region
-          - '!GetAttr': Gs2::OwnerId
-          - queue
-          - ${JobQueueNamespaceName}
-      KeyId: !GetAttr: LotteryKey.Item.KeyId
-      Name: ${LotteryNamespaceName}
+      - LotteryNamespace
 
 Outputs:
   LotteryNamespaceName: ${LotteryNamespaceName}

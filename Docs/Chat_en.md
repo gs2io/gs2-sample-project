@@ -1,4 +1,4 @@
-# Chat Description
+# Chat Explanation
 
 This is a sample of using [GS2-Chat](https://app.gs2.io/docs/en/index.html#gs2-chat) to chat, send and receive messages.
 

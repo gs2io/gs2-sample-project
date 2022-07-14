@@ -276,6 +276,7 @@ namespace Gs2.Sample.Money
                     showcaseNamespaceName,
                     showcaseName,
                     selectedProduct.Id,
+                    null,
                     new List<EzConfig>
                     {
                         new EzConfig

@@ -1,4 +1,4 @@
-﻿# Account takeover Description
+﻿# Account Takeover Explanation
 
 Anonymous accounts created by [GS2-Account](https://app.gs2.io/docs/en/index.html#gs2-account) with email addresses and  
 Associate a Game Center/Google Play Game Service account  

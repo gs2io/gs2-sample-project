@@ -1,4 +1,4 @@
-﻿# Matchmaking Description
+﻿# Matchmaking Explanation
 
 This is a sample of using [GS2-Matchmaking](https://app.gs2.io/docs/en/index.html#gs2-matchmaking) to find players for competitive and cooperative play.
 

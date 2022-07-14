@@ -1,4 +1,4 @@
-# Create and login account Description
+# Create and login account Explanation
 
 Sample function to login using [GS2-Account](https://app.gs2.io/docs/en/index.html#gs2-account).
 

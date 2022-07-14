@@ -1,4 +1,4 @@
-# Billing Currency/ Billing Currency Store Description
+# Billing Currency/ Billing Currency Store Explanation
 
 The billing currency managed using [GS2-Money](https://app.gs2.io/docs/en/index.html#gs2-money) can be used to  
 This is a sample of selling on [GS2-Showcase](https://app.gs2.io/docs/en/index.html#gs2-showcase).

@@ -260,8 +260,8 @@ namespace Gs2.Sample.Quest
             AsyncResult<EzGetProgressResult> result = null;
             yield return _questModel.GetProgress(
                 r => result = r,
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _questSetting.questNamespaceName,
                 _questSetting.onGetProgress,
                 _questSetting.onError
@@ -303,8 +303,8 @@ namespace Gs2.Sample.Quest
             AsyncResult<EzGetProgressResult> result = null;
             yield return _questModel.GetProgress(
                 r => result = r,
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _questSetting.questNamespaceName,
                 _questSetting.onGetProgress,
                 _questSetting.onError
@@ -372,7 +372,7 @@ namespace Gs2.Sample.Quest
                 AsyncResult<EzListQuestGroupsResult> result = null;
                 yield return _questModel.GetQuestGroups(
                     r => result = r,
-                    GameManager.Instance.Cllient.Client,
+                    GameManager.Instance.Client,
                     _questSetting.questNamespaceName,
                     _questSetting.onListGroupQuestModel,
                     _questSetting.onError
@@ -392,8 +392,8 @@ namespace Gs2.Sample.Quest
                 AsyncResult<EzDescribeCompletedQuestListsResult> result = null;
                 yield return _questModel.GetCompleteQuests(
                     r => result = r,
-                    GameManager.Instance.Cllient.Client,
-                    GameManager.Instance.Session.Session,
+                    GameManager.Instance.Client,
+                    GameManager.Instance.Session,
                     _questSetting.questNamespaceName,
                     _questSetting.onListCompletedQuestsModel,
                     _questSetting.onError
@@ -478,7 +478,7 @@ namespace Gs2.Sample.Quest
             AsyncResult<EzListQuestsResult> result = null;
             yield return _questModel.GetQuests(
                 r => result = r,
-                GameManager.Instance.Cllient.Client,
+                GameManager.Instance.Client,
                 _questSetting.questNamespaceName,
                 _questSetting.onListQuestModel,
                 _questSetting.onError
@@ -522,8 +522,8 @@ namespace Gs2.Sample.Quest
             AsyncResult<EzProgress> result = null;
             yield return _questModel.QuestStart(
                 r => result = r,
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _questSetting.questNamespaceName,
                 _questSetting.distributorNamespaceName,
                 _questSetting.questKeyId,
@@ -643,8 +643,8 @@ namespace Gs2.Sample.Quest
             AsyncResult<object> result = null;
             yield return _questModel.QuestEnd(
                 r => result = r,
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _questSetting.questNamespaceName,
                 isComplete,
                 rewards,

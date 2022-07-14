@@ -1,6 +1,6 @@
-# Gacha function Description
+# Lottery Function Explanation
 
-[GS2-Showcase](https://app.gs2.io/docs/en/index.html#gs2-showcase) sells gacha products, [GS2-Lottery](https://app.gs2.io/docs/en/index.html#gs2-lottery), and then the lottery is drawn by the  
+[GS2-Showcase](https://app.gs2.io/docs/en/index.html#gs2-showcase) sells lottery products, [GS2-Lottery](https://app.gs2.io/docs/en/index.html#gs2-lottery), and then the lottery is drawn by the  
 This sample shows the payout of items to a dedicated inventory.
 
 ## GS2-Deploy template
@@ -30,13 +30,13 @@ Import the IAP package.
 | Event | Description |
 |---|---|
 | OnGetShowcase(EzShowcase) | Called when the product shelf information is obtained. | OnGetShowcase(EzShowcase)
-| OnBuy(EzRoom room) | Called when IP address and port information of the real-time game server is obtained. | OnBuy(EzRoom room)
-| OnJoinPlayer(Player player) | Called when a new player joins the real-time game server. | OnJoinPlayer(Player player)
+| OnBuy(EzRoom room) | Called when IP address and port information of the Realtime game server is obtained. | OnBuy(EzRoom room)
+| OnJoinPlayer(Player player) | Called when a new player joins the Realtime game server. | OnJoinPlayer(Player player)
 | OnError(Gs2Exception error) | Called when an error occurs. | OnError(Gs2Exception error)
 
-## Process flow for purchasing gacha products
+## Process flow for purchasing lottery products
 
-### Display of gacha store
+### Display of lottery store
 
 Retrieves the product list and displays the store.
 
@@ -90,7 +90,7 @@ Execute the process of purchasing an item from __GS2-Showcase__ using the purcha
 Config is passed a __GS2-Money__ wallet slot and the contents of the receipt.
 
 ```c#
-// Gacha purchase Receipt information
+// Lottery purchase receipt information
 if (receipt ! = null)
 {
     tempConfig.Add(
@@ -137,17 +137,17 @@ To run the state machine, you will need [GS2-Distributor](https://app.gs2.io/doc
 StartCoroutine(
     _stampSheetRunner.Run(
     stampSheet,
-    _gachaSetting.showcaseKeyId,
-    _gachaSetting.onError
+    _lotterySetting.showcaseKeyId,
+    _lotterySetting.onError
     )
 );
 ```
 
 The normal flow of a stamp sheet for the purchase of billed currency items is as follows
 
-![Purchase of Lottery products](GachaStore_en.png)
+![LotteryStore](GachaStore_en.png)
 
-Using the lottery results included in the issued stamp sheet, the client can play the gacha performance, etc., if necessary, and then use the  
+Using the lottery results included in the issued stamp sheet, the client can play the lottery performance, etc., if necessary, and then use the  
 The list of acquired items can be displayed.  
 After the stamp sheet is executed, the server uses [GS2-JobQueue](https://app.gs2.io/docs/en/index.html#gs2-jobqueue) to process the items in the inventory in order.
 
@@ -168,15 +168,15 @@ if (sheet.Action == "Gs2Lottery:DrawByUserId")
     {
         AddRange(acquireRequests);
     }
-    _gachaSetting.onAcquireInventoryItem.Invoke(
+    _lotterySetting.onAcquireInventoryItem.Invoke(
         mergedAcquireRequests
     );
     // Execute stamp sheet
     StartCoroutine(
         _stampSheetRunner.Run(
             StampSheet,
-            _gachaSetting.lotteryKeyId,
-            _gachaSetting.onError
+            _lotterySetting.lotteryKeyId,
+            _lotterySetting.onError
         )
     );
 }

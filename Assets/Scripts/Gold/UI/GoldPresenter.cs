@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Gs2.Sample.Core.Runtime;
 using Gs2.Unity.Gs2Distributor.Result;
 using Gs2.Unity.Gs2Inventory.Model;
 using Gs2.Unity.Util;
@@ -33,7 +32,7 @@ namespace Gs2.Sample.Gold
             UIManager.Instance.AddLog("GoldPresenter::Initialize");
         
             yield return _goldModel.GetInventoryModel(
-                GameManager.Instance.Cllient.Client,
+                GameManager.Instance.Client,
                 _goldSetting.inventoryNamespaceName,
                 _goldSetting.inventoryModelName,
                 _goldSetting.onGetInventoryModel,
@@ -67,8 +66,8 @@ namespace Gs2.Sample.Gold
             _goldSetting.onGetInventory.AddListener(RefreshInventoryAction);
             
             yield return _goldModel.GetInventory(
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _goldSetting.inventoryNamespaceName,
                 _goldModel.InventoryModel.Name,
                 _goldSetting.onGetInventory,
@@ -96,7 +95,7 @@ namespace Gs2.Sample.Gold
         {
             StartCoroutine(
                 _goldModel.Acquire(
-                    GameManager.Instance.Session.Session,
+                    GameManager.Instance.Session,
                     _goldSetting.identifierAcquireGoldClientId,
                     _goldSetting.identifierAcquireGoldClientSecret,
                     _goldSetting.inventoryNamespaceName,
@@ -152,8 +151,8 @@ namespace Gs2.Sample.Gold
         {
             StartCoroutine(
                 _goldModel.Consume(
-                    GameManager.Instance.Cllient.Client,
-                    GameManager.Instance.Session.Session,
+                    GameManager.Instance.Client,
+                    GameManager.Instance.Session,
                     _goldSetting.inventoryNamespaceName,
                     _goldSetting.inventoryModelName,
                     _goldSetting.itemModelName,

@@ -127,8 +127,8 @@ namespace Gs2.Sample.Money
                             SetState(State.GetProductsFailed);
                         }
                     },
-                    GameManager.Instance.Cllient.Client,
-                    GameManager.Instance.Session.Session,
+                    GameManager.Instance.Client,
+                    GameManager.Instance.Session,
                     _moneySetting.showcaseNamespaceName,
                     _moneySetting.showcaseName,
                     _moneySetting.onGetProducts,
@@ -201,8 +201,8 @@ namespace Gs2.Sample.Money
                         ? State.BuySucceed
                         : State.BuyFailed);
                 },
-                GameManager.Instance.Cllient.Client,
-                GameManager.Instance.Session.Session,
+                GameManager.Instance.Client,
+                GameManager.Instance.Session,
                 _moneySetting.showcaseNamespaceName,
                 _moneySetting.showcaseName,
                 _moneySetting.distributorNamespaceName,

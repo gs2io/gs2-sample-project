@@ -1,4 +1,4 @@
-﻿# Version check Explanation
+﻿# Version Check Explanation
 
 This sample uses [GS2-Version](https://app.gs2.io/docs/en/index.html#gs2-version) to check the version of an application when it is launched and to confirm user acceptance of the Terms of Use.
 
