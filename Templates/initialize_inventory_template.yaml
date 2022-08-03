@@ -1,66 +1,99 @@
 GS2TemplateFormatVersion: "2019-05-01"
-Description: GS2-Inventory initialize template Version 2021-12-03
+Description: GS2-Inventory initialize template Version 2022-07-25
 
 Globals:
   Alias:
-    IdentifierAcquireItemUserName: inventory-acquire-item
-    EnableDebugAcquireItemAction: 'True'
-    InventoryNamespaceName: inventory
-    IdentifierAcquireItemPolicyName: inventory-acquire-item
+    InventoryNamespaceName: inventory-0001    # GS2-Inventory ネームスペース名 / Namespace name
+    InventoryModelName: inventory             # GS2-Inventory インベントリモデル名 / Inventory model name
+    KeyNamespaceName: inventory-key           # GS2-Key ネームスペース名 / Namespace name
+    ExchangeNamespaceName: inventory-exchange # GS2-Exchange ネームスペース名 / Namespace name
+    ExchangeRateNameFire: fire_element        # GS2-Exchange 交換レート名 fire_elementアイテム / Exchange rate name fire_element Item
+    ExchangeRateNameWater: water_element      # GS2-Exchange 交換レート名 water_elementアイテム / Exchange rate name water_element Item
+    ExchangeKeyName: inventory-exchange-key   # GS2-Exchange 交換処理のスタンプシートの署名計算に使用する暗号鍵 / Cryptographic key used to calculate signatures on stamp sheets for the exchange process
 
 Resources:
-  IdentifierAcquireItemPolicy:
-    Type: GS2::Identifier::SecurityPolicy
-    Properties:
-      Name: ${IdentifierAcquireItemPolicyName}
-      Policy:
-        Version: "2016-04-01"
-        Statements:
-        - Effect: Allow
-          Actions:
-          - Gs2Inventory:AcquireItemSetByUserId
-          Resources:
-          - '*'
-
-  IdentifierAcquireItemUser:
-    Type: GS2::Identifier::User
-    Properties:
-      Name: ${IdentifierAcquireItemPolicyName}
-
-  IdentifierAcquireItemUserAttachPolicy:
-    DependsOn:
-    - IdentifierAcquireItemPolicy
-    - IdentifierAcquireItemUser
-    Type: GS2::Identifier::AttachSecurityPolicy
-    Properties:
-      SecurityPolicyId: !GetAttr IdentifierAcquireItemPolicy.Item.SecurityPolicyId
-      UserName: ${IdentifierAcquireItemUserName}
-
-  InventorySettings:
-    DependsOn:
-    - InventoryNamespace
-    Type: GS2::Inventory::CurrentItemModelMaster
-    Properties:
-      Settings: '{"version":"2019-02-05","inventoryModels":[{"name":"inventory","initialCapacity":100,"maxCapacity":100,"itemModels":[{"name":"fire_element","stackingLimit":99,"allowMultipleStacks":true,"sortValue":0},{"name":"water_element","stackingLimit":99,"allowMultipleStacks":true,"sortValue":1}]}]}'
-      NamespaceName: ${InventoryNamespaceName}
-
-  IdentifierAcquireItemIdentifier:
-    DependsOn:
-    - IdentifierAcquireItemUser
-    Type: GS2::Identifier::Identifier
-    Properties:
-      UserName: ${IdentifierAcquireItemUserName}
-
   InventoryNamespace:
     Type: GS2::Inventory::Namespace
     Properties:
       Name: ${InventoryNamespaceName}
 
+  InventorySettings:
+    Type: GS2::Inventory::CurrentItemModelMaster
+    Properties:
+      NamespaceName: ${InventoryNamespaceName}
+      Settings:
+        version: 2019-02-05
+        inventoryModels:
+          - name: ${InventoryModelName}
+            initialCapacity: 100
+            maxCapacity: 100
+            itemModels:
+            - name: 'fire_element'
+              stackingLimit: 99
+              allowMultipleStacks: true
+              sortValue: 0
+            - name: 'water_element'
+              stackingLimit: 99
+              allowMultipleStacks: true
+              sortValue: 1
+    DependsOn:
+      - InventoryNamespace
+
+  InventoryKeyNamespace:
+    Type: GS2::Key::Namespace
+    Properties:
+      Name: ${KeyNamespaceName}
+
+  ExchangeKey:
+    Type: GS2::Key::Key
+    Properties:
+      NamespaceName: ${KeyNamespaceName}
+      Name: ${ExchangeKeyName}
+    DependsOn:
+      - InventoryKeyNamespace
+
+  ExchangeNamespace:
+    Type: GS2::Exchange::Namespace
+    Properties:
+      Name: ${ExchangeNamespaceName}
+      KeyId: !GetAttr ExchangeKey.Item.KeyId
+    DependsOn:
+      - ExchangeKey
+
+  ExchangeSettings:
+    Type: GS2::Exchange::CurrentRateMaster
+    Properties:
+      NamespaceName: ${ExchangeNamespaceName}
+      Settings:
+        version: 2019-08-19
+        rateModels:
+          - name: ${ExchangeRateNameFire}
+            consumeActions: []
+            acquireActions:
+              - action: Gs2Inventory:AcquireItemSetByUserId
+                request:
+                  namespaceName: ${InventoryNamespaceName}
+                  inventoryName: ${InventoryModelName}
+                  itemName: fire_element
+                  userId: "#{userId}"
+                  acquireCount: 1
+          - name: ${ExchangeRateNameWater}
+            consumeActions: []
+            acquireActions:
+              - action: Gs2Inventory:AcquireItemSetByUserId
+                request:
+                  namespaceName: ${InventoryNamespaceName}
+                  inventoryName: ${InventoryModelName}
+                  itemName: water_element
+                  userId: "#{userId}"
+                  acquireCount: 1
+    DependsOn:
+      - ExchangeNamespace
+
 Outputs:
-  InventoryNamespaceName: ${InventoryNamespaceName}
-  InventoryModelName: inventory
-  IdentifierAcquireItemPolicyName: ${IdentifierAcquireItemPolicyName}
-  IdentifierAcquireItemUserName: ${IdentifierAcquireItemUserName}
-  EnableDebugAcquireItemAction: ${EnableDebugAcquireItemAction}
-  IdentifierAcquireItemClientId: !GetAttr IdentifierAcquireItemIdentifier.Item.ClientId
-  IdentifierAcquireItemClientSecret: !GetAttr IdentifierAcquireItemIdentifier.ClientSecret
+  InventoryNamespaceName: !GetAttr InventoryNamespace.Item.Name
+  InventoryModelName: ${InventoryModelName}
+  ExchangeNamespaceName: !GetAttr ExchangeNamespace.Item.Name
+  ExchangeRateNameFire: ${ExchangeRateNameFire}
+  ExchangeRateNameWater: ${ExchangeRateNameWater}
+  ExchangeKeyName: !GetAttr ExchangeKey.Item.Name

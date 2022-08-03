@@ -50,55 +50,207 @@
 
 `プロフィール`ボタンをタップすると、自分のプロフィールを取得し`プロフィール`ダイアログを開きます。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzGetProfileResult> result = null;
-yield return client.Friend.GetProfile(
-callback: r => { result = r; },
-session,
-friendNamespaceName
-);
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+).Profile();
+try
+{
+    myProfile = await domain.ModelAsync();
+    
+    onGetProfile.Invoke(myProfile);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+・コルーチン使用時
+```c#
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+).Profile();
+var future = domain.Model();
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    yield break;
+}
+
+myProfile = future.Result;
+
+onGetProfile.Invoke(myProfile);
 ```
 
 InputFieldでプロフィールの文言を編集後、`更新`ボタンをタップしプロフィールの更新を行います。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzUpdateProfileResult> result = null;
-yield return client.Friend.UpdateProfile(
-    callback: r => { result = r; },
-    session,
-    friendNamespaceName,
-    publicProfile,
-    followerProfile,
-    friendProfile
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+).Profile();
+try
+{
+    var result = await domain.UpdateProfileAsync(
+	    publicProfile: publicProfile,
+	    followerProfile: followerProfile,
+	    friendProfile: friendProfile
+    );
+    myProfile = await result.ModelAsync();
+    
+    onUpdateProfile.Invoke(myProfile);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+・コルーチン使用時
+```c#
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+).Profile(
 );
+var future = domain.UpdateProfile(
+    publicProfile: publicProfile,
+    followerProfile: followerProfile,
+    friendProfile: friendProfile
+);
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    yield break;
+}
+
+var result = future.Result;
+var future2 = result.Model();
+yield return future2;
+if (future2.Error != null)
+{
+    onError.Invoke(future2.Error);
+    yield break;
+}
+
+myProfile = future2.Result;
+
+onUpdateProfile.Invoke(myProfile);
 ```
 
 ## フレンドの一覧/削除
 
 `フレンド`ボタンでフレンドの一覧を取得し`フレンドリスト`ダイアログを開きます。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzDescribeFriendsResult> result = null;
-yield return client.Friend.DescribeFriends(
-    callback: r => { result = r; },
-    session,
-    friendNamespaceName,
-    false,
-    30,
-    null
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
 );
+try
+{
+    Friends = await domain.FriendsAsync().ToListAsync();
+    
+    onDescribeFriends.Invoke(Friends);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+・コルーチン使用時
+```c#
+Friends.Clear();
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+);
+var it = domain.Friends();
+while (it.HasNext())
+{
+    yield return it.Next();
+    if (it.Error != null)
+    {
+	    onError.Invoke(it.Error);
+	    break;
+    }
+
+    if (it.Current != null)
+    {
+	    Friends.Add(it.Current);
+    }
+}
+
+onDescribeFriends.Invoke(Friends);
 ```
 
 `フレンドリスト`ダイアログのユーザー項目の`削除`で、フレンドを削除、フレンド登録を解除します。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzDeleteFriendResult> result = null;
-yield return client.Friend.DeleteFriend(
-    callback: r => { result = r; },
-    session,
-    friendNamespaceName,
-    targetUserId
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+).Friend(
+    withProfile: false // プロフィールも一緒に取得するか / get a profile together?
+).FriendUser(
+    targetUserId: targetUserId
 );
+try
+{
+    var result = await domain.DeleteFriendAsync();
+    var item = await result.ModelAsync();
+    
+    onDeleteFriend.Invoke(item);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+・コルーチン使用時
+```c#
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+).Friend(
+    withProfile: false // プロフィールも一緒に取得するか / get a profile together?
+).FriendUser(
+    targetUserId: targetUserId
+);
+var future = domain.DeleteFriend();
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    yield break;
+}
+
+var result = future.Result;
+var future2 = result.Model();
+yield return future2;
+if (future2.Error != null)
+{
+    onError.Invoke(future2.Error);
+    yield break;
+}
+
+var item = future2.Result;
+onDeleteFriend.Invoke(item);
 ```
 
 ## フレンドリクエストの送信
@@ -107,14 +259,48 @@ yield return client.Friend.DeleteFriend(
 対象となるユーザーに対してフレンドリクエストを送信します。  
 相手ユーザーの承認/拒否を待っている状態になります。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzSendRequestResult> result = null;
-yield return client.Friend.SendRequest(
-    callback: r => { result = r; },
-    session,
-    friendNamespaceName,
-    targetUserId
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
 );
+try
+{
+    var result = await domain.SendRequestAsync(
+	    targetUserId: targetUserId
+    );
+    var item = await result.ModelAsync();
+
+    onSendRequest.Invoke(item);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+・コルーチン使用時
+```c#
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+);
+var future = domain.SendRequest(
+    targetUserId: targetUserId
+);
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    yield break;
+}
+var result = future.Result;
+var future2 = result.Model();
+yield return future2;
+var item = future2.Result;
+onSendRequest.Invoke(item);
 ```
 
 ## 送信/受信したフレンドリクエストリクエストの一覧取得 
@@ -122,152 +308,580 @@ yield return client.Friend.SendRequest(
 `送信中リクエスト`ボタンをタップして、送信したフレンドリクエストの一覧を取得し  
 `送信したフレンドリクエスト`ダイアログを開きます。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzDescribeSendRequestsResult> result = null;
-yield return client.Friend.DescribeSendRequests(
-    callback: r => { result = r; },
-    session,
-    friendNamespaceName
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
 );
+try
+{
+    Requests = await domain.SendRequestsAsync().ToListAsync();
+    
+    onDescribeSendRequests.Invoke(Requests);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+・コルーチン使用時
+```c#
+Requests.Clear();
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+);
+var it = domain.SendRequests();
+while (it.HasNext())
+{
+    yield return it.Next();
+    if (it.Error != null)
+    {
+	    onError.Invoke(it.Error);
+	    break;
+    }
+
+    if (it.Current != null)
+    {
+	    Requests.Add(it.Current);
+    }
+}
+
+onDescribeSendRequests.Invoke(Requests);
 ```
 
 送信したフレンドリクエストは相手が承認/拒否を行う前であれば削除、取り下げることができます。  
 `送信中リクエスト`ボタンから開く`送信したフレンドリクエスト`ダイアログのユーザー項目の`削除`で、リクエストを削除します。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzDeleteRequestResult> result = null;
-yield return client.Friend.DeleteRequest(
-    callback: r => { result = r; },
-    session,
-    friendNamespaceName,
-    targetUserId
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+).SendFriendRequest(
+    targetUserId: targetUserId
 );
+try
+{
+    var result = await domain.DeleteRequestAsync();
+    var item = await result.ModelAsync();
+    onDeleteRequest.Invoke(item);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+・コルーチン使用時
+```c#
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+).SendFriendRequest(
+    targetUserId: targetUserId
+);
+var future = domain.DeleteRequest();
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    yield break;
+}
+var result = future.Result;
+var future2 = result.Model();
+yield return future2;
+var item = future2.Result;
+onDeleteRequest.Invoke(item);
 ```
 
 `受信中リクエスト`ボタンをタップして、受信したフレンドリクエストの一覧を取得し  
 `受信したフレンドリクエスト`ダイアログを開きます。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzDescribeReceiveRequestsResult> result = null;
-yield return client.Friend.DescribeReceiveRequests(
-    callback: r => { result = r; },
-    session,
-    friendNamespaceName
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
 );
+try
+{
+    Requests = await domain.ReceiveRequestsAsync().ToListAsync();
+    
+    onDescribeReceiveRequests.Invoke(Requests);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+・コルーチン使用時
+```c#
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+);
+var it = domain.ReceiveRequests();
+while (it.HasNext())
+{
+    yield return it.Next();
+    if (it.Error != null)
+    {
+	    onError.Invoke(it.Error);
+	    break;
+    }
+
+    if (it.Current != null)
+    {
+	    Requests.Add(it.Current);
+    }
+}
+
+onDescribeReceiveRequests.Invoke(Requests);
 ```
 
 ## フレンドリクエストの承認/拒否
 
 `受信中リクエスト`ボタンから開く`受信したフレンドリクエスト`ダイアログのユーザー項目の`承認`ボタンで、フレンドリクエストを承認します。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzAcceptResult> result = null;
-yield return client.Friend.Accept(
-    callback: r => { result = r; },
-    session,
-    friendNamespaceName,
-    fromUserId
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+).ReceiveFriendRequest(
+    fromUserId: fromUserId
 );
+try
+{
+    var result  = await domain.AcceptAsync();
+    var item = await result.ModelAsync();
+    
+    onAccept.Invoke(item);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+・コルーチン使用時
+```c#
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+).ReceiveFriendRequest(
+    fromUserId: fromUserId
+);
+var future = domain.Accept();
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    yield break;
+}
+
+var result = future.Result;
+var future2 = result.Model();
+yield return future2;
+var item = future2.Result;
+onAccept.Invoke(item);
 ```
 
 `拒否`ボタンで、フレンドリクエストを拒否します。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzRejectResult> result = null;
-yield return client.Friend.Reject(
-    callback: r => { result = r; },
-    session,
-    friendNamespaceName,
-    fromUserId
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+).ReceiveFriendRequest(
+    fromUserId: fromUserId
 );
+try
+{
+    var result = await domain.RejectAsync();
+    var item = await result.ModelAsync();
+    onReject.Invoke(item);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+・コルーチン使用時
+```c#
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+).ReceiveFriendRequest(
+    fromUserId: fromUserId
+);
+var future = domain.Reject();
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    yield break;
+}
+
+var result = future.Result;
+var future2 = result.Model();
+yield return future2;
+var item = future2.Result;
+onReject.Invoke(item);
 ```
 
 ## フレンド登録の解除
 
 `フレンド`ボタンから開く`フレンドリスト`ダイアログのユーザー項目の`削除`で、フレンドを削除、フレンド登録を解除します。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzDeleteFriendResult> result = null;
-yield return client.Friend.DeleteFriend(
-    callback: r => { result = r; },
-    session,
-    friendNamespaceName,
-    targetUserId
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+).Friend(
+    withProfile: false // プロフィールも一緒に取得するか / get a profile together?
+).FriendUser(
+    targetUserId: targetUserId
 );
+try
+{
+    var result = await domain.DeleteFriendAsync();
+    var item = await result.ModelAsync();
+    
+    onDeleteFriend.Invoke(item);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+・コルーチン使用時
+```c#
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+).ReceiveFriendRequest(
+    fromUserId: fromUserId
+);
+var future = domain.Reject();
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    yield break;
+}
+
+var result = future.Result;
+var future2 = result.Model();
+yield return future2;
+var item = future2.Result;
+onReject.Invoke(item);
 ```
 
 ## ブラックリスト
 
 チャットのメッセージから開く`プレイヤー`ダイアログで他プレイヤーを`ブラックリストに追加`します。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzRegisterBlackListResult> result = null;
-yield return client.Friend.RegisterBlackList(
-    callback: r => { result = r; },
-    session,
-    friendNamespaceName,
-    targetUserId
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+).BlackList();
+try
+{
+    var result = await domain.RegisterBlackListAsync(
+	    targetUserId: targetUserId
+    );
+    var item = await result.ModelAsync();
+    onRegisterBlackList.Invoke(item);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+・コルーチン使用時
+```c#
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+).BlackList();
+var future = domain.UnregisterBlackList(
+    targetUserId: targetUserId
 );
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    yield break;
+}
+
+var result = future.Result;
+var future2 = result.Model();
+yield return future2;
+if (future2.Error != null)
+{
+    onError.Invoke(future2.Error);
+    yield break;
+}
+
+var item = future2.Result;
+onUnregisterBlackList.Invoke(item);
 ```
 
 `ブラックリスト`ボタンで、ブラックリストに登録しているユーザーの一覧を取得し表示します。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzGetBlackListResult> result = null;
-yield return client.Friend.GetBlackList(
-    callback: r => { result = r; },
-    session,
-    friendNamespaceName
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
 );
+try
+{
+    BlackList = await domain.BlackListsAsync().ToListAsync();
+    onGetBlackList.Invoke(BlackList);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+・コルーチン使用時
+```c#
+BlackList.Clear();
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+);
+var it = domain.BlackLists();
+while (it.HasNext())
+{
+    yield return it.Next();
+    if (it.Error != null)
+    {
+        onError.Invoke(it.Error);
+        break;
+    }
+
+    if (it.Current != null)
+    {
+        BlackList.Add(it.Current);
+    }
+}
+
+onGetBlackList.Invoke(BlackList);
 ```
 
 `ブラックリスト`ダイアログのユーザー項目の`削除`で、ブラックリスト登録している相手を解除します。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzUnregisterBlackListResult> result = null;
-yield return client.Friend.UnregisterBlackList(
-    callback: r => { result = r; },
-    session,
-    friendNamespaceName,
-    targetUserId
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+).BlackList();
+try
+{
+    var result = await domain.UnregisterBlackListAsync(
+	    targetUserId: targetUserId
+    );
+    var item = await result.ModelAsync();
+    onUnregisterBlackList.Invoke(item);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+・コルーチン使用時
+```c#
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+).BlackList();
+var future = domain.RegisterBlackList(
+    targetUserId: targetUserId
 );
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    yield break;
+}
+var result = future.Result;
+var future2 = result.Model();
+yield return future2;
+var item = future2.Result;
+onRegisterBlackList.Invoke(item);
 ```
 
 ## フォロー
 
 チャットのメッセージから開く`プレイヤー`ダイアログで、他プレイヤーを`フォロー`します。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzFollowResult> result = null;
-yield return client.Friend.Follow(
-    callback: r => { result = r; },
-    session,
-    friendNamespaceName,
-    targetUserId
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+).FollowUser(
+    targetUserId: targetUserId,
+    withProfile: false
 );
+try
+{
+    var result = await domain.FollowAsync();
+    var item = await result.ModelAsync();
+    onFollow.Invoke(item);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+・コルーチン使用時
+```c#
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+).FollowUser(
+    targetUserId: targetUserId,
+    withProfile: false
+);
+var future = domain.Follow();
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    yield break;
+}
+
+var result = future.Result;
+var future2 = result.Model();
+yield return future2;
+var item = future2.Result;
+onFollow.Invoke(item);
 ```
 
 `フォロー`ボタンからフォローしているユーザー一覧を取得し表示します。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzDescribeFollowUsersResult> result = null;
-yield return client.Friend.DescribeFollowUsers(
-    callback: r => { result = r; },
-    session,
-    friendNamespaceName,
-    true
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
 );
+try
+{
+    FollowUsers = await domain.FollowsAsync().ToListAsync();
+
+    onDescribeFollowUsers.Invoke(FollowUsers);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+・コルーチン使用時
+```c#
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+).FollowUser(
+    targetUserId: targetUserId,
+    withProfile: false
+);
+var future = domain.Follow();
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    yield break;
+}
+
+var result = future.Result;
+var future2 = result.Model();
+yield return future2;
+var item = future2.Result;
+onFollow.Invoke(item);
 ```
 
 `フォロー`ダイアログのユーザー項目の`削除`で、フォローしている相手をアンフォローします。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzUnfollowResult> result = null;
-yield return client.Friend.Unfollow(
-    callback: r => { result = r; },
-    session,
-    friendNamespaceName,
-    targetUserId
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+).FollowUser(
+    targetUserId: targetUserId,
+    withProfile: false
 );
+try
+{
+    var result = await domain.UnfollowAsync();
+    var item = await result.ModelAsync();
+    onUnfollow.Invoke(item);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
 ```
+・コルーチン使用時
+```c#
+var domain = gs2.Friend.Namespace(
+    namespaceName: friendNamespaceName
+).Me(
+    gameSession: gameSession
+).FollowUser(
+    targetUserId: targetUserId,
+    withProfile: false
+);
+var future = domain.Unfollow();
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    yield break;
+}
 
+var result = future.Result;
+var future2 = result.Model();
+yield return future2;
+if (future2.Error != null)
+{
+    onError.Invoke(future2.Error);
+    yield break;
+}
+
+var item = future2.Result;
+onUnfollow.Invoke(item);
+```

@@ -17,11 +17,6 @@ namespace Gs2.Sample.Experience
     }
 
     [System.Serializable]
-    public class IncreaseExperienceEvent : UnityEvent<EzExperienceModel, EzStatus, int>
-    {
-    }
-    
-    [System.Serializable]
     public class ExperienceSetting : MonoBehaviour
     {
         [SerializeField]
@@ -34,19 +29,19 @@ namespace Gs2.Sample.Experience
         public string itemExperienceModelName;
         
         [SerializeField]
-        public string identifierIncreaseExperienceClientId;
+        public string exchangeNamespaceName;
 
         [SerializeField]
-        public string identifierIncreaseExperienceClientSecret;
+        public string playerEexchangeRateName;
 
+        [SerializeField]
+        public string itemExchangeRateName;
+        
         [SerializeField]
         public GetExperienceModelEvent onGetExperienceModel = new GetExperienceModelEvent();
         
         [SerializeField]
         public GetStatusesEvent onGetStatuses = new GetStatusesEvent();
-
-        [SerializeField]
-        public IncreaseExperienceEvent onIncreaseExperience = new IncreaseExperienceEvent();
 
         [SerializeField]
         public ErrorEvent onError = new ErrorEvent();

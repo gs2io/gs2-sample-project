@@ -2,6 +2,10 @@ using System.Collections;
 using Gs2.Sample.Login;
 using UnityEngine;
 using UnityEngine.Assertions;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
+#endif
 
 namespace Gs2.Sample.AccountTakeOver
 {
@@ -9,6 +13,7 @@ namespace Gs2.Sample.AccountTakeOver
     {
         /// <summary>
         /// GS2-Account の設定値
+        /// GS2-Account setting value
         /// </summary>
         [SerializeField] private LoginSetting _loginSetting;
 
@@ -27,86 +32,105 @@ namespace Gs2.Sample.AccountTakeOver
 
             /// <summary>
             /// アカウント連携情報を取得中
+            /// Account linkage information is being obtained.
             /// </summary>
             GetTakeOverSettingsProcessing,
             /// <summary>
             /// アカウント連携情報の取得に失敗
+            /// Failure to obtain account linkage information
             /// </summary>
             GetTakeOverSettingsFailed,
 
             /// <summary>
             /// アカウント連携 方式メニュー
+            /// Account Linking Method Menu
             /// </summary>
             Setting_SelectTypeMenu,
             
             /// <summary>
             /// アカウント連携 Email設定
+            /// Account Linking Email Setting
             /// </summary>
             SettingEmail,
             /// <summary>
             /// Emailの設定をキャンセル
+            /// Cancel Email setting
             /// </summary>
             CancelSettingEmail,
             
             /// <summary>
             /// Platformによるアカウント連携を保存/削除
+            /// Save/delete account linkage by Platform
             /// </summary>
             SettingPlatform,
             /// <summary>
             /// Platformによるアカウント連携を保存/削除に失敗
+            /// Failed to save/delete account linkage by Platform
             /// </summary>
             SettingPlatformError,
             
             /// <summary>
             /// 引継ぎ設定の登録を実行中
+            /// Running registration of takeover setting
             /// </summary>
             AddSettingProcessing,
             /// <summary>
             /// 引継ぎ設定の登録に成功
+            /// Successfully registering takeover setting
             /// </summary>
             AddSettingSucceed,
             /// <summary>
             /// 引継ぎ設定の登録に失敗
+            /// Failed to register takeover setting
             /// </summary>
             AddSettingFailed,
 
             /// <summary>
             /// 引継ぎ設定の削除中
+            /// Deleting takeover setting
             /// </summary>
             DeleteSettingProcessing,
             /// <summary>
             /// 引継ぎ設定の削除に成功
+            /// Deletion of takeover setting succeeded
             /// </summary>
             DeleteSettingSucceed,
             /// <summary>
             /// 引継ぎ設定の削除に失敗
+            /// Failed to delete takeover setting
             /// </summary>
             DeleteSettingFailed,
             
             /// <summary>
             /// 引継ぎ 方式メニュー
+            /// Takeover method menu
             /// </summary>
             TakeOver_SelectTypeMenu,
             
             /// <summary>
             /// 引継ぎ Email設定
+            /// Takeover Email setting
             /// </summary>
             TakeOverEmail,
             /// <summary>
             /// Emailの設定をキャンセル
+            /// Cancel Email settings
             /// </summary>
             CancelTakeOverEmail,
             
             /// <summary>
             /// 引継ぎ実行中
+            /// Takeover in progress
             /// </summary>
             TakeOver_Processing,
             /// <summary>
             /// 引継ぎの実行を完了
+            /// Complete the transfer execution.
             /// </summary>
             TakeOverCompleted,
             /// <summary>
             /// 引継ぎの実行に失敗
+            /// Failure to execute handover
             /// </summary>
             TakeOverFailed,
 
@@ -254,8 +278,8 @@ namespace Gs2.Sample.AccountTakeOver
 
         /// <summary>
         /// 初期化処理
+        /// initialization process
         /// </summary>
-        /// <returns></returns>
         public void Initialize()
         {
             if (!Social.localUser.authenticated)
@@ -266,69 +290,104 @@ namespace Gs2.Sample.AccountTakeOver
 
         /// <summary>
         /// 現在登録されている引継ぎ情報を取得
+        /// Retrieve currently registered transfer information
         /// </summary>
-        /// <returns></returns>
         private IEnumerator GetTakeOverSettings()
         {
             yield return _accountTakeOverModel.ListAccountTakeOverSettings(
-                r =>
+                e =>
                 {
-                    SetState(r.Error == null
+                    SetState(e == null
                         ? State.Setting_SelectTypeMenu
                         : State.GetTakeOverSettingsFailed);
                 },
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _loginSetting.accountNamespaceName,
                 _takeOverSetting.onError
             );
         }
-        
+#if GS2_ENABLE_UNITASK
+        private async UniTask GetTakeOverSettingsAsync()
+        {
+            var err = await _accountTakeOverModel.ListAccountTakeOverSettingsAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _loginSetting.accountNamespaceName,
+                _takeOverSetting.onError
+            );
+            
+            if (err == null)
+                SetState(State.Setting_SelectTypeMenu);
+            else
+                SetState(State.GetTakeOverSettingsFailed);
+        }
+#endif
+
         /// <summary>
-        /// 引継ぎ設定の登録を実行
+        /// 引継ぎ設定の登録
+        /// Registering takeover settings
         /// </summary>
-        /// <param name="animator"></param>
-        /// <returns></returns>
         private IEnumerator AddTakeOverSetting()
         {
             yield return _accountTakeOverModel.AddAccountTakeOverSetting(
-                GameManager.Instance.Client,
-                GameManager.Instance.Session,
-                r =>
+                e =>
                 {
-                    SetState(r.Error == null
+                    SetState(e == null
                         ? State.AddSettingSucceed
                         : State.AddSettingFailed);
                 },
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
                 _loginSetting.accountNamespaceName,
                 _takeOverSetting.onSetTakeOver,
                 _takeOverSetting.onError
             );
         }
+#if GS2_ENABLE_UNITASK
+        private async UniTask AddTakeOverSettingAsync()
+        {
+            var err = await _accountTakeOverModel.AddAccountTakeOverSettingAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _loginSetting.accountNamespaceName,
+                _takeOverSetting.onSetTakeOver,
+                _takeOverSetting.onError
+            );
+            
+            if (err == null)
+                SetState(State.AddSettingSucceed);
+            else
+                SetState(State.AddSettingFailed);
+        }
+#endif
         
         /// <summary>
-        /// 引継ぎ設定を削除
+        /// 引継ぎを実行
+        /// Execute takeover
         /// </summary>
         public void ExecTakeOver()
         {
             SetState(State.TakeOver_Processing);
-            
+#if GS2_ENABLE_UNITASK
+            DoTakeOverAsync().Forget();
+#else
             StartCoroutine(
                 DoTakeOver()
             );
+#endif
         }
         
         /// <summary>
         /// 引継ぎを実行
+        /// Execute takeover
         /// </summary>
-        /// <returns></returns>
         private IEnumerator DoTakeOver()
         {
             yield return _accountTakeOverModel.DoAccountTakeOver(
-                GameManager.Instance.Client,
-                r =>
+                e =>
                 {
-                    if (r.Error == null)
+                    if (e == null)
                     {
                         SetState(State.TakeOverCompleted);
                     }
@@ -337,46 +396,84 @@ namespace Gs2.Sample.AccountTakeOver
                         SetState(State.TakeOverFailed);
                     }
                 },
+                GameManager.Instance.Domain,                
                 _loginSetting.accountNamespaceName,
                 _takeOverSetting.onDoTakeOver,
                 _takeOverSetting.onError
             );
         }
-        
+#if GS2_ENABLE_UNITASK
+        private async UniTask DoTakeOverAsync()
+        {
+            var err = await _accountTakeOverModel.DoAccountTakeOverAsync(
+                GameManager.Instance.Domain,                
+                _loginSetting.accountNamespaceName,
+                _takeOverSetting.onDoTakeOver,
+                _takeOverSetting.onError
+            );
+            
+            if (err == null)
+                SetState(State.TakeOverCompleted);
+            else
+                SetState(State.TakeOverFailed);
+        }
+#endif
+
         /// <summary>
         /// 引継ぎ設定を削除
+        /// Delete takeover setting
         /// </summary>
         public void DeleteSetting()
         {
             SetState(State.DeleteSettingProcessing);
+#if GS2_ENABLE_UNITASK
+            DeleteTakeOverSettingAsync().Forget();
+#else
             StartCoroutine(
                 DeleteTakeOverSetting()
             );
+#endif
         }
             
         /// <summary>
         /// 引継ぎ設定の削除を実行
+        /// Delete takeover settings
         /// </summary>
-        /// <param name="animator"></param>
-        /// <returns></returns>
         private IEnumerator DeleteTakeOverSetting()
         {
             yield return _accountTakeOverModel.DeleteAccountTakeOverSetting(
-                GameManager.Instance.Client,
-                GameManager.Instance.Session,
-                r =>
+                e =>
                 {
-                    SetState(r.Error == null
+                    SetState(e == null
                         ? State.DeleteSettingSucceed
                         : State.DeleteSettingFailed);
                 },
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
                 _loginSetting.accountNamespaceName,
                 _takeOverSetting.onError
             );
         }
-
+#if GS2_ENABLE_UNITASK
+        private async UniTask DeleteTakeOverSettingAsync()
+        {
+            var err = await _accountTakeOverModel.DeleteAccountTakeOverSettingAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _loginSetting.accountNamespaceName,
+                _takeOverSetting.onError
+            );
+            
+            if (err == null)
+                SetState(State.DeleteSettingSucceed);
+            else
+                SetState(State.DeleteSettingFailed);
+        }
+#endif
+        
         /// <summary>
         /// メインメニューを開く
+        /// Open Main Menu
         /// </summary>
         public void OnClickMainMenu()
         {
@@ -385,6 +482,7 @@ namespace Gs2.Sample.AccountTakeOver
         
         /// <summary>
         /// アカウント連携を選択した
+        /// Selected account linkage
         /// </summary>
         public void OnClickSetting()
         {
@@ -394,18 +492,27 @@ namespace Gs2.Sample.AccountTakeOver
         /// <summary>
         /// アカウント連携を選択
         /// 連携方式を選択へ
+        /// Select Account Linkage
+        /// Go to Select Linkage Method
         /// </summary>
         public void OnClickSettingSelectType()
         {
             SetState(State.GetTakeOverSettingsProcessing);
+            
+#if GS2_ENABLE_UNITASK
+            GetTakeOverSettingsAsync().Forget();
+#else
             StartCoroutine(
                 GetTakeOverSettings()
             );
+#endif
         }
 
         /// <summary>
         /// 引継ぎを選択
         /// 引継ぎ方式を選択へ
+        /// Select takeover
+        /// Go to Select takeover method
         /// </summary>
         public void OnClickSelectTakeOver()
         {
@@ -414,6 +521,7 @@ namespace Gs2.Sample.AccountTakeOver
         
         /// <summary>
         /// メールアドレスによるアカウント連携を保存/削除
+        /// Save/delete account linkage by email address
         /// </summary>
         public void OnClickSettingEmail()
         {
@@ -431,6 +539,7 @@ namespace Gs2.Sample.AccountTakeOver
         
         /// <summary>
         /// Emailの設定をキャンセル
+        /// Cancel Email settings
         /// </summary>
         public void OnClickCancelSettingEmail()
         {
@@ -439,6 +548,7 @@ namespace Gs2.Sample.AccountTakeOver
         
         /// <summary>
         /// Platformによるアカウント連携を保存/削除
+        /// Save/delete account linkage by Platform
         /// </summary>
         public void OnClickSettingPlatform()
         {
@@ -451,9 +561,13 @@ namespace Gs2.Sample.AccountTakeOver
                     _accountTakeOverModel.userIdentifier = Social.localUser.id;
                     _accountTakeOverModel.password = Social.localUser.id;
                     SetState(State.AddSettingProcessing);
+#if GS2_ENABLE_UNITASK
+                    AddTakeOverSettingAsync().Forget();
+#else
                     StartCoroutine(
                         AddTakeOverSetting()
                     );
+#endif
                 }
                 else
                 {
@@ -474,6 +588,7 @@ namespace Gs2.Sample.AccountTakeOver
 
         /// <summary>
         /// メールアドレスによるアカウント連携を保存
+        /// Save account linkage by email address
         /// </summary>
         public void OnClickSubmitSettingEmail()
         {
@@ -482,13 +597,18 @@ namespace Gs2.Sample.AccountTakeOver
             
             SetState(State.AddSettingProcessing);
             
+#if GS2_ENABLE_UNITASK
+            AddTakeOverSettingAsync().Forget();
+#else
             StartCoroutine(
                 AddTakeOverSetting()
             );
+#endif
         }
 
         /// <summary>
-        /// 引継ぎを選択した
+        /// 引継ぎを選択
+        /// selected take over.
         /// </summary>
         public void OnClickTakeOver()
         {
@@ -497,6 +617,7 @@ namespace Gs2.Sample.AccountTakeOver
 
         /// <summary>
         /// メールアドレスによる引継ぎ　設定画面へ
+        /// 
         /// </summary>
         public void OnClickTakeOverEmail()
         {
@@ -506,6 +627,7 @@ namespace Gs2.Sample.AccountTakeOver
 
         /// <summary>
         /// Emailの設定をキャンセル
+        /// Takeover setting by e-mail address Go to setting screen
         /// </summary>
         public void OnClickCancelTakeOverEmail()
         {
@@ -514,6 +636,7 @@ namespace Gs2.Sample.AccountTakeOver
         
         /// <summary>
         /// メールアドレスによるアカウント連携を保存/削除
+        /// Save/delete account linkage by email address
         /// </summary>
         public void OnClickSubmitTakeOverEmail()
         {
@@ -528,6 +651,7 @@ namespace Gs2.Sample.AccountTakeOver
         
         /// <summary>
         /// Platformによる引継ぎ実行
+        /// Takeover Execution by Platform
         /// </summary>
         public void OnClickExecTakeOverPlatform()
         {
@@ -540,6 +664,7 @@ namespace Gs2.Sample.AccountTakeOver
 
         /// <summary>
         /// 再ログイン
+        /// Re-login
         /// </summary>
         public void OnClickConfirmTakeOver()
         {
@@ -548,6 +673,7 @@ namespace Gs2.Sample.AccountTakeOver
         
         /// <summary>
         /// エラー内容の確認ボタンをクリック
+        /// Click the Confirm Error button.
         /// </summary>
         public void OnClickConfirmError()
         {
@@ -556,6 +682,7 @@ namespace Gs2.Sample.AccountTakeOver
         
         /// <summary>
         /// 閉じる
+        /// Close
         /// </summary>
         public void OnClickClose()
         {

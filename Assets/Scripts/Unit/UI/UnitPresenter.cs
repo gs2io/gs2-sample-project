@@ -10,6 +10,10 @@ using Gs2.Unity.Util;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Events;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
+#endif
 
 namespace Gs2.Sample.Unit
 {
@@ -104,36 +108,38 @@ namespace Gs2.Sample.Unit
         {
             UIManager.Instance.AddLog("UnitPresenter::Initialize");
 
-            void OnGetInventoryModel(
-                string inventoryName, 
-                EzInventoryModel ezinventoryModel, 
-                List<EzItemModel> itemModels
-            )
-            {
-                UIManager.Instance.AddLog("UnitPresenter::OnGetInventoryModel");
-                
-                _unitSetting.onGetInventoryModel.RemoveListener(OnGetInventoryModel);
-                
-                _unitModel.Model = ezinventoryModel;
-                _unitModel.ItemModels = itemModels;
-            }
-            
-            _unitSetting.onGetInventoryModel.AddListener(OnGetInventoryModel);
-        
             yield return _unitModel.GetInventoryModel(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 _unitSetting.inventoryNamespaceName,
                 _unitSetting.inventoryModelName,
                 _unitSetting.onGetInventoryModel,
                 _unitSetting.onError
             );
         }
-
+#if GS2_ENABLE_UNITASK
+        public async UniTask InitializeAsync()
+        {
+            UIManager.Instance.AddLog("UnitPresenter::InitializeAsync");
+        
+            await _unitModel.GetInventoryModelAsync(
+                GameManager.Instance.Domain,
+                _unitSetting.inventoryNamespaceName,
+                _unitSetting.inventoryModelName,
+                _unitSetting.onGetInventoryModel,
+                _unitSetting.onError
+            );
+        }
+#endif
+        
         public void Open()
         {
+#if GS2_ENABLE_UNITASK
+            OpenInventoryAsync().Forget();
+#else
             StartCoroutine(
                 OpenInventory()
             );
+#endif
         }
 
         public IEnumerator OpenInventory()
@@ -173,7 +179,7 @@ namespace Gs2.Sample.Unit
             _unitSetting.onGetInventory.AddListener(RefreshInventoryAction);
             
             yield return _unitModel.GetInventory(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _unitSetting.inventoryNamespaceName,
                 _unitSetting.inventoryModelName,
@@ -181,6 +187,53 @@ namespace Gs2.Sample.Unit
                 _unitSetting.onError
             );
         }
+#if GS2_ENABLE_UNITASK
+        public async UniTask OpenInventoryAsync()
+        {
+            SetState(State.GetInventoryProcessing);
+            
+            _unitSetting.onConsume.AddListener(ConsumeAction);
+            
+            await RefreshAsync();
+
+            await _experiencePresenter.RefreshItemExperienceAsync();
+            
+            SetState(State.InventoryMenu);
+        }
+        
+        public async UniTask RefreshAsync()
+        {
+            void RefreshInventoryAction(
+                EzInventory inventory, 
+                List<EzItemSet> itemSets
+            )
+            {
+                _unitSetting.onGetInventory.RemoveListener(RefreshInventoryAction);
+                
+                if (inventory.InventoryName != _unitModel.Model.Name)
+                {
+                    return;
+                }
+                
+                _unitModel.Inventory = inventory;
+                _unitModel.ItemSets = itemSets;
+                _unitModel.ItemSets.Sort((o1, o2) => o1.SortValue != o2.SortValue ? o1.SortValue - o2.SortValue : (int)(o2.Count - o1.Count));
+                
+                OnChangeInventory(inventory, itemSets);
+            }
+
+            _unitSetting.onGetInventory.AddListener(RefreshInventoryAction);
+            
+            await _unitModel.GetInventoryAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _unitSetting.inventoryNamespaceName,
+                _unitSetting.inventoryModelName,
+                _unitSetting.onGetInventory,
+                _unitSetting.onError
+            );
+        }
+#endif
         
         public void OnChangeInventory(
             EzInventory inventory,
@@ -227,49 +280,40 @@ namespace Gs2.Sample.Unit
             
             SetState(State.MainMenu);
         }
-        
-        public void OnAcquireItem(
-            string itemModelName,
-            int count
-        )
-        {
-            StartCoroutine(
-                _unitModel.Acquire(
-                    GameManager.Instance.Session,
-                    _unitSetting.identifierAcquireUnitClientId,
-                    _unitSetting.identifierAcquireUnitClientSecret,
-                    _unitSetting.inventoryNamespaceName,
-                    _unitSetting.inventoryModelName,
-                    itemModelName,
-                    count,
-                    _unitSetting.onAcquire,
-                    _unitSetting.onError
-                )
-            );
-        }
-        
+
         /// <summary>
         /// アイテムを消費する リクエスト
         /// Consume Item Request
         /// </summary>
-        /// <param name="itemSet"></param>
         public void OnClickDecreaseItem(
             EzItemSet itemSet
         )
         {
+#if GS2_ENABLE_UNITASK
+            _unitModel.ConsumeAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _unitSetting.inventoryNamespaceName,
+                _unitSetting.inventoryModelName,
+                itemSet.ItemName,
+                1,
+                _unitSetting.onConsume,
+                _unitSetting.onError
+            ).Forget();
+#else
             StartCoroutine(
                 _unitModel.Consume(
-                    GameManager.Instance.Client,
+                    GameManager.Instance.Domain,
                     GameManager.Instance.Session,
                     _unitSetting.inventoryNamespaceName,
                     _unitSetting.inventoryModelName,
                     itemSet.ItemName,
                     1,
                     _unitSetting.onConsume,
-                    _unitSetting.onError,
-                    itemSet.Name
+                    _unitSetting.onError
                 )
             );
+#endif
         }
 
         private void ConsumeAction(
@@ -295,67 +339,6 @@ namespace Gs2.Sample.Unit
             _unitModel.ItemSets.Sort((o1, o2) => o1.SortValue != o2.SortValue ? o1.SortValue - o2.SortValue : (int)(o2.Count - o1.Count));
             
             OnChangeInventory(inventory, _unitModel.ItemSets);
-        }
-        
-        /// <summary>
-        /// JobQueueの実行結果を受け取り
-        /// Receives the results of JobQueue execution
-        /// </summary>
-        /// <returns></returns>
-        public UnityAction<EzJob, EzJobResultBody> GetJobQueueAction()
-        {
-            return (job, jobResult) =>
-            {
-                Debug.Log("UnitPresenter::GetJobQueueAction");
-
-                if (job.ScriptId.EndsWith(
-                    "system:script:general:script:execute_inventory_acquire_item_set_by_user_id"
-                ))
-                {
-                    if (IsOpenInventory())
-                    {
-                        StartCoroutine(
-                            Refresh()
-                        );
-                    }
-                }
-            };
-        }
-
-        public UnityAction<EzStampTask, EzRunStampTaskResult> GetTaskCompleteAction()
-        {
-            return (task, taskResult) =>
-            {
-                Debug.Log("UnitPresenter::StateMachineOnDoneStampTask");
-
-                if (task.Action == "Gs2Inventory:ConsumeItemSetByUserId")
-                {
-                    if (IsOpenInventory())
-                    {
-                        StartCoroutine(
-                            Refresh()
-                        );
-                    }
-                }
-            };
-        }
-
-        public UnityAction<EzStampSheet, EzRunStampSheetResult> GetSheetCompleteAction()
-        {
-            return (sheet, sheetResult) =>
-            {
-                Debug.Log("UnitPresenter::StateMachineOnCompleteStampSheet");
-
-                if (sheet.Action == "Gs2Inventory:AcquireItemSetByUserId")
-                {
-                    if (IsOpenInventory())
-                    {
-                        StartCoroutine(
-                            Refresh()
-                        );
-                    }
-                }
-            };
         }
     }
 }

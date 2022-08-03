@@ -1,22 +1,18 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using Gs2.Core;
 using Gs2.Core.Exception;
-using Gs2.Gs2Limit.Request;
-using Gs2.Gs2Money.Request;
-using Gs2.Sample.Core;
-using Gs2.Sample.Money;
-using Gs2.Unity;
-using Gs2.Unity.Gs2Limit.Result;
+using Gs2.Gs2Lottery.Model;
+using Gs2.Unity.Core;
+using Gs2.Unity.Gs2Lottery.Model;
 using Gs2.Unity.Gs2Showcase.Model;
-using Gs2.Unity.Gs2Showcase.Result;
 using Gs2.Unity.Util;
-using Gs2.Util.LitJson;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Purchasing;
-using Product = Gs2.Sample.Money.Product;
+using EzConfig = Gs2.Unity.Gs2Showcase.Model.EzConfig;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
+#endif
 
 namespace Gs2.Sample.Lottery
 {
@@ -24,6 +20,7 @@ namespace Gs2.Sample.Lottery
     {
         /// <summary>
         /// 販売中の抽選商品
+        /// Lottery items on sale
         /// </summary>
         public EzShowcase Showcase { get; private set; }
 
@@ -31,191 +28,212 @@ namespace Gs2.Sample.Lottery
 
         /// <summary>
         /// 選択した抽選商品
+        /// Selected Lottery Items
         /// </summary>
         public SalesItem selectedItem;
         
         /// <summary>
         /// 商品棚を取得
+        /// Retrieve product shelves
         /// </summary>
-        /// <param name="callback"></param>
-        /// <param name="client"></param>
-        /// <param name="session"></param>
-        /// <param name="showcaseNamespaceName"></param>
-        /// <param name="showcaseName"></param>
-        /// <param name="onGetShowcase"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
         public IEnumerator GetShowcase(
-            UnityAction<AsyncResult<EzGetShowcaseResult>> callback,
-            Client client,
-            GameSession session,
+            UnityAction<Gs2Exception> callback,
+            Gs2Domain gs2,
+            GameSession gameSession,
             string showcaseNamespaceName,
             string showcaseName,
             GetShowcaseEvent onGetShowcase,
             ErrorEvent onError
         )
         {
-            AsyncResult<EzGetShowcaseResult> result = null;
-            yield return client.Showcase.GetShowcase(
-                r =>
-                {
-                    result = r;
-                },
-                session,
-                showcaseNamespaceName,
-                showcaseName
+            var domain = gs2.Showcase.Namespace(
+                namespaceName: showcaseNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Showcase(
+                showcaseName: showcaseName
             );
-            
-            if (result.Error != null)
+            var future = domain.Model();
+            yield return future;
+            if (future.Error != null)
             {
                 onError.Invoke(
-                    result.Error
+                    future.Error
                 );
-                callback.Invoke(new AsyncResult<EzGetShowcaseResult>(null, result.Error));
+                callback.Invoke(future.Error);
                 yield break;
             }
 
-            Showcase = result.Result.Item;
-
+            Showcase = future.Result;
+            
             onGetShowcase.Invoke(Showcase);
             
-            callback.Invoke(new AsyncResult<EzGetShowcaseResult>(null, result.Error));
+            callback.Invoke(null);
         }
+#if GS2_ENABLE_UNITASK
+        public async UniTask<Gs2Exception> GetShowcaseAsync(
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string showcaseNamespaceName,
+            string showcaseName,
+            GetShowcaseEvent onGetShowcase,
+            ErrorEvent onError
+        )
+        {
+            var domain = gs2.Showcase.Namespace(
+                namespaceName: showcaseNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Showcase(
+                showcaseName: showcaseName
+            );
+            try
+            {
+                Showcase = await domain.ModelAsync();
+                
+                onGetShowcase.Invoke(Showcase);
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+                return e;
+            }
+            return null;
+        }
+#endif
         
         /// <summary>
-        /// 入手アクション取得
-        /// </summary>
-        /// <param name="salesItem"></param>
-        /// <param name="action"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        private T GetAcquireAction<T>(
-            EzSalesItem salesItem,
-            string action
-        )
-        {
-            var item = salesItem.AcquireActions.FirstOrDefault(acquireAction => acquireAction.Action == action);
-            if (item == null)
-            {
-                return default;
-            }
-            return (T)typeof(T).GetMethod("FromJson")?.Invoke(null, new object[] { Gs2Util.RemovePlaceholder(JsonMapper.ToObject(item.Request)) });
-        }
-
-        /// <summary>
-        /// 消費アクション取得
-        /// </summary>
-        /// <param name="salesItem"></param>
-        /// <param name="action"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        private T GetConsumeAction<T>(
-            EzSalesItem salesItem,
-            string action
-        )
-        {
-            var item = salesItem.ConsumeActions.FirstOrDefault(consumeAction => consumeAction.Action == action);
-            if (item == null)
-            {
-                return default;
-            }
-            return (T)typeof(T).GetMethod("FromJson")?.Invoke(null, new object[] { Gs2Util.RemovePlaceholder(JsonMapper.ToObject(item.Request)) });
-        }
-
-        /// <summary>
         /// 抽選商品を購入する
+        /// Purchase Lottery Items
         /// </summary>
         public IEnumerator Buy(
-            Client client,
-            GameSession session,
+            Gs2Domain gs2,
+            GameSession gameSession,
             string showcaseNamespaceName,
             string showcaseName,
             string displayItemId,
-            IssueBuyStampSheetEvent onIssueBuyStampSheet,
+            AcquireInventoryItemEvent onAcquireInventoryItem,
             ErrorEvent onError,
-            List<EzConfig> config,
-            string contentsId = null
+            List<EzConfig> config
         )
         {
             var tempConfig = new List<EzConfig>(config);
-#if GS2_ENABLE_PURCHASING
-            IStoreController controller = null;
-            UnityEngine.Purchasing.Product product = null;
-            string receipt = null;
-            if (contentsId != null)
+            
+            void LotteryResult(
+                string _namespace,
+                string lotteryName,
+                DrawnPrize[] prizes
+            )
             {
-                AsyncResult<Gs2.Unity.Util.PurchaseParameters> result = null;
-                yield return new IAPUtil().Buy(
-                    r => { result = r; },
-                    contentsId
-                );
+                // 抽選処理の結果を取得
+                // Obtain the results of the lottery process
 
-                if (result.Error != null)
+                // 抽選で獲得したアイテム
+                // Items won in the lottery
+                var DrawnPrizes = new List<EzDrawnPrize>();
+                foreach (var prize in prizes)
                 {
-                    onError.Invoke(
-                        result.Error
-                    );
-                    yield break;
+                    var item = EzDrawnPrize.FromModel(prize);
+                    DrawnPrizes.Add(item);
                 }
 
-                receipt = result.Result.receipt;
-                controller = result.Result.controller;
-                product = result.Result.product;
+                onAcquireInventoryItem.Invoke(
+                    DrawnPrizes
+                );
             }
             
-            // 抽選商品購入 レシート情報
-            if (receipt != null)
+            // 抽選結果取得コールバックを登録
+            // Register lottery result acquisition callback
+            Gs2Lottery.Domain.Gs2Lottery.DrawnResult = LotteryResult;
+            
+            // 商品の購入をリクエスト
+            // Request to purchase an item
+            var domain = gs2.Showcase.Namespace(
+                namespaceName: showcaseNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Showcase(
+                showcaseName: showcaseName
+            );
+            var future = domain.Buy(
+                displayItemId: displayItemId,
+                config: tempConfig.ToArray()
+            );
+            yield return future;
+            if (future.Error != null)
             {
-                tempConfig.Add(
-                    new EzConfig
-                    {
-                        Key = "receipt", 
-                        Value = receipt
-                    }
+                onError.Invoke(
+                    future.Error
                 );
-                
-                UIManager.Instance.AddLog("receipt:" + receipt);
             }
-#else
-            Debug.LogError("課金通貨・抽選機能の実行には Unity Purchasing を有効にしてください。");
-            throw new InvalidProgramException("課金通貨・抽選機能の実行には Unity Purchasing を有効にしてください。");
-            Debug.LogError("Unity Purchasing must be enabled to run the billing currency and lottery functions.");
-            throw new InvalidProgramException("Unity Purchasing must be enabled to run the billing currency and lottery functions.");
-#endif
-
-            string stampSheet = null;
-            {
-                // Showcase 商品の購入をリクエスト
-                AsyncResult<EzBuyResult> result = null;
-                yield return client.Showcase.Buy(
-                    r => { result = r; },
-                    session,
-                    showcaseNamespaceName,
-                    showcaseName,
-                    displayItemId,
-                    null,
-                    tempConfig
-                );
-
-                if (result.Error != null)
-                {
-                    onError.Invoke(
-                        result.Error
-                    );
-                    yield break;
-                }
-                
-                // スタンプシートを取得
-                stampSheet = result.Result.StampSheet;
-            }
-
-            // スタンプシートを実行
-            onIssueBuyStampSheet.Invoke(stampSheet);
-
-#if GS2_ENABLE_PURCHASING
-            if (controller != null)
-                controller.ConfirmPendingPurchase(product);
-#endif
         }
+#if GS2_ENABLE_UNITASK
+        /// <summary>
+        /// 抽選商品を購入する
+        /// Purchase Lottery Items
+        /// </summary>
+        public async UniTask BuyAsync(
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string showcaseNamespaceName,
+            string showcaseName,
+            string displayItemId,
+            AcquireInventoryItemEvent onAcquireInventoryItem,
+            ErrorEvent onError,
+            List<EzConfig> config
+        )
+        {
+            var tempConfig = new List<EzConfig>(config);
+
+            // 抽選処理の結果を取得
+            // Obtain the results of the lottery process
+            void LotteryResult(
+                string _namespace,
+                string lotteryName,
+                DrawnPrize[] prizes
+            )
+            {
+                // 抽選で獲得したアイテム
+                // Items won in the lottery
+                var DrawnPrizes = new List<EzDrawnPrize>();
+                foreach (var prize in prizes)
+                {
+                    var item = EzDrawnPrize.FromModel(prize);
+                    DrawnPrizes.Add(item);
+                }
+
+                onAcquireInventoryItem.Invoke(
+                    DrawnPrizes
+                );
+            }
+            
+            // 抽選結果取得コールバックを登録
+            // Register lottery result acquisition callback
+            Gs2Lottery.Domain.Gs2Lottery.DrawnResult = LotteryResult;
+            
+            // 商品の購入をリクエスト
+            // Request to purchase an item
+            var domain = gs2.Showcase.Namespace(
+                namespaceName: showcaseNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Showcase(
+                showcaseName: showcaseName
+            );
+            try
+            {
+                var result = await domain.BuyAsync(
+                    displayItemId: displayItemId,
+                    quantity: null,
+                    config: tempConfig.ToArray()
+                );
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+                return;
+            }
+        }
+#endif
     }
 }

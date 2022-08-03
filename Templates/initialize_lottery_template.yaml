@@ -1,19 +1,21 @@
 GS2TemplateFormatVersion: "2019-05-01"
-Description: GS2-Lottery initialize template Version 2021-12-06
+Description: GS2-Lottery initialize template Version 2022-07-25
 
 Globals:
   Alias:
-    LotteryNamespaceName: lottery-store
-    LotteryKeyName: lottery-key
-    ShowcaseNamespaceName: lottery-store
-    ShowcaseName: lottery
-    ShowcaseKeyName: lottery-store
-    MoneyNamespaceName: money-0001
-    JobQueueNamespaceName: job-queue
-    KeyNamespaceName: lottery-key-namespace
+    LotteryNamespaceName: lottery-store      # GS2-Lottery ネームスペース名 / Namespace name
+    LotteryName: lottery                     # GS2-Lottery 抽選マスターデータの種類名, GS2-Showcase 商品棚マスターデータの商品名 / GS2-Lottery Lottery master data type name, GS2-Showcase Product name of merchandise shelf master data
+    ShowcaseNamespaceName: lottery-showcase  # GS2-Showcase ネームスペース名 / Namespace name
+    KeyNamespaceName: lottery-showcase-key   # GS2-Key ネームスペース名 / Namespace name
+    KeyName: lottery-showcase-key            # GS2-Key 購入処理のスタンプシートの署名計算に使用する暗号鍵 / Cryptographic key used to calculate signatures on stamp sheets for purchase processing
+    LotteryKeyName: lottery-key              # GS2-Key 抽選処理のスタンプシートの署名計算に使用する暗号鍵 / Cryptographic key used to calculate signatures on stamp sheets for lottery processing
+    MoneyNamespaceName: money-0001           # GS2-Money ネームスペース名 / Namespace name
+    JobQueueNamespaceName: job-queue         # GS2-JobQueue ネームスペース名 / Namespace name
+    InventoryNamespaceName: unit-0001        # GS2-Inventory ネームスペース名 / Namespace name
+    InventoryModelName: unit                 # GS2-Inventory インベントリモデル名 / Inventory model name
 
 Resources:
-  KeyNamespace:
+  ShowcaseKeyNamespace:
     Type: GS2::Key::Namespace
     Properties:
       Name: ${KeyNamespaceName}
@@ -22,9 +24,9 @@ Resources:
     Type: GS2::Key::Key
     Properties:
       NamespaceName: ${KeyNamespaceName}
-      Name: ${ShowcaseKeyName}
+      Name: ${KeyName}
     DependsOn:
-      - KeyNamespace
+      - ShowcaseKeyNamespace
 
   ShowcaseNamespace:
     Type: GS2::Showcase::Namespace
@@ -37,10 +39,11 @@ Resources:
   ShowcaseSettings:
     Type: GS2::Showcase::CurrentShowcaseMaster
     Properties:
+      NamespaceName: ${ShowcaseNamespaceName}
       Settings:
-        version: "2019-04-04"
+        version: 2019-04-04
         showcases:
-          - name: ${ShowcaseName}
+          - name: ${LotteryName}
             displayItems:
               - type: salesItem
                 salesItem:
@@ -50,7 +53,7 @@ Resources:
                     - action: Gs2Lottery:DrawByUserId
                       request:
                         namespaceName: ${LotteryNamespaceName}
-                        lotteryName: ${ShowcaseName}
+                        lotteryName: ${LotteryName}
                         userId: "#{userId}"
                         count: 10
                   consumeActions:
@@ -69,7 +72,7 @@ Resources:
                     - action: Gs2Lottery:DrawByUserId
                       request:
                         namespaceName: ${LotteryNamespaceName}
-                        lotteryName: ${ShowcaseName}
+                        lotteryName: ${LotteryName}
                         userId: "#{userId}"
                         count: 1
                   consumeActions:
@@ -80,7 +83,6 @@ Resources:
                         slot: "#{slot}"
                         count: 5
                         paidOnly: false
-      NamespaceName: ${ShowcaseNamespaceName}
     DependsOn:
       - ShowcaseNamespace
 
@@ -90,7 +92,7 @@ Resources:
       NamespaceName: ${KeyNamespaceName}
       Name: ${LotteryKeyName}
     DependsOn:
-      - KeyNamespace
+      - ShowcaseKeyNamespace
 
   LotteryNamespace:
     Type: GS2::Lottery::Namespace
@@ -124,12 +126,13 @@ Resources:
   LotterySettings:
     Type: GS2::Lottery::CurrentLotteryMaster
     Properties:
+      NamespaceName: ${LotteryNamespaceName}
       Settings: 
-        version: "2019-02-21"
+        version: 2019-02-21
         lotteryModels:
-        - prizeTableName: rarity
+        - name: ${LotteryName}
+          prizeTableName: rarity
           mode: normal
-          name: lottery
           method: prize_table
           metadata: ''
         prizeTables:
@@ -153,8 +156,8 @@ Resources:
             acquireActions:
             - action: Gs2Inventory:AcquireItemSetByUserId
               request:
-                namespaceName: "unit"
-                inventoryName: "unit"
+                namespaceName: ${InventoryNamespaceName}
+                inventoryName: ${InventoryModelName}
                 itemName: "ssrare_0001"
                 userId: "#{userId}"
                 acquireCount: 1
@@ -163,8 +166,8 @@ Resources:
             acquireActions:
             - action: Gs2Inventory:AcquireItemSetByUserId
               request:
-                namespaceName: "unit"
-                inventoryName: "unit"
+                namespaceName: ${InventoryNamespaceName}
+                inventoryName: ${InventoryModelName}
                 itemName: "ssrare_0002"
                 userId: "#{userId}"
                 acquireCount: 1
@@ -173,8 +176,8 @@ Resources:
             acquireActions:
             - action: Gs2Inventory:AcquireItemSetByUserId
               request:
-                namespaceName: "unit"
-                inventoryName: "unit"
+                namespaceName: ${InventoryNamespaceName}
+                inventoryName: ${InventoryModelName}
                 itemName: "ssrare_0003"
                 userId: "#{userId}"
                 acquireCount: 1
@@ -185,8 +188,8 @@ Resources:
             acquireActions:
             - action: Gs2Inventory:AcquireItemSetByUserId
               request:
-                namespaceName: "unit"
-                inventoryName: "unit"
+                namespaceName: ${InventoryNamespaceName}
+                inventoryName: ${InventoryModelName}
                 itemName: "srare_0001"
                 userId: "#{userId}"
                 acquireCount: 1
@@ -195,8 +198,8 @@ Resources:
             acquireActions:
             - action: Gs2Inventory:AcquireItemSetByUserId
               request:
-                namespaceName: "unit"
-                inventoryName: "unit"
+                namespaceName: ${InventoryNamespaceName}
+                inventoryName: ${InventoryModelName}
                 itemName: "srare_0002"
                 userId: "#{userId}"
                 acquireCount: 1
@@ -205,8 +208,8 @@ Resources:
             acquireActions:
             - action: Gs2Inventory:AcquireItemSetByUserId
               request:
-                namespaceName: "unit"
-                inventoryName: "unit"
+                namespaceName: ${InventoryNamespaceName}
+                inventoryName: ${InventoryModelName}
                 itemName: "srare_0003"
                 userId: "#{userId}"
                 acquireCount: 1
@@ -217,8 +220,8 @@ Resources:
             acquireActions:
             - action: Gs2Inventory:AcquireItemSetByUserId
               request:
-                namespaceName: "unit"
-                inventoryName: "unit"
+                namespaceName: ${InventoryNamespaceName}
+                inventoryName: ${InventoryModelName}
                 itemName: "rare_0001"
                 userId: "#{userId}"
                 acquireCount: 1
@@ -227,8 +230,8 @@ Resources:
             acquireActions:
             - action: Gs2Inventory:AcquireItemSetByUserId
               request:
-                namespaceName: "unit"
-                inventoryName: "unit"
+                namespaceName: ${InventoryNamespaceName}
+                inventoryName: ${InventoryModelName}
                 itemName: "rare_0002"
                 userId: "#{userId}"
                 acquireCount: 1
@@ -237,8 +240,8 @@ Resources:
             acquireActions:
             - action: Gs2Inventory:AcquireItemSetByUserId
               request:
-                namespaceName: "unit"
-                inventoryName: "unit"
+                namespaceName: ${InventoryNamespaceName}
+                inventoryName: ${InventoryModelName}
                 itemName: "rare_0003"
                 userId: "#{userId}"
                 acquireCount: 1
@@ -249,8 +252,8 @@ Resources:
             acquireActions:
             - action: Gs2Inventory:AcquireItemSetByUserId
               request:
-                namespaceName: "unit"
-                inventoryName: "unit"
+                namespaceName: ${InventoryNamespaceName}
+                inventoryName: ${InventoryModelName}
                 itemName: "normal_0001"
                 userId: "#{userId}"
                 acquireCount: 1
@@ -259,8 +262,8 @@ Resources:
             acquireActions:
             - action: Gs2Inventory:AcquireItemSetByUserId
               request:
-                namespaceName: "unit"
-                inventoryName: "unit"
+                namespaceName: ${InventoryNamespaceName}
+                inventoryName: ${InventoryModelName}
                 itemName: "normal_0002"
                 userId: "#{userId}"
                 acquireCount: 1
@@ -269,24 +272,16 @@ Resources:
             acquireActions:
             - action: Gs2Inventory:AcquireItemSetByUserId
               request:
-                namespaceName: "unit"
-                inventoryName: "unit"
+                namespaceName: ${InventoryNamespaceName}
+                inventoryName: ${InventoryModelName}
                 itemName: "normal_0003"
                 userId: "#{userId}"
                 acquireCount: 1
             weight: 1
           name: 'n'
-      NamespaceName: ${LotteryNamespaceName}
     DependsOn:
       - LotteryNamespace
 
 Outputs:
-  LotteryNamespaceName: ${LotteryNamespaceName}
-  LotteryKeyId: !GetAttr LotteryKey.Item.KeyId
-  LotteryKeyName: ${LotteryKeyName}
-  ShowcaseNamespaceName: ${ShowcaseNamespaceName}
-  ShowcaseName: ${ShowcaseName}
-  ShowcaseKeyName: ${ShowcaseKeyName}
-  ShowcaseKeyId: !GetAttr ShowcaseKey.Item.KeyId
-  KeyNamespaceName: ${KeyNamespaceName}
-  MoneyNamespaceName: ${MoneyNamespaceName}
+  LotteryName: ${LotteryName}
+  ShowcaseNamespaceName: !GetAttr ShowcaseNamespace.Item.Name

@@ -37,7 +37,8 @@ gs2-news-sample
      |- events
      |- maintenance
  |- layouts
-````
+ |- config.toml
+```
 
 ## About WebView
 
@@ -51,24 +52,56 @@ It is installed from the package manager.
 
 Obtain from GS2-News the URL to connect to the deployed delivery content and the key and value of the cookie used to verify access privileges.
 
+When UniTask is enabled
 ```c#
-AsyncResult<EzGetContentsUrlResult> result = null;
-yield return client.News.GetContentsUrl(
-    r => {
-        if (r.Error ! = null)
-        {
-            // Reached if an error occurs
-            // r.Error contains the exception object that occurred
-            Debug.Log(r.Error);
-        }
-        else
-        {
-            result = r;
-        }
-    },
-    session, // Session object representing the GameSession login state
-    newsNamespaceName // namespace name
+var domain = gs2.News.Namespace(
+    namespaceName: newsNamespaceName
+).Me(
+    gameSession: gameSession
+).News();
+var result = await domain.GetContentsUrlAsync();
+
+var items = result.ToList();
+foreach (var item in items)
+{
+    var entry = await item.ModelAsync();
+    cookies.Add(entry);
+}
+browserUrl = domain.BrowserUrl;
+zipUrl = domain.ZipUrl;
+
+onGetContentsUrl.Invoke(cookies, browserUrl, zipUrl);
+```
+When coroutine is used
+```c#
+ var domain = gs2.News.Namespace(
+    namespaceName: newsNamespaceName
+).Me(
+    gameSession: gameSession
+).News(
 );
+var future = domain.GetContentsUrl();
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(
+        future.Error
+    );
+    yield break;
+}
+
+var items = future.Result.ToList();
+foreach (var item in items)
+{
+    var future2 = item.Model();
+    yield return future2;
+    var entry = future2.Result;
+    cookies.Add(entry);
+}
+browserUrl = domain.BrowserUrl;
+zipUrl = domain.ZipUrl;
+
+onGetContentsUrl.Invoke(cookies, browserUrl, zipUrl);
 ```
 
 ### Open content in WebView

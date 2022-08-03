@@ -1,17 +1,16 @@
 ﻿GS2TemplateFormatVersion: "2019-05-01"
-Description: GS2-Stamina initialize template Version 2021-12-03
+Description: GS2-Stamina initialize template Version 2022-07-25
 
 Globals:
   Alias:
-    StaminaNamespaceName: stamina-0001
-    StaminaName: main
-    MoneyNamespaceName: money-0001
-    ExchangeNamespaceName: stamina-exchange
-    ExchangeRateName: money-stamima
-    ExchangeKeyNamespaceName: stamina-exchange-key  # 購入処理のスタンプシートの署名計算に使用する暗号鍵
-    ExchangeKeyName: stamp-sheet-key                # 購入処理のスタンプシートの署名計算に使用する暗号鍵
-    DistributorNamespaceName: stamina-distributor   # リソースの入手処理 を GS2-Distributor を経由することで所持数量制限で溢れた場合の GS2-Inbox への転送処理が自動的に行われる
-    DeliveryUserName: stamina-distribute-user       # リソースの入手処理を実行する権限を持つ GS2-Identifier ユーザ
+    StaminaNamespaceName: stamina-0001       # GS2-Stamina ネームスペース名 / Namespace name
+    StaminaName: main                        # GS2-Stamina スタミナモデル名 / Stamina model name
+    ExchangeNamespaceName: stamina-exchange  # GS2-Exchange ネームスペース名 / Namespace name
+    ExchangeRateName: money-stamina          # GS2-Exchange 交換レート名 / Exchange rate name
+    KeyNamespaceName: stamina-exchange-key   # GS2-Key ネームスペース名 / Namespace name
+    KeyName: stamina-exchange-key            # GS2-Key 購入処理のスタンプシートの署名計算に使用する暗号鍵 / Cryptographic key used to calculate signatures on stamp sheets for purchase processing
+    MoneyNamespaceName: money-0001           # GS2-Money ネームスペース名 / Namespace name
+
 Resources:
   StaminaNamespace:
     Type: GS2::Stamina::Namespace
@@ -37,36 +36,15 @@ Resources:
   ExchangeKeyNamespace:
     Type: GS2::Key::Namespace
     Properties:
-      Name: ${ExchangeKeyNamespaceName}
+      Name: ${KeyNamespaceName}
 
   ExchangeKey:
     Type: GS2::Key::Key
     Properties:
-      NamespaceName: ${ExchangeKeyNamespaceName}
-      Name: ${ExchangeKeyName}
+      NamespaceName: ${KeyNamespaceName}
+      Name: ${KeyName}
     DependsOn:
       - ExchangeKeyNamespace
-
-  IdentifierDeliveryUser:
-    Type: GS2::Identifier::User
-    Properties:
-      Name: ${DeliveryUserName}
-
-  IdentifierDeliveryUserAttachPolicy:
-    Type: GS2::Identifier::AttachSecurityPolicy
-    Properties:
-      UserName: ${DeliveryUserName}
-      SecurityPolicyId: grn:gs2::system:identifier:securityPolicy:DeliveryAccess
-    DependsOn:
-      - IdentifierDeliveryUser
-
-  DistributorNamespace:
-    Type: GS2::Distributor::Namespace
-    Properties:
-      Name: ${DistributorNamespaceName}
-      AssumeUserId: !GetAttr IdentifierDeliveryUser.Item.UserId
-    DependsOn:
-      - IdentifierDeliveryUser
 
   ExchangeNamespace:
     Type: GS2::Exchange::Namespace
@@ -109,4 +87,3 @@ Outputs:
   ExchangeNamespaceName: !GetAttr ExchangeNamespace.Item.Name
   ExchangeKeyId: !GetAttr ExchangeKey.Item.KeyId
   ExchangeRateName: ${ExchangeRateName}
-  DistributorNamespaceName: ${DistributorNamespaceName}

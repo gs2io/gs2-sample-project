@@ -1,38 +1,38 @@
 GS2TemplateFormatVersion: "2019-05-01"
-Description: GS2-Account initialize template Version 2021-12-03
+Description: GS2-Account initialize template Version 2022-07-25
 
 Globals:
   Alias:
-    AccountNamespaceName: game-0001
-    KeyNamespaceAccountAuthentication: account-encryption-key-namespace
-    KeyAccountAuthentication: account-encryption-key
-    GatewayNamespaceName: gateway-0001
+    AccountNamespaceName: account-0001              # GS2-Account ネームスペース名 / Namespace name
+    KeyNamespaceName: account-key                   # GS2-Key ネームスペース名 / Namespace name
+    KeyName: account-key                            # GS2-Key 認証処理の署名計算に使用する暗号鍵 / Cryptographic key used to calculate signatures for the authentication process
+    GatewayNamespaceName: gateway-0001              # GS2-Gateway ネームスペース名 / Namespace name
 
 Resources:
-  GatewayNamespace:
-    Type: GS2::Gateway::Namespace
-    Properties:
-      Name: ${GatewayNamespaceName}
-  
-  KeyNamespaceAccountAuthentication:
-    Type: GS2::Key::Namespace
-    Properties:
-      Name: ${KeyNamespaceAccountAuthentication}
-
-  KeyAccountAuthentication:
-    Type: GS2::Key::Key
-    Properties:
-      NamespaceName: ${KeyNamespaceAccountAuthentication}
-      Name: ${KeyAccountAuthentication}
-    DependsOn:
-      - KeyNamespaceAccountAuthentication
-
   AccountNamespace:
     Type: GS2::Account::Namespace
     Properties:
       Name: ${AccountNamespaceName}
 
+  KeyNamespaceAccountAuthentication:
+    Type: GS2::Key::Namespace
+    Properties:
+      Name: ${KeyNamespaceName}
+
+  KeyAccountAuthentication:
+    Type: GS2::Key::Key
+    Properties:
+      NamespaceName: ${KeyNamespaceName}
+      Name: ${KeyName}
+    DependsOn:
+      - KeyNamespaceAccountAuthentication
+
+  GatewayNamespace:
+    Type: GS2::Gateway::Namespace
+    Properties:
+      Name: ${GatewayNamespaceName}
+
 Outputs:
   AccountNamespaceName: !GetAttr AccountNamespace.Item.Name
-  KeyAccountAuthenticationKeyId: !GetAttr KeyAccountAuthentication.Item.KeyId
+  AccountEncryptionKeyId: !GetAttr KeyAccountAuthentication.Item.KeyId  # -> LoginSetting Account Encryption Key Id
   GatewayNamespaceName: !GetAttr GatewayNamespace.Item.Name

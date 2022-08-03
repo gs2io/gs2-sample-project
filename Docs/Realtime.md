@@ -30,15 +30,50 @@
 
 GS2-Realtime からルームの情報を取得します。  
 
+・UniTask有効時
 ```c#
-AsyncResult<EzGetRoomResult> result = null;
-yield return _realtimeModel.GetRoom(
-    r => { result = r; },
-    GameManager.Instance.Cllient.Client,
-    _realtimeSetting.realtimeNamespaceName,
-    _realtimeSetting.onGetRoom,
-    _realtimeSetting.onError
- );
+var domain = gs2.Realtime.Namespace(
+    namespaceName: realtimeNamespaceName
+).Room(
+    roomName: gatheringName
+);
+try
+{
+    room = await domain.ModelAsync();
+    
+    onGetRoom.Invoke(room);
+    
+    return room;
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+    throw;
+}
+```
+・コルーチン使用時
+```c#
+var domain = gs2.Realtime.Namespace(
+    namespaceName: realtimeNamespaceName
+).Room(
+    roomName: gatheringName
+);
+var future = domain.Model();
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(
+        future.Error
+    );
+    callback.Invoke(null);
+    yield break;
+}
+
+room = future.Result;
+
+onGetRoom.Invoke(room);
+
+callback.Invoke(room);
 ```
 
 ### ルームへの接続
@@ -47,9 +82,65 @@ yield return _realtimeModel.GetRoom(
 RelayRealtimeSessionを生成したのち、各種イベントハンドラを設定、  
 ルームへの接続 `realtimeSession.Connect` を実行します。
 
+・UniTask有効時
 ```c#
 var realtimeSession = new RelayRealtimeSession(
-    GameManager.Instance.Session.Session.AccessToken.Token,
+    GameManager.Instance.Session.AccessToken.Token,
+    ipAddress,
+    port,
+    encryptionKey,
+    ByteString.CopyFrom()
+);
+
+realtimeSession.OnRelayMessage += message =>
+{
+    _realtimeSetting.onRelayMessage.Invoke(message);
+}; 
+realtimeSession.OnJoinPlayer += player =>
+{
+    _realtimeSetting.onJoinPlayer.Invoke(player);
+};
+realtimeSession.OnLeavePlayer += player =>
+{
+    _realtimeSetting.onLeavePlayer.Invoke(player);
+};
+realtimeSession.OnGeneralError += args => 
+{
+    _realtimeSetting.onGeneralError.Invoke(args);
+};
+realtimeSession.OnError += error =>
+{
+    _realtimeSetting.onRelayError.Invoke(error);
+};
+realtimeSession.OnUpdateProfile += player =>
+{
+    _realtimeSetting.onUpdateProfile.Invoke(player);
+};
+realtimeSession.OnClose += args =>
+{
+    _realtimeSetting.onClose.Invoke(args);
+};
+
+try
+{
+    await realtimeSession.ConnectAsync(
+        this
+    );
+}
+catch (Gs2Exception e)
+{
+    _realtimeSetting.onError.Invoke(
+        e
+    );
+    return null;
+}
+
+return realtimeSession;
+```
+・コルーチン使用時
+```c#
+var realtimeSession = new RelayRealtimeSession(
+    GameManager.Instance.Session.AccessToken.Token,
     ipAddress,
     port,
     encryptionKey,
@@ -93,6 +184,25 @@ yield return realtimeSession.Connect(
         result = r;
     }
 );
+
+if (realtimeSession.Connected)
+{
+    callback.Invoke(
+        new AsyncResult<RelayRealtimeSession>(realtimeSession, null)
+    );
+}
+else
+{
+    if (result.Error != null)
+    {
+        _realtimeSetting.onError.Invoke(
+            result.Error
+        );
+        callback.Invoke(
+            new AsyncResult<RelayRealtimeSession>(null, result.Error)
+        );
+    }
+}
 ```
 
 ### ゲームプレイ中の同期
@@ -101,6 +211,53 @@ yield return realtimeSession.Connect(
 他プレイヤーからプロフィール情報を受け取った場合は、そのプレイヤー情報の同期を行います。
 
 > 送信
+
+・UniTask有効時
+```c#
+public async UniTask UpdateProfileAsync()
+{
+    while (true)
+    {
+        await UniTask.Delay(300);
+
+        ByteString binary = null;
+        try
+        {
+            binary = ByteString.CopyFrom(ProfileSerialize());
+        }
+        catch (Exception e)
+        {
+            Debug.Log(e);
+            continue;
+        }
+
+        if (Session != null && Session.Connected)
+        {
+            bool lockWasTaken = false;
+            try
+            {
+                System.Threading.Monitor.TryEnter(this, ref lockWasTaken);
+
+                if (lockWasTaken)
+                {
+                    await Session.UpdateProfileAsync(
+                        binary
+                    );
+                }
+            }
+            finally
+            {
+                if (lockWasTaken) System.Threading.Monitor.Exit(this);
+            }
+        }
+        else
+        {
+            break;
+        }
+    }
+}
+```
+・コルーチン使用時
 ```c#
 public IEnumerator UpdateProfile()
 {
@@ -144,6 +301,7 @@ public IEnumerator UpdateProfile()
 ```
 
 > 受信
+
 ```c#
 _realtimeSetting.onUpdateProfile.AddListener(
     player => 
@@ -166,10 +324,31 @@ _realtimeSetting.onUpdateProfile.AddListener(
 ### バイナリーデータの送信
 
 `Send` で他のプレイヤーに選択しているじゃんけんの手等の情報を送信します。  
-`Send` の第三引数に宛先の `コネクションID` の配列を指定した場合は、指定したプレイヤーにデータを送信します。  
-他プレイヤーから情報を受け取った場合は、そのプレイヤーの情報でUIを更新します。
+`Send` の第三引数に宛先の `コネクションID` の配列を指定した場合は、指定したプレイヤーにデータを送信されます。  
+他プレイヤーから情報を受信したら、そのプレイヤーの情報でUIを更新します。
 
 > 送信
+
+・UniTask有効時
+```c#
+public async UniTask SendAsync()
+{
+    ByteString binary = null;
+    try
+    {
+        binary = ByteString.CopyFrom(StateSerialize());
+    }
+    catch (Exception e)
+    {
+        Debug.Log(e);
+    }
+
+    await Session.SendAsync(
+        binary
+    );
+}
+```
+・コルーチン使用時
 ```c#
 public IEnumerator Send()
 {

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Gs2.Gs2Inventory.Request;
-using Gs2.Sample.Money;
+using Gs2.Unity.Gs2Lottery.Model;
 using Gs2.Unity.Gs2Showcase.Model;
 using Gs2.Unity.Util;
 using UnityEngine;
@@ -18,14 +17,9 @@ namespace Gs2.Sample.Lottery
     public class BuyEvent : UnityEvent<SalesItem>
     {
     }
-
-    [Serializable]
-    public class IssueBuyStampSheetEvent : UnityEvent<string>
-    {
-    }
     
     [Serializable]
-    public class AcquireInventoryItemEvent : UnityEvent<List<AcquireItemSetByUserIdRequest>>
+    public class AcquireInventoryItemEvent : UnityEvent<List<EzDrawnPrize>>
     {
         
     }
@@ -34,22 +28,12 @@ namespace Gs2.Sample.Lottery
     public class LotterySetting : MonoBehaviour
     {
         [SerializeField]
-        public string lotteryNamespaceName;
-        [SerializeField]
-        public string jobQueueNamespaceName;
+        public string lotteryName;
         [SerializeField]
         public string showcaseNamespaceName;
-        [SerializeField]
-        public string showcaseName;
-        [SerializeField]
-        public string showcaseKeyId;
-        [SerializeField]
-        public string lotteryKeyId;
 
         [SerializeField]
         public GetShowcaseEvent onGetShowcase = new GetShowcaseEvent();
-        [SerializeField]
-        public IssueBuyStampSheetEvent onIssueBuyStampSheet = new IssueBuyStampSheetEvent();
         [SerializeField]
         public AcquireInventoryItemEvent onAcquireInventoryItem = new AcquireInventoryItemEvent();
         [SerializeField]

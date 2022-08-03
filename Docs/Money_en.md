@@ -26,18 +26,15 @@ Import the IAP package.
 | Setting Name | Description | 
 |---|---|
 | moneyNamespaceName | GS2-Money namespace name |
-| showcaseNamespaceName | GS2-Showcase NamespaceName | GS2-Showcase NamespaceName
+| showcaseNamespaceName | GS2-Showcase NamespaceName |
 | showcaseName | GS2-Showcase display shelf name |
-| showcaseKeyId | cryptographic key used for signature calculation for stamp sheets issued at GS2-Showcase for merchandise purchases
-| limitNamespaceName | Namespace name of GS2-Limit that realizes the purchase count limit
-| distributorNamespaceName | namespace name of the GS2-Distributor who delivers the purchased goods
 
 | Event | Description |
 |---|---|
-| OnGetWallet(EzWalletDetail wallet) | Called when wallet information is retrieved. | OnGetWallet(EzWalletDetail wallet)
-| OnGetProducts(List<Product> products) | Called when a list of products for sale is retrieved. | OnGetProducts(List<Product> products)
-| OnBuy(Product product) | Called when the purchase of a product is completed. | OnBuy(Product)
-| OnError(Gs2Exception error) | Called when an error occurs. | OnError(Gs2Exception error)
+| OnGetWallet(EzWalletDetail wallet) | Called when wallet information is retrieved. |
+| OnGetProducts(List<Product> products) | Called when a list of products for sale is retrieved. |
+| OnBuy(Product product) | Called when the purchase of a product is completed. |
+| OnError(Gs2Exception error) | Called when an error occurs. |
 
 ## Get Wallet
 
@@ -45,17 +42,46 @@ Import the IAP package.
 
 After login, the latest wallet status is retrieved below.
 
+When UniTask is enabled
 ```c#
-AsyncResult<EzGetResult> result = null;
-yield return client.Money.Get(
-    r =>
-    {
-        result = r;
-    },
-    session,
-    moneyNamespaceName,
-    Slot
+var domain = gs2.Money.Namespace(
+    namespaceName: moneyNamespaceName
+).Me(
+    gameSession: gameSession
+).Wallet(
+    slot: Slot
 );
+try
+{
+    Wallet = await domain.ModelAsync();
+
+    onGetWallet.Invoke(Wallet);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+When coroutine is used
+```c#
+var domain = gs2.Money.Namespace(
+    namespaceName: moneyNamespaceName
+).Me(
+    gameSession: gameSession
+).Wallet(
+    slot: Slot
+);
+var future = domain.Model();
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    yield break;
+}
+
+Wallet = future.Result;
+
+onGetWallet.Invoke(Wallet);
 ```
 
 ## Retrieve items from the billing currency store
@@ -64,17 +90,46 @@ yield return client.Money.Get(
 
 Retrieves the product list and displays the store.
 
+When UniTask is enabled
 ```c#
-AsyncResult<EzGetShowcaseResult> result = null;
-yield return client.Showcase.GetShowcase(
-    r =>
-    {
-        result = r;
-    },
-    session,
-    showcaseNamespaceName,
-    showcaseName
+var domain = gs2.Showcase.Namespace(
+    namespaceName: showcaseNamespaceName
+).Me(
+    gameSession: gameSession
+).Showcase(
+    showcaseName: showcaseName
 );
+try
+{
+    var showcase = await domain.ModelAsync();
+
+    onGetProducts.Invoke(Products);
+
+    return Products;
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+When coroutine is used
+```c#
+var domain = gs2.Showcase.Namespace(
+    namespaceName: showcaseNamespaceName
+).Me(
+    gameSession: gameSession
+).Showcase(
+    showcaseName: showcaseName
+);
+var future = domain.Model();
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(
+        future.Error
+    );
+    yield break;
+}
 ```
 
 Parses the retrieved product information to obtain the selling price and the quantity of billable currency available.  
@@ -85,40 +140,40 @@ var products = new List<Product>();
 foreach (var displayItem in result.Result.Item.DisplayItems)
 {
     var depositRequest = GetAcquireAction<DepositByUserIdRequest>(
-        SalesItem, 
-        "Gs2Money:DepositByUserId".
+        displayItem.SalesItem, 
+        "Gs2Money:DepositByUserId"
     );
     var recordReceiptRequest = GetConsumeAction<RecordReceiptRequest>(
         displayItem.SalesItem, 
-        "Gs2Money:RecordReceipt".
+        "Gs2Money:RecordReceipt"
     );
     var countUpRequest = GetConsumeAction<CountUpByUserIdRequest>(
-        SalesItem, 
-        "Gs2Limit:CountUpByUserId".
+        displayItem.SalesItem, 
+        "Gs2Limit:CountUpByUserId"
     );
     var price = depositRequest.Price;
     var count = depositRequest.Count;
 
-    Count; int? boughtCount = null;
-    if(countUpRequest ! = null) {
+    int? boughtCount = null;
+    if(countUpRequest != null) {
         AsyncResult<EzGetCounterResult> result2 = null;
         yield return client.Limit.GetCounter(
-            r => { result2 = r; }
+            r => { result2 = r; },
             session,
             countUpRequest.NamespaceName,
-            LimitName,
-            CounterName
+            countUpRequest.LimitName,
+            countUpRequest.CounterName
         );
         if (result2.Error == null)
         {
-            Item.Count;
+            boughtCount = result2.Result.Item.Count;
         }
         else if (result2.Error is NotFoundException)
         {
             boughtCount = 0;
         }
     }
-    Add(new Product
+    products.Add(new Product
     {
         Id = displayItem.DisplayItemId,
         ContentsId = recordReceiptRequest.ContentsId,
@@ -137,35 +192,109 @@ If you are in a mobile environment, use the Unity IAP to purchase content from t
 In the editor environment, a Fake Store receipt will be issued.  
 The resulting receipt is retained for reference in subsequent processing.
 
+When UniTask is enabled
 ```c#
-AsyncResult<PurchaseParameters> result = null;
-yield return new IAPUtil().Buy(
-    r => { result = r; }
-    selectedProduct.ContentsId
-);
-if (result.Error ! = null)
+string receipt;
 {
-    onError.Invoke(
-        Error
+#if GS2_ENABLE_PURCHASING
+    try
+    {
+        PurchaseParameters result = await new IAPUtil().BuyAsync(
+            selectedProduct.ContentsId
+        );
+        
+        // Billed Currency Product Purchase Receipt Information
+        receipt = result.receipt;
+    }
+    catch (Gs2Exception e)
+    {
+        onError.Invoke(e);
+        return e;
+    }
+#endif
+}
+```
+When coroutine is used
+```c#
+string receipt;
+{
+#if GS2_ENABLE_PURCHASING
+    AsyncResult<PurchaseParameters> result = null;
+    yield return new IAPUtil().Buy(
+        r => { result = r; },
+        selectedProduct.ContentsId
     );
-    callback.Invoke(new AsyncResult<object>(null, result.Error));
-    yield break;
+    if (result.Error != null)
+    {
+        onError.Invoke(
+            result.Error
+        );
+        callback.Invoke(
+            result.Error
+        );
+        yield break;
+    }
+
+    // Billed Currency Product Purchase Receipt Information
+    receipt = result.Result.receipt;
+#endif
 }
 ```
 
-Executes a process to purchase an item from [GS2-Showcase](https://app.gs2.io/docs/en/index.html#gs2-showcase) using a purchased receipt.  
-Config is passed the [GS2-Money](https://app.gs2.io/docs/en/index.html#gs2-money) wallet slot and the contents of the receipt.
+Executes a process to purchase an item from [GS2-Showcase](https://app.gs2.io/docs/en/index.html#gs2-showcase) using the purchase receipt.  
 
+When UniTask is enabled
 ```c#
-// Request to purchase Showcase products
-AsyncResult<EzBuyResult> result = null;
-yield return client.Showcase.Buy(
-    r => { result = r; }
-    session,
-    showcaseNamespaceName,
-    showcaseName,
-    selectedProduct.Id,
-    new List<EzConfig>
+// Request to purchase an item
+var domain = gs2.Showcase.Namespace(
+    namespaceName: showcaseNamespaceName
+).Me(
+    gameSession: gameSession
+).Showcase(
+    showcaseName: showcaseName
+);
+try
+{
+    var result = await domain.BuyAsync(
+        displayItemId: selectedProduct.Id,
+        config: new[]
+        {
+            new EzConfig
+            {
+                Key = "slot",
+                Value = Slot.ToString(),
+            },
+            new EzConfig
+            {
+                Key = "receipt",
+                Value = receipt,
+            },
+        }
+    );
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+    return e;
+}
+
+// Successful product purchase
+onBuy.Invoke(selectedProduct);
+return null;
+```
+When coroutine is used
+```c#
+// Request to purchase an item
+var domain = gs2.Showcase.Namespace(
+    namespaceName: showcaseNamespaceName
+).Me(
+    gameSession: gameSession
+).Showcase(
+    showcaseName: showcaseName
+);
+var future = domain.Buy(
+    displayItemId: selectedProduct.Id,
+    config: new []
     {
         new EzConfig
         {
@@ -179,62 +308,65 @@ yield return client.Showcase.Buy(
         },
     }
 );
-
-if (result.Error ! = null)
+yield return future;
+if (future.Error != null)
 {
     onError.Invoke(
-        Error
+        future.Error
     );
-    callback.Invoke(new AsyncResult<object>(null, result.Error));
+    callback.Invoke(
+        future.Error
+    );
     yield break;
 }
 
-// Get stamp sheet
-StampSheet = result.Result.StampSheet;
+// Successful product purchase
+
+onBuy.Invoke(selectedProduct);
+
+callback.Invoke(null);
+```
+Config is passed the wallet slot number __slot__ of [GS2-Money](https://app.gs2.io/docs/en/index.html#gs2-money) and the
+and the contents of the receipt __receipt__.
+The wallet slot number is the type of billing currency assigned by platform for reference in this sample, and is defined as follows
+
+| Platform | Number |
+|---------------|---|
+| Standalone (Other) | 0 |
+| iOS | 1 |
+| Android | 2 |
+
+Config is a mechanism for passing dynamic parameters to the stamp sheet.  
+[⇒Stamp Sheet Variables](https://app.gs2.io/docs/en/index.html#d7e97677c7)  
+Config(EzConfig) is a key-value format that allows you to substitute a placeholder string of #{key value specified in Config} with the parameters you pass.
+In the following stamp sheet definition #{slot} will be replaced by the wallet slot number and #{receipt} by the receipt.
+
+```yaml
+consumeActions:
+  - action: Gs2Money:RecordReceipt
+    request:
+      namespaceName: ${MoneyNamespaceName}
+      contentsId: io.gs2.sample.currency120
+      userId: "#{userId}"
+      receipt: "#{receipt}"
+acquireActions:
+  - action: Gs2Money:DepositByUserId
+    request:
+      namespaceName: ${MoneyNamespaceName}
+      userId: "#{userId}"
+      slot: "#{slot}"
+      price: 120
+      count: 50
 ```
 
-The obtained stamp sheet is executed.  
-GS2 SDK for Unity provides a state machine for stamp sheet execution.  
-To run the state machine, you will need [GS2-Distributor](https://app.gs2.io/docs/en/index.html#gs2-distributor) and the encryption key used to calculate the stamp sheet signature.
+The purchase process issues a stamp sheet for the purchase of the charged currency item in GS2-Showcase.  
+In implementations using GS2Domain Class ("gs2" in the source), the stamp sheet process is __automatically executed__ on the client side.  
 
-```c#
-{
-    // Generate stamp sheet state machine
-    var machine = new StampSheetStateMachine(
-        stampSheet,
-        client,
-        distributorNamespaceName,
-        showcaseKeyId
-     );
+The normal process for stamp sheets for the purchase of billed currency items is as follows
 
-    Gs2Exception exception = null;
-    void OnError(Gs2Exception e)
-    {
-        exception = e;
-    }
-    
-    AddListener(OnError);
-    
-    // Stamp sheet execution
-    yield return machine.Execute(onError);
-    
-    RemoveListener(OnError);
-    
-    if (exception ! = null)
-    {
-        // Stamp sheet execution error
-        callback.Invoke(new AsyncResult<object>(null, exception));
-        yield break;
-    }
-}
-// Successful purchase of product
-```
+![Billing Currency Purchase](BuyGems_en.png)
 
-The normal flow of a stamp sheet for the purchase of a chargeable currency item is as follows
-
-![Purchase of billable currency](BuyGems_en.png)
-
-The following is the flow of the purchase stamp sheet for a restricted purchase billed currency item.
+The purchase stamp sheet process for restricted purchase billed currency items is as follows
 
 ![Purchase Restrictions](BuyGems2_en.png)
 

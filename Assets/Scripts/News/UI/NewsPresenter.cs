@@ -1,13 +1,10 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
-using Gs2.Unity.Gs2Distributor.Result;
-using Gs2.Unity.Gs2Experience.Model;
-using Gs2.Unity.Gs2Inventory.Model;
-using Gs2.Unity.Gs2JobQueue.Model;
-using Gs2.Unity.Util;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.Events;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
+#endif
 
 namespace Gs2.Sample.News
 {
@@ -36,7 +33,7 @@ namespace Gs2.Sample.News
             UIManager.Instance.AddLog("NewsPresenter::Initialize");
             
             yield return _newsModel.GetContentsUrl(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _newsSetting.newsNamespaceName,
                 _newsSetting.onGetContentsUrl,
@@ -44,13 +41,41 @@ namespace Gs2.Sample.News
             );
 
             yield return _newsModel.ListNewses(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _newsSetting.newsNamespaceName,
                 _newsSetting.onGetListNewses,
                 _newsSetting.onError
             );
         }
+        
+#if GS2_ENABLE_UNITASK
+        /// <summary>
+        /// お知らせの初期化
+        /// Initialization of Notices
+        /// </summary>
+        /// <returns></returns>
+        public async UniTask InitializeAsync()
+        {
+            UIManager.Instance.AddLog("NewsPresenter::InitializeAync");
+            
+            await _newsModel.GetContentsUrlAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _newsSetting.newsNamespaceName,
+                _newsSetting.onGetContentsUrl,
+                _newsSetting.onError
+            );
+
+            await _newsModel.ListNewsesAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _newsSetting.newsNamespaceName,
+                _newsSetting.onGetListNewses,
+                _newsSetting.onError
+            );
+        }
+#endif
         
         /// <summary>
         /// お知らせを開く
@@ -62,7 +87,7 @@ namespace Gs2.Sample.News
             UIManager.Instance.AddLog("NewsPresenter::Initialize");
             
             yield return _newsModel.GetContentsUrl(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _newsSetting.newsNamespaceName,
                 _newsSetting.onGetContentsUrl,

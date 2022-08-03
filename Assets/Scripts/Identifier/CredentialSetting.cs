@@ -1,5 +1,5 @@
 using System;
-using Gs2.Unity;
+using Gs2.Unity.Core;
 using Gs2.Unity.Util;
 using UnityEngine;
 using UnityEngine.Events;
@@ -7,12 +7,7 @@ using UnityEngine.Events;
 namespace Gs2.Sample.Credential
 {
     [Serializable]
-    public class InitializeGs2AccountEvent : UnityEvent<Client>
-    {
-    }
-
-    [Serializable]
-    public class FinalizeGs2AccountEvent : UnityEvent<Profile>
+    public class InitializeGs2AccountEvent : UnityEvent<Gs2Domain>
     {
     }
 
@@ -26,10 +21,10 @@ namespace Gs2.Sample.Credential
         public string applicationClientSecret;
 
         [SerializeField]
-        public InitializeGs2AccountEvent onInitializeGs2 = new InitializeGs2AccountEvent();
-
+        public string distributorNamespaceName;
+        
         [SerializeField]
-        public FinalizeGs2AccountEvent onFinalizeGs2 = new FinalizeGs2AccountEvent();
+        public InitializeGs2AccountEvent onInitializeGs2 = new InitializeGs2AccountEvent();
 
         [SerializeField]
         public ErrorEvent onError = new ErrorEvent();

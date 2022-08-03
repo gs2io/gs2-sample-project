@@ -1,16 +1,15 @@
 using System;
 using System.Collections;
-using Gs2.Core;
 using Gs2.Core.Exception;
 using Gs2.Core.Model;
 using Gs2.Gs2Matchmaking.Model;
-using Gs2.Sample.Friend;
-using Gs2.Unity.Gs2Matchmaking.Result;
 using Gs2.Util.LitJson;
-using TMPro;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.UI;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
+#endif
 
 namespace Gs2.Sample.Matchmaking
 {
@@ -92,9 +91,13 @@ namespace Gs2.Sample.Matchmaking
         private string _issuer;
 
         /// <summary>
+        /// マッチメイキング完了通知のgatheringName
+        /// </summary>
+        private string _gatheringName;
+        
+        /// <summary>
         /// 通知で対象になっているUserId
         /// </summary>
-        /// <returns></returns>
         private string _userId;
         
         // Start is called before the first frame update
@@ -149,12 +152,12 @@ namespace Gs2.Sample.Matchmaking
 
         public void Initialize()
         {
-            GameManager.Instance.Client.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
+            GameManager.Instance.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
         }
         
         public void Finish()
         {
-            GameManager.Instance.Client.Profile.Gs2Session.OnNotificationMessage -= PushNotificationHandler;
+            GameManager.Instance.Profile.Gs2Session.OnNotificationMessage -= PushNotificationHandler;
         }
         
         /// <summary>
@@ -189,6 +192,8 @@ namespace Gs2.Sample.Matchmaking
             }
             else if (message.issuer.EndsWith(":Complete"))
             {
+                var notification = CompleteNotification.FromJson(JsonMapper.ToObject(message.payload));
+                _gatheringName = notification.GatheringName;
                 _recievedNotification = true;
             }
         }
@@ -228,7 +233,7 @@ namespace Gs2.Sample.Matchmaking
                         // Joinと同時にマッチメイキングが成立する場合
                         // DoMatchmaking の応答より先にマッチメイキング完了通知が届くことがある
                         SetState(State.Complete);
-                        _matchmakingSetting.onMatchmakingComplete.Invoke(_matchmakingModel.Gathering, _matchmakingModel.JoinedPlayerIds);
+                        _matchmakingSetting.onMatchmakingComplete.Invoke(_gatheringName);
                         
                         _issuer = String.Empty;
                         _userId = String.Empty;
@@ -297,24 +302,26 @@ namespace Gs2.Sample.Matchmaking
         {
             _matchmakingModel.Capacity = int.Parse(_createGatheringView.capacityInputField.text);
             SetState(State.CreateGathering);
+#if GS2_ENABLE_UNITASK
+            SimpleMatchmakingCreateGatheringTaskAsync().Forget();
+#else
             StartCoroutine(
                 SimpleMatchmakingCreateGatheringTask()
             );
+#endif
         }
 
         public IEnumerator SimpleMatchmakingCreateGatheringTask()
         {
-            AsyncResult<EzCreateGatheringResult> result = null;
             yield return _matchmakingModel.CreateGathering(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
-                r => result = r,
                 _matchmakingSetting.matchmakingNamespaceName,
                 _matchmakingSetting.onUpdateJoinedPlayerIds,
                 _matchmakingSetting.onError
             );
             
-            if (result.Error != null)
+            if (_matchmakingModel.Gathering == null)
             {
                 SetState(State.CreateGatheringFailed);
                 yield break;
@@ -322,17 +329,40 @@ namespace Gs2.Sample.Matchmaking
             
             SetState(State.Matchmaking);
         }
-        
+#if GS2_ENABLE_UNITASK
+        public async UniTask SimpleMatchmakingCreateGatheringTaskAsync()
+        {
+            await _matchmakingModel.CreateGatheringAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _matchmakingSetting.matchmakingNamespaceName,
+                _matchmakingSetting.onUpdateJoinedPlayerIds,
+                _matchmakingSetting.onError
+            );
+            
+            if (_matchmakingModel.Gathering == null)
+            {
+                SetState(State.CreateGatheringFailed);
+                return;
+            }
+            
+            SetState(State.Matchmaking);
+        }
+#endif
+
         /// <summary>
         /// 既存のギャザリングへの参加ボタンをクリック
         /// </summary>
         public void OnClickToJoinGathering()
         {
             SetState(State.JoinGathering);
-            
+#if GS2_ENABLE_UNITASK
+            SimpleMatchmakingJoinGatheringAsync().Forget();
+#else
             StartCoroutine(
                 SimpleMatchmakingJoinGathering()
             );
+#endif
         }
         
         /// <summary>
@@ -346,26 +376,22 @@ namespace Gs2.Sample.Matchmaking
             
             while (matchmakingState == State.JoinGathering)
             {
-                AsyncResult<EzDoMatchmakingResult> result = null;
-                string contextToken = null;
                 yield return _matchmakingModel.JoinGathering(
-                    r => { result = r; },
-                    GameManager.Instance.Client,
+                    GameManager.Instance.Domain,
                     GameManager.Instance.Session,
                     _matchmakingSetting.matchmakingNamespaceName,
-                    contextToken,
                     _matchmakingSetting.onError
                 );
                 
-                if (result.Error != null)
+                if (_matchmakingModel.Error != null)
                 {
                     SetState(State.Error);
                     yield break;
                 }
 
-                if (result.Result.Item != null)
+                if (_matchmakingModel.ResultGatherings.Count > 0)
                 {
-                    _matchmakingModel.Gathering = result.Result.Item;
+                    _matchmakingModel.Gathering = _matchmakingModel.ResultGatherings[0];
                     if (_matchmakingModel.Gathering.CapacityOfRoles.Count > 0)
                     {
                         foreach (var CapacityOfRole in _matchmakingModel.Gathering.CapacityOfRoles)
@@ -377,24 +403,21 @@ namespace Gs2.Sample.Matchmaking
                                     if (!_matchmakingModel.JoinedPlayerIds.Contains(player.UserId))
                                     {
                                         _matchmakingModel.JoinedPlayerIds.Add(player.UserId);
-                                        _matchmakingSetting.onJoinPlayer.Invoke(_matchmakingModel.Gathering,
-                                            _userId);
                                     }
                                 }
                             }
                         }
                     }
-                    _matchmakingSetting.onJoinPlayer.Invoke(_matchmakingModel.Gathering, _userId);
                     _matchmakingSetting.onUpdateJoinedPlayerIds.Invoke(_matchmakingModel.Gathering,
                         _matchmakingModel.JoinedPlayerIds);
 
-                    if (result.Error is NotFoundException)
+                    if (_matchmakingModel.Error is NotFoundException)
                     {
                         SetState(State.GatheringNotFound);
                     }
                     else
                     {
-                        if (result.Error != null)
+                        if (_matchmakingModel.Error != null)
                         {
                             SetState(State.Error);
                         }
@@ -405,12 +428,76 @@ namespace Gs2.Sample.Matchmaking
                     }
                 }
 
-                contextToken = result.Result.MatchmakingContextToken;
-                
                 yield return new WaitForSeconds(1);
             }
         }
-        
+#if GS2_ENABLE_UNITASK
+        public async UniTask SimpleMatchmakingJoinGatheringAsync(
+        )
+        {
+            UIManager.Instance.AddLog("SimpleMatchmakingJoinGatheringAsync");
+            
+            while (matchmakingState == State.JoinGathering)
+            {
+                await _matchmakingModel.JoinGatheringAsync(
+                    GameManager.Instance.Domain,
+                    GameManager.Instance.Session,
+                    _matchmakingSetting.matchmakingNamespaceName,
+                    _matchmakingSetting.onError
+                );
+                
+                if (_matchmakingModel.Error != null)
+                {
+                    SetState(State.Error);
+                    return;
+                }
+
+                if (_matchmakingModel.ResultGatherings.Count > 0)
+                {
+                    _matchmakingModel.Gathering = _matchmakingModel.ResultGatherings[0];
+                    if (_matchmakingModel.Gathering.CapacityOfRoles.Count > 0)
+                    {
+                        foreach (var CapacityOfRole in _matchmakingModel.Gathering.CapacityOfRoles)
+                        {
+                            if (CapacityOfRole != null)
+                            {
+                                foreach (var player in CapacityOfRole.Participants)
+                                {
+                                    if (!_matchmakingModel.JoinedPlayerIds.Contains(player.UserId))
+                                    {
+                                        _matchmakingModel.JoinedPlayerIds.Add(player.UserId);
+                                        _matchmakingSetting.onJoinPlayer.Invoke(_matchmakingModel.Gathering, _userId);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    _matchmakingSetting.onJoinPlayer.Invoke(_matchmakingModel.Gathering, _userId);
+                    _matchmakingSetting.onUpdateJoinedPlayerIds.Invoke(_matchmakingModel.Gathering,
+                        _matchmakingModel.JoinedPlayerIds);
+
+                    if (_matchmakingModel.Error is NotFoundException)
+                    {
+                        SetState(State.GatheringNotFound);
+                    }
+                    else
+                    {
+                        if (_matchmakingModel.Error != null)
+                        {
+                            SetState(State.Error);
+                        }
+                        else if (matchmakingState != State.Complete)
+                        {
+                            SetState(State.Matchmaking);
+                        }
+                    }
+                }
+
+                await UniTask.Delay(TimeSpan.FromSeconds(1));
+            }
+        }
+#endif
+
         /// <summary>
         /// ギャザリング作成 キャンセルボタンをクリック
         /// </summary>
@@ -432,9 +519,13 @@ namespace Gs2.Sample.Matchmaking
         /// </summary>
         public void OnClickToCancelMatchmaking()
         {
+#if GS2_ENABLE_UNITASK
+            CancelMatchmakingAsync().Forget();
+#else
             StartCoroutine(
                 CancelMatchmaking()
             );
+#endif
         }
 
         /// <summary>
@@ -445,17 +536,15 @@ namespace Gs2.Sample.Matchmaking
         {
             UIManager.Instance.AddLog("CancelMatchmaking");
 
-            AsyncResult<EzCancelMatchmakingResult> result = null;
             yield return _matchmakingModel.CancelMatchmaking(
-                r => { result = r; },
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _matchmakingSetting.matchmakingNamespaceName,
                 _matchmakingSetting.onMatchmakingCancel,
                 _matchmakingSetting.onError
             );
         
-            if (result.Error != null)
+            if (_matchmakingModel.Error != null)
             {
                 SetState(State.Error);
                 yield break;
@@ -463,6 +552,28 @@ namespace Gs2.Sample.Matchmaking
             
             SetState(State.MainMenu);
         }
+#if GS2_ENABLE_UNITASK
+        public async UniTask CancelMatchmakingAsync()
+        {
+            UIManager.Instance.AddLog("CancelMatchmakingAsync");
+
+            await _matchmakingModel.CancelMatchmakingAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _matchmakingSetting.matchmakingNamespaceName,
+                _matchmakingSetting.onMatchmakingCancel,
+                _matchmakingSetting.onError
+            );
+        
+            if (_matchmakingModel.Error != null)
+            {
+                SetState(State.Error);
+                return;
+            }
+            
+            SetState(State.MainMenu);
+        }
+#endif
         
         /// <summary>
         /// エラー内容の確認ボタンをクリック

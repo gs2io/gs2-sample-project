@@ -39,15 +39,6 @@ namespace Gs2.Sample.Money
 
         [SerializeField] 
         public string showcaseName;
-
-        [SerializeField] 
-        public string showcaseKeyId;
-
-        [SerializeField] 
-        public string limitNamespaceName;
-
-        [SerializeField] 
-        public string distributorNamespaceName;
         
         /// <summary>
         /// ウォレットを取得したとき

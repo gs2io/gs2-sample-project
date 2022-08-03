@@ -20,164 +20,158 @@ Import the IAP package.
 
 | Setting Name | Description |
 |---|---|
-| lotteryNamespaceName | namespace name of GS2-Lottery
-| jobQueueNamespaceName | GS2-JobQueue's namespace name
-| showcaseNamespaceName | GS2-Showcase namespace name
-| showcaseName | GS2-Showcase display shelf name |
-| showcaseKeyId | cryptographic key used for signature calculation for stamp sheets issued at GS2-Showcase for merchandise purchases
-| lotteryKeyId | cryptographic key used for signature calculation of stamp sheets issued at the time of lottery execution in GS2-Lottery
+| lotteryName | type name of lottery master data in GS2-Lottery, product name of merchandise shelf master data in GS2-Showcase |
+| showcaseNamespaceName | GS2-Showcase namespace name |
 
 | Event | Description |
 |---|---|
-| OnGetShowcase(EzShowcase) | Called when the product shelf information is obtained. | OnGetShowcase(EzShowcase)
-| OnBuy(EzRoom room) | Called when IP address and port information of the Realtime game server is obtained. | OnBuy(EzRoom room)
-| OnJoinPlayer(Player player) | Called when a new player joins the Realtime game server. | OnJoinPlayer(Player player)
-| OnError(Gs2Exception error) | Called when an error occurs. | OnError(Gs2Exception error)
+| OnGetShowcase(EzShowcase) | Called when the product shelf information is obtained. |
+| OnAcquireInventoryItem(List<AcquireItemSetByUserIdRequest>) | It is called when an item is obtained in the lottery. |
+| OnError(Gs2Exception error) | Called when an error occurs. |
 
 ## Process flow for purchasing lottery products
 
 ### Display of lottery store
 
+![LotteryList](LotteryList_en.png)
+
 Retrieves the product list and displays the store.
 
+When UniTask is enabled
 ```c#
-AsyncResult<EzGetShowcaseResult> result = null;
-yield return client.Showcase.GetShowcase(
-    r =>
-    {
-        result = r;
-    },
-    session,
-    showcaseNamespaceName,
-    showcaseName
+var domain = gs2.Showcase.Namespace(
+    namespaceName: showcaseNamespaceName
+).Me(
+    gameSession: gameSession
+).Showcase(
+    showcaseName: showcaseName
 );
-````
+try
+{
+    Showcase = await domain.ModelAsync();
+    
+    onGetShowcase.Invoke(Showcase);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+    return e;
+}
+return null;
+```
+When coroutine is used
+```c#
+var domain = gs2.Showcase.Namespace(
+    namespaceName: showcaseNamespaceName
+).Me(
+    gameSession: gameSession
+).Showcase(
+    showcaseName: showcaseName
+);
+var future = domain.Model();
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(
+        future.Error
+    );
+    callback.Invoke(future.Error);
+    yield break;
+}
+
+Showcase = future.Result;
+
+onGetShowcase.Invoke(Showcase);
+
+callback.Invoke(null);
+```
 
 ### Purchase Processing
 
-If you are in a mobile environment, use the Unity IAP to purchase content from the AppStore or GooglePlay  
-(The product must be registered and configured).  
-In the editor environment, a Fake Store receipt will be issued.  
-The resulting receipt is retained for reference in subsequent processing.
+Requests GS2-Showcase to purchase an item.  
+Specify the display item ID of the item to be purchased in displayItemId.  
+Specify the quantity to be purchased in quantity.  
 
+When UniTask is enabled
 ```c#
-IStoreController controller = null;
-UnityEngine.Purchasing.Product product = null;
-Product product = null; string receipt = null;
-if (contentsId ! = null)
-{
-    AsyncResult<Gs2.Unity.Util.PurchaseParameters> result = null;
-    yield return new IAPUtil().Buy(
-        r => { result = r; }
-        contentsId
-    );
-
-    if (result.Error ! = null)
-    {
-        onError.Invoke(
-            Error
-        );
-        yield break;
-    }
-
-    receipt = result.result.receipt;
-    controller = result.Result.controller;
-    product = result.Result.product;
-}
-```
-
-Execute the process of purchasing an item from __GS2-Showcase__ using the purchase receipt.  
-Config is passed a __GS2-Money__ wallet slot and the contents of the receipt.
-
-```c#
-// Lottery purchase receipt information
-if (receipt ! = null)
-{
-    tempConfig.Add(
-        new EzConfig
-        {
-            Key = "receipt", 
-            Value = receipt
-        }
-    );
-
-    UIManager.Instance.AddLog("receipt:" + receipt);
-}
-```
-
-```c#
-// Request the purchase of Showcase products.
-AsyncResult<EzBuyResult> result = null;
-yield return client.Showcase.Buy(
-    r => { result = r; }
-    session,
-    showcaseNamespaceName,
-    showcaseName,
-    displayItemId,
-    tempConfig
+// Request to purchase an item
+var domain = gs2.Showcase.Namespace(
+    namespaceName: showcaseNamespaceName
+).Me(
+    gameSession: gameSession
+).Showcase(
+    showcaseName: showcaseName
 );
-
-if (result.Error ! = null)
+try
+{
+    var result = await domain.BuyAsync(
+        displayItemId: displayItemId,
+        quantity: null,
+        config: tempConfig.ToArray()
+    );
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+    return;
+}
+```
+When coroutine is used
+```c#
+// Request to purchase an item
+var domain = gs2.Showcase.Namespace(
+    namespaceName: showcaseNamespaceName
+).Me(
+    gameSession: gameSession
+).Showcase(
+    showcaseName: showcaseName
+);
+var future = domain.Buy(
+    displayItemId: displayItemId,
+    config: tempConfig.ToArray()
+);
+yield return future;
+if (future.Error != null)
 {
     onError.Invoke(
-        Error
+        future.Error
     );
-    yield break;
 }
-                
-// Get the stamp sheet
-StampSheet = result.Result.StampSheet;
 ```
 
-The obtained stamp sheet is executed.  
-GS2 SDK for Unity provides a state machine for stamp sheet execution.  
-To run the state machine, you will need [GS2-Distributor](https://app.gs2.io/docs/en/index.html#gs2-distributor) and the encryption key used to calculate the stamp sheet signature.
+A stamp sheet for purchasing lottery items is issued by GS2-Showcase.  
+In implementations using the GS2Domain class ("gs2" in the source), the processing of stamp sheets on the client side is __automatically executed__.  
+
+The list of products resulting from the lottery can be retrieved with the following callback.
 
 ```c#
-StartCoroutine(
-    _stampSheetRunner.Run(
-    stampSheet,
-    _lotterySetting.showcaseKeyId,
-    _lotterySetting.onError
-    )
-);
-```
-
-The normal flow of a stamp sheet for the purchase of billed currency items is as follows
-
-![LotteryStore](GachaStore_en.png)
-
-Using the lottery results included in the issued stamp sheet, the client can play the lottery performance, etc., if necessary, and then use the  
-The list of acquired items can be displayed.  
-After the stamp sheet is executed, the server uses [GS2-JobQueue](https://app.gs2.io/docs/en/index.html#gs2-jobqueue) to process the items in the inventory in order.
-
-```c#
-// Get the result of the Lottery drawing process
-if (sheet.Action == "Gs2Lottery:DrawByUserId")
+// Obtain the results of the lottery process
+void LotteryResult(
+    string _namespace,
+    string lotteryName,
+    DrawnPrize[] prizes
+)
 {
-    // Items acquired by lottery are added to the inventory
-    var json = JsonMapper.ToObject(sheetResult.Result);
-    var result = DrawByUserIdResult.FromJson(json);
-    var mergedAcquireRequests = new List<AcquireItemSetByUserIdRequest>();
-    foreach (var acquireRequests in result.Items.Select(item => (
-        from acquireAction in item.AcquireActions 
-        where acquireAction.Action == "Gs2Inventory:AcquireItemSetByUserId" 
-        select JsonMapper.ToObject(acquireAction.Request) into acquireJson 
-        select AcquireItemSetByUserIdRequest.FromJson(acquireJson)
-    ).ToList()))
+    // Items won in the lottery
+    var DrawnPrizes = new List<EzDrawnPrize>();
+    foreach (var prize in prizes)
     {
-        AddRange(acquireRequests);
+        var item = EzDrawnPrize.FromModel(prize);
+        DrawnPrizes.Add(item);
     }
-    _lotterySetting.onAcquireInventoryItem.Invoke(
-        mergedAcquireRequests
-    );
-    // Execute stamp sheet
-    StartCoroutine(
-        _stampSheetRunner.Run(
-            StampSheet,
-            _lotterySetting.lotteryKeyId,
-            _lotterySetting.onError
-        )
+
+    onAcquireInventoryItem.Invoke(
+        DrawnPrizes
     );
 }
+
+// Register lottery result acquisition callback
+Gs2Lottery.Domain.Gs2Lottery.DrawnResult = LotteryResult;
 ```
+
+At the time the lottery results are retrieved, the client will perform the lottery production, list the items retrieved, etc., if necessary in the actual game.  
+After the stamp sheet is executed, [GS2-JobQueue](https://app.gs2.io/docs/index.html#gs2-jobqueue) in turn executes the process of acquiring items to the inventory.
+
+The purchase stamp sheet process for raffle items is as follows
+
+![LotteryStore](LotteryStore_en.png)

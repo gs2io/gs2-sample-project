@@ -1,13 +1,16 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Gs2.Core;
-using Gs2.Unity;
+using System.Linq;
+using Gs2.Core.Exception;
+using Gs2.Unity.Core;
 using Gs2.Unity.Gs2Version.Model;
-using Gs2.Unity.Gs2Version.Result;
 using Gs2.Unity.Util;
 using UnityEngine;
-using UnityEngine.Events;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
+#endif
 
 namespace Gs2.Sample.Version
 {
@@ -22,24 +25,15 @@ namespace Gs2.Sample.Version
         /// Server compares the version master of the agreement with the approved version and returns
         /// the unapproved version to Errors and Warnings.
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="session"></param>
-        /// <param name="versionNamespaceName"></param>
-        /// <param name="versionName"></param>
-        /// <param name="onCheckVersion"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
         public IEnumerator CheckTerm(
-            Client client,
-            GameSession session,
+            Gs2Domain gs2,
+            GameSession gameSession,
             string versionNamespaceName,
             string versionName,
             CheckVersionEvent onCheckVersion,
             ErrorEvent onError
         )
         {
-            AsyncResult<EzCheckVersionResult> result = null;
-            
             List<EzTargetVersion> targetVersions = new List<EzTargetVersion>();
             EzTargetVersion targetVersion = new EzTargetVersion();
             targetVersion.VersionName = versionName;
@@ -49,64 +43,145 @@ namespace Gs2.Sample.Version
             version.Minor = 0;
             version.Micro = 0;
             targetVersion.Version = version;
-            targetVersion.VersionName = versionName;
             targetVersions.Add(targetVersion);
             
-            yield return client.Version.CheckVersion(
-                r =>
-                {
-                    result = r;
-                },
-                session,    // GameSession ログイン状態を表すセッションオブジェクト
-                versionNamespaceName,   //  ネームスペース名
-                targetVersions
+            var domain = gs2.Version.Namespace(
+                namespaceName: versionNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Checker();
+            var future = domain.CheckVersion(
+                targetVersions: targetVersions.ToArray()
             );
-
-            if (result != null &&result.Error != null)
+            yield return future;
+            if (future.Error != null)
             {
                 onError.Invoke(
-                    result.Error
+                    future.Error
                 );
-                onCheckVersion.Invoke(targetVersions, null);
                 yield break;
             }
-            
-            var version_result = result.Result;
-            
-            onCheckVersion.Invoke(targetVersions, version_result);
-        }
 
-        public IEnumerator AcceptTerm(
-            Client client,
-            GameSession session,
+            var projectToken = future.Result.ProjectToken;
+            var warnings = future.Result.Warnings;
+            var errors = future.Result.Errors;
+            
+            onCheckVersion.Invoke(projectToken, warnings.ToList(), errors.ToList());
+        }
+#if GS2_ENABLE_UNITASK
+        public async UniTask CheckTermAsync(
+            Gs2Domain gs2,
+            GameSession gameSession,
             string versionNamespaceName,
             string versionName,
-            UnityEvent onAcceptTerm,
+            CheckVersionEvent onCheckVersion,
             ErrorEvent onError
         )
         {
-            // バージョンを承認
-            AsyncResult<EzAcceptResult> result = null;
-            var current = client.Version.Accept(
-                r =>
-                {
-                    result = r;
-                },
-                session,
-                namespaceName: versionNamespaceName,
+            List<EzTargetVersion> targetVersions = new List<EzTargetVersion>();
+            EzTargetVersion targetVersion = new EzTargetVersion();
+            targetVersion.VersionName = versionName;
+            
+            EzVersion version = new EzVersion();
+            version.Major = 0;
+            version.Minor = 0;
+            version.Micro = 0;
+            targetVersion.Version = version;
+            targetVersions.Add(targetVersion);
+            
+            var domain = gs2.Version.Namespace(
+                namespaceName: versionNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Checker();
+            try
+            {
+                var result = await domain.CheckVersionAsync(
+                    targetVersions: targetVersions.ToArray()
+                );
+                
+                var projectToken = result.ProjectToken;
+                var warnings = result.Warnings;
+                var errors = result.Errors;
+            
+                onCheckVersion.Invoke(projectToken, warnings.ToList(), errors.ToList());
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+            }
+        }
+#endif
+        
+        public IEnumerator AcceptTerm(
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string versionNamespaceName,
+            string versionName,
+            AcceptTermEvent onAcceptTerm,
+            ErrorEvent onError
+        )
+        {
+            var domain = gs2.Version.Namespace(
+                namespaceName: versionNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).AcceptVersion(
                 versionName: versionName
             );
-
-            yield return current;
-            if (result != null &&result.Error != null)
+            var future = domain.Accept();
+            yield return future;
+            if (future.Error != null)
             {
                 onError.Invoke(
-                    result.Error
+                    future.Error
                 );
                 yield break;
             }
+
+            var future2 = future.Result.Model();
+            yield return future2;
+            if (future2.Error != null)
+            {
+                onError.Invoke(
+                    future2.Error
+                );
+                yield break;
+            }
+
+            var item = future2.Result;
             
-            onAcceptTerm.Invoke();
+            onAcceptTerm.Invoke(item);
         }
+#if GS2_ENABLE_UNITASK
+        public async UniTask AcceptTermAsync(
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string versionNamespaceName,
+            string versionName,
+            AcceptTermEvent onAcceptTerm,
+            ErrorEvent onError
+        )
+        {
+            var domain = gs2.Version.Namespace(
+                namespaceName: versionNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).AcceptVersion(
+                versionName: versionName
+            );
+            try
+            {
+                var result = await domain.AcceptAsync();
+                var item = await result.ModelAsync();
+                
+                onAcceptTerm.Invoke(item);
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+            }
+        }
+#endif
     }
 }

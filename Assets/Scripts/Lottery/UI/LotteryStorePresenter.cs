@@ -1,19 +1,21 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Gs2.Core.Exception;
 using Gs2.Gs2Inventory.Request;
-using Gs2.Gs2Lottery.Result;
 using Gs2.Sample.Core;
-using Gs2.Sample.JobQueue;
 using Gs2.Sample.Money;
 using Gs2.Sample.Unit;
-using Gs2.Unity.Gs2Distributor.Result;
+using Gs2.Unity.Gs2Lottery.Model;
 using Gs2.Unity.Gs2Showcase.Model;
-using Gs2.Unity.Util;
 using Gs2.Util.LitJson;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.Events;
+using EzConfig = Gs2.Unity.Gs2Showcase.Model.EzConfig;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
+#endif
 
 namespace Gs2.Sample.Lottery
 {
@@ -38,9 +40,6 @@ namespace Gs2.Sample.Lottery
         private UnitPresenter _unitPresenter;
         
         private StampSheetRunner _stampSheetRunner;
-        
-        [SerializeField]
-        private JobQueueModel _jobQueueModel;
         
         public enum State
         {
@@ -95,12 +94,8 @@ namespace Gs2.Sample.Lottery
             Assert.IsNotNull(_unitModel);
             Assert.IsNotNull(_moneyPresenter);
             Assert.IsNotNull(_unitPresenter);
-            Assert.IsNotNull(_jobQueueModel);
             
             _lotteryStoreView.OnCloseEvent();
-            
-            _lotterySetting.onIssueBuyStampSheet.AddListener(OnIssueStampSheet);
-            _lotterySetting.onError.AddListener(OnError);
         }
 
         private void SetState(State _state)
@@ -143,38 +138,11 @@ namespace Gs2.Sample.Lottery
         {
             UIManager.Instance.AddLog("LotteryStorePresenter::Initialize");
             
-            // 抽選処理のスタンプシート
-            // Stamp sheet for lottery processing
-            _stampSheetRunner = new StampSheetRunner(
-                GameManager.Instance.Client
-            );
-            _stampSheetRunner.AddDoneStampTaskEventHandler(
-                _moneyPresenter.GetTaskCompleteAction(),
-                _unitPresenter.GetTaskCompleteAction(),
-                _jobQueueModel.GetTaskCompleteAction(),
-                GetTaskCompleteAction()
-            );
-            _stampSheetRunner.AddCompleteStampSheetEvent(
-                _moneyPresenter.GetSheetCompleteAction(),
-                _unitPresenter.GetSheetCompleteAction(),
-                _jobQueueModel.GetSheetCompleteAction(),
-                GetSheetCompleteAction()
-            );
-            
-            // 商品受け取りのJobQueue
-            // JobQueue for goods receipt
-            _jobQueueModel.Initialize(
-                _lotterySetting.jobQueueNamespaceName,
-                _lotterySetting.onError
-            );
-            _jobQueueModel.onExecJob.AddListener(
-                _unitPresenter.GetJobQueueAction()
-            );
+            _lotterySetting.onError.AddListener(OnError);
         }
         
         public void Finish()
         {
-            _lotterySetting.onIssueBuyStampSheet.RemoveListener(OnIssueStampSheet);
             _lotterySetting.onError.RemoveListener(OnError);
         }
 
@@ -190,31 +158,64 @@ namespace Gs2.Sample.Lottery
         public void ClickToOpenLotteryStore()
         {
             SetState(State.GetShowcaseProcessing);
-            
+
+#if GS2_ENABLE_UNITASK
+            GetProductsTaskAsync().Forget();
+#else
             StartCoroutine(
-                _lotteryStoreModel.GetShowcase(
-                    r =>
+                GetProductsTask()
+            );
+#endif
+        }
+
+        public IEnumerator GetProductsTask()
+        {
+            yield return _lotteryStoreModel.GetShowcase(
+                e =>
+                {
+                    if (e == null)
                     {
-                        if (r.Error == null)
-                        {
-                            OnGetSalesItems(_lotteryStoreModel.Showcase, _lotteryStoreModel.DisplayItems);
-                            
-                            SetState(State.OpenLotteryStore);
-                        }
-                        else
-                        {
-                            SetState(State.GetShowcaseFailed);
-                        }
-                    },
-                    GameManager.Instance.Client,
-                    GameManager.Instance.Session,
-                    _lotterySetting.showcaseNamespaceName,
-                    _lotterySetting.showcaseName,
-                    _lotterySetting.onGetShowcase,
-                    _lotterySetting.onError
-                )
+                        OnGetSalesItems(_lotteryStoreModel.Showcase, _lotteryStoreModel.DisplayItems);
+
+                        SetState(State.OpenLotteryStore);
+                    }
+                    else
+                    {
+                        SetState(State.GetShowcaseFailed);
+                    }
+                },
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _lotterySetting.showcaseNamespaceName,
+                _lotterySetting.lotteryName,
+                _lotterySetting.onGetShowcase,
+                _lotterySetting.onError
             );
         }
+#if GS2_ENABLE_UNITASK
+        public async UniTask GetProductsTaskAsync()
+        {
+            var e = await _lotteryStoreModel.GetShowcaseAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _lotterySetting.showcaseNamespaceName,
+                _lotterySetting.lotteryName,
+                _lotterySetting.onGetShowcase,
+                _lotterySetting.onError
+            );
+            
+            if (e == null)
+            {
+                OnGetSalesItems(_lotteryStoreModel.Showcase, _lotteryStoreModel.DisplayItems);
+
+                SetState(State.OpenLotteryStore);
+            }
+            else
+            {
+                SetState(State.GetShowcaseFailed);
+            }
+        }
+#endif
         
         /// <summary>
         /// 商品リストの初期化
@@ -236,7 +237,7 @@ namespace Gs2.Sample.Lottery
             foreach (var displayItem in displayItems)
             {
                 var item = Instantiate(_lotteryStoreView.productPrefab, _lotteryStoreView.contentTransform);
-                item.Initialize(new SalesItem(displayItem.DisplayItemId, displayItem.SalesItem));
+                item.Initialize(new SalesItem(displayItem.DisplayItemId, displayItem.SalesItem), _moneyPresenter.GetWalletBalance());
                 item.onBuy.AddListener(OnBuyProduct);
                 item.gameObject.SetActive(true);
             }
@@ -262,14 +263,30 @@ namespace Gs2.Sample.Lottery
                 ["slot"] = MoneyModel.Slot.ToString()
             };
             
+#if GS2_ENABLE_UNITASK
+            _lotteryStoreModel.BuyAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _lotterySetting.showcaseNamespaceName,
+                _lotterySetting.lotteryName,
+                salesItem.DisplayItemId,
+                _lotterySetting.onAcquireInventoryItem,
+                _lotterySetting.onError,
+                config.Select(item => new EzConfig
+                {
+                    Key = item.Key,
+                    Value = item.Value
+                }).ToList()
+            ).Forget();
+#else
             StartCoroutine(
                 _lotteryStoreModel.Buy(
-                    GameManager.Instance.Client,
+                    GameManager.Instance.Domain,
                     GameManager.Instance.Session,
                     _lotterySetting.showcaseNamespaceName,
-                    _lotterySetting.showcaseName,
+                    _lotterySetting.lotteryName,
                     salesItem.DisplayItemId,
-                    _lotterySetting.onIssueBuyStampSheet,
+                    _lotterySetting.onAcquireInventoryItem,
                     _lotterySetting.onError,
                     config.Select(item => new EzConfig
                     {
@@ -278,74 +295,7 @@ namespace Gs2.Sample.Lottery
                     }).ToList()
                 )
             );
-        }
-
-        /// <summary>
-        /// スタンプシートが発行された
-        /// Stamp sheet issued
-        /// </summary>
-        /// <param name="stampSheet"></param>
-        public void OnIssueStampSheet(
-            string stampSheet
-        )
-        {
-            UIManager.Instance.AddLog("LotteryStorePresenter::OnIssueStampSheet");
-
-            // スタンプシートを実行
-            // Execute stamp sheet
-            StartCoroutine(
-                _stampSheetRunner.Run(
-                    stampSheet,
-                    _lotterySetting.showcaseKeyId,
-                    _lotterySetting.onError
-                )
-            );
-        }
-
-        public UnityAction<EzStampTask, EzRunStampTaskResult> GetTaskCompleteAction()
-        {
-            return (task, taskResult) =>
-            {
-                Debug.Log("LotteryStorePresenter::StateMachineOnDoneStampTask");
-            };
-        }
-
-        public UnityAction<EzStampSheet, EzRunStampSheetResult> GetSheetCompleteAction()
-        {
-            return (sheet, sheetResult) =>
-            {
-                Debug.Log("LotteryStorePresenter::StateMachineOnCompleteStampSheet");
-
-                // 抽選処理の結果を取得
-                // Obtain the results of the lottery process
-                if (sheet.Action == "Gs2Lottery:DrawByUserId")
-                {
-                    // 抽選によって取得したアイテムがインベントリに追加される
-                    var json = JsonMapper.ToObject(sheetResult.Result);
-                    var result = DrawByUserIdResult.FromJson(json);
-                    var mergedAcquireRequests = new List<AcquireItemSetByUserIdRequest>();
-                    foreach (var acquireRequests in result.Items.Select(item => (
-                        from acquireAction in item.AcquireActions 
-                        where acquireAction.Action == "Gs2Inventory:AcquireItemSetByUserId" 
-                        select JsonMapper.ToObject(acquireAction.Request) into acquireJson 
-                        select AcquireItemSetByUserIdRequest.FromJson(acquireJson)
-                    ).ToList()))
-                    {
-                        mergedAcquireRequests.AddRange(acquireRequests);
-                    }
-                    _lotterySetting.onAcquireInventoryItem.Invoke(
-                        mergedAcquireRequests
-                    );
-                    // スタンプシートを実行
-                    StartCoroutine(
-                        _stampSheetRunner.Run(
-                            result.StampSheet,
-                            _lotterySetting.lotteryKeyId,
-                            _lotterySetting.onError
-                        )
-                    );
-                }
-            };
+#endif
         }
         
         /// <summary>
@@ -353,17 +303,31 @@ namespace Gs2.Sample.Lottery
         /// </summary>
         /// <param name="requests"></param>
         public void OnAcquireInventoryItem(
-            List<AcquireItemSetByUserIdRequest> requests
+            List<EzDrawnPrize> prizes
         )
         {
-            string text = "";
-            foreach (var request in requests)
+            if (prizes != null)
             {
-                var itemModel = _unitModel.ItemModels.First(model => model.Name == request.ItemName);
-                var obtainText = UIManager.Instance.GetLocalizationText("UnitObtain");
-                text += $"{itemModel.Name} x {request.AcquireCount} {obtainText}\n";
+                string text = "";
+                foreach (var prize in prizes)
+                {
+                    if (prize.AcquireActions != null && prize.AcquireActions.Count > 0)
+                    {
+                        foreach (var action in prize.AcquireActions)
+                        {
+                            var request = action.Request;
+                            var item = AcquireItemSetByUserIdRequest.FromJson(JsonMapper.ToObject(request));
+                            if (item != null)
+                            {
+                                var itemModel = _unitModel.ItemModels.First(model => model.Name == item.ItemName);
+                                var obtainText = UIManager.Instance.GetLocalizationText("UnitObtain");
+                                text += $"{itemModel.Name} x {item.AcquireCount} {obtainText}\n";
+                            }
+                        }
+                    }
+                }
+                _getItemDialog.SetText(text);
             }
-            _getItemDialog.SetText(text);
             
             SetState(State.BuySucceed);
             _getItemDialog.OnOpenEvent();

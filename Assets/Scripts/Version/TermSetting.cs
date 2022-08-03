@@ -1,10 +1,16 @@
 ﻿using System;
+using Gs2.Unity.Gs2Version.Model;
 using Gs2.Unity.Util;
 using UnityEngine;
 using UnityEngine.Events;
 
 namespace Gs2.Sample.Version
 {
+    [System.Serializable]
+    public class AcceptTermEvent : UnityEvent<EzAcceptVersion>
+    {
+    }
+    
     [Serializable]
     public class TermSetting : MonoBehaviour
     {
@@ -18,7 +24,7 @@ namespace Gs2.Sample.Version
         public CheckVersionEvent onCheckVersion = new CheckVersionEvent();
         
         [SerializeField]
-        public UnityEvent onAcceptTerm = new UnityEvent();
+        public AcceptTermEvent onAcceptTerm = new AcceptTermEvent();
         
         [SerializeField]
         public ErrorEvent onError = new ErrorEvent();

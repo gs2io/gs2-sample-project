@@ -1,16 +1,15 @@
 ﻿GS2TemplateFormatVersion: "2019-05-01"
-Description: GS2-Money initialize template Version 2021-12-03
+Description: GS2-Money initialize template Version 2022-07-21
 
 Globals:
   Alias:
-    MoneyNamespaceName: money-0001
-    ShowcaseNamespaceName: money-showcase
-    ShowcaseName: money-showcase
-    ShowcaseKeyNamespaceName: money-showcase-key  # 購入処理のスタンプシートの署名計算に使用する暗号鍵
-    ShowcaseKeyName: stamp-sheet-key              # 購入処理のスタンプシートの署名計算に使用する暗号鍵
-    LimitNamespaceName: money-showcase-limit      # 購入回数を制限する GS2-Limit
-    DistributorNamespaceName: money-distributor   # リソースの入手処理 を GS2-Distributor を経由することで所持数量制限で溢れた場合の GS2-Inbox への転送処理が自動的に行われる
-    DeliveryUserName: money-distribute-user       # リソースの入手処理を実行する権限を持つ GS2-Identifier ユーザ
+    MoneyNamespaceName: money-0001            # GS2-Money ネームスペース名 / Namespace name
+    ShowcaseNamespaceName: money-showcase     # GS2-Showcase ネームスペース名 / Namespace name
+    ShowcaseName: money-showcase              # GS2-Showcase 商品名 / Product name
+    KeyNamespaceName: money-showcase-key      # GS2-Key ネームスペース名 / Namespace name
+    KeyName: money-showcase-key               # 購入処理のスタンプシートの署名計算に使用する暗号鍵 / Cryptographic key used to calculate signatures on stamp sheets for purchase processing
+    LimitNamespaceName: money-showcase-limit  # GS2-Limit ネームスペース名 購入回数の制限 / Namespace name, Limit on number of purchases
+
 Resources:
   MoneyNamespace:
     Type: GS2::Money::Namespace
@@ -24,13 +23,13 @@ Resources:
   ShowcaseKeyNamespace:
     Type: GS2::Key::Namespace
     Properties:
-      Name: ${ShowcaseKeyNamespaceName}
+      Name: ${KeyNamespaceName}
 
   ShowcaseKey:
     Type: GS2::Key::Key
     Properties:
-      NamespaceName: ${ShowcaseKeyNamespaceName}
-      Name: ${ShowcaseKeyName}
+      NamespaceName: ${KeyNamespaceName}
+      Name: ${KeyName}
     DependsOn:
       - ShowcaseKeyNamespace
 
@@ -50,27 +49,6 @@ Resources:
             resetType: notReset
     DependsOn:
       - LimitNamespace
-
-  IdentifierDeliveryUser:
-    Type: GS2::Identifier::User
-    Properties:
-      Name: ${DeliveryUserName}
-
-  IdentifierDeliveryUserAttachPolicy:
-    Type: GS2::Identifier::AttachSecurityPolicy
-    Properties:
-      UserName: ${DeliveryUserName}
-      SecurityPolicyId: grn:gs2::system:identifier:securityPolicy:DeliveryAccess
-    DependsOn:
-      - IdentifierDeliveryUser
-
-  DistributorNamespace:
-    Type: GS2::Distributor::Namespace
-    Properties:
-      Name: ${DistributorNamespaceName}
-      AssumeUserId: !GetAttr IdentifierDeliveryUser.Item.UserId
-    DependsOn:
-      - IdentifierDeliveryUser
 
   ShowcaseNamespace:
     Type: GS2::Showcase::Namespace
@@ -277,5 +255,3 @@ Outputs:
   ShowcaseNamespaceName: !GetAttr ShowcaseNamespace.Item.Name
   ShowcaseKeyId: !GetAttr ShowcaseKey.Item.KeyId
   ShowcaseName: ${ShowcaseName}
-  DistributorNamespaceName: ${DistributorNamespaceName}
-  DistributorName: money

@@ -9,8 +9,8 @@ Game Server Services (https://gs2.io) の Unity 向けのサンプルプロジ�
 
 Unity 2019.4.40f1
 
-GS2 SDK for Unity　2022.7.3  
-GS2 C# SDK　2022.7.3
+GS2 SDK for Unity　2022.7.5  
+GS2 C# SDK　2022.7.5
 
 ## 注意事項
 
@@ -43,7 +43,7 @@ Licensed under SIL Open Font License 1.1 ( http://scripts.sil.org/OFL )
 - [チャット 解説 (GS2-Chat)](Docs/Chat.md)
 - [フレンド 解説 (GS2-Friend)](Docs/Friend.md)
 - [マッチメイキング 解説 (GS2-Matchmaking)](Docs/Matchmaking.md)
-- [リアルタイム 解説 (GS2-Realtime)](Docs/Realtime.md)
+- [リアルタイム対戦 解説 (GS2-Realtime)](Docs/Realtime.md)
 
 ## 起動の準備
 
@@ -73,7 +73,8 @@ Templatesフォルダの以下のファイルでスタックを作成します�
 | Template files | Functions to be set |
 ---|---
 [initialize_credential_template.yaml](Templates/initialize_credential_template.yaml) |クレデンシャル GS2の初期化
-[initialize_account_template.yaml](Templates/initialize_account_template.yaml) |ログイン/アカウント連携・引継ぎ
+[initialize_account_template.yaml](Templates/initialize_account_template.yaml) |ログイン/アカウント連携・引継ぎ GS2-Gateway
+[initialize_distributor_template.yaml](Templates/initialize_distributor_template.yaml) |GS2-Distributor GS2-JobQueue 設定
 
 #### 各機能の動作に必要なテンプレート
 
@@ -90,7 +91,6 @@ Templatesフォルダの以下のファイルでスタックを作成します�
 [initialize_quest_template.yaml](Templates/initialize_quest_template.yaml) |クエスト
 [initialize_lottery_template.yaml](Templates/initialize_lottery_template.yaml) |抽選機能
 [initialize_unit_template.yaml](Templates/initialize_unit_template.yaml) |抽選アイテム用インベントリ ※抽選機能の動作に必要
-[initialize_jobqueue_template.yaml](Templates/initialize_jobqueue_template.yaml) |JobQueue機能設定 ※抽選機能の動作に必要
 
 | テンプレートファイル | 設定する機能 |
 ---|---
@@ -101,18 +101,13 @@ Templatesフォルダの以下のファイルでスタックを作成します�
 ---|---
 [initialize_realtime_template.yaml](Templates/initialize_realtime_template.yaml) |マッチメイキング/リアルタイム対戦
 
-※GS2-News お知らせ機能を使う場合に作成
+| テンプレートファイル | 設定する機能 | |
+---|---|---
+[initialize_news_template.yaml](Templates/initialize_news_template.yaml) | お知らせ | ※GS2-News お知らせ機能を使う場合に作成
 
-| テンプレートファイル | 設定する機能 |
----|---
-[initialize_news_template.yaml](Templates/initialize_news_template.yaml) |お知らせ
-
-※GS2-Version バージョンチェック機能を使う場合に作成
-
-| テンプレートファイル | 設定する機能 |
----|---
-[initialize_version_template.yaml](Templates/initialize_version_template.yaml)|アプリバージョンチェック
-[initialize_term_template.yaml](Templates/initialize_term_template.yaml)|利用規約チェック
+| テンプレートファイル | 設定する機能 | |
+---|---|---
+[initialize_version_template.yaml](Templates/initialize_version_template.yaml)|アプリバージョン・利用規約チェック|※GS2-Version バージョンチェック機能を使う場合に作成|
 
 しばらく待ってすべてのスタックの状態が `CREATE_COMPLETE` になればサーバ側の設定は完了です。
 
@@ -137,81 +132,22 @@ IAP パッケージのインポートを行います。
 -----------------|------|------
 | __CredentialSetting__ | __Application Client Id__ | __GS2 にアクセスするためのクレデンシャル（クライアントID）__ |
 | __CredentialSetting__ | __Application Client Secret__ | __GS2 にアクセスするためのクレデンシャル（クライアントシークレット）__ |
-| LoginSetting | accountNamespaceName | GS2-Account のネームスペース名 |
-| __LoginSetting__ | __accountEncryptionKeyId__ | __GS2-Account でアカウント情報の暗号化に使用する GS2-Key の暗号鍵GRN__ |
-| LoginSetting | gatewayNamespaceName | GS2-Gateway のネームスペース名 |
+| CredentialSetting | distributorNamespaceName | スタンプシート処理をおこなう GS2-Distributor のネームスペース名 |
 
-| スクリプトファイル | 設定名 | 説明 |
------------------|------|------
-| StaminaSetting | staminaNamespaceName | GS2-Stamina のネームスペース名 |
-| StaminaSetting | staminaModelName | GS2-Stamina のスタミナのモデル名 |
-| StaminaSetting | staminaName | GS2-Stamina のスタミナ名 |
-| StaminaSetting | exchangeNamespaceName | スタミナの回復に使用する GS2-Exchange のネームスペース名 |
-| StaminaSetting | exchangeRateName | スタミナの回復に使用する GS2-Exchange の交換レート名 |
-| __StaminaSetting__ | __exchangeKeyId__ | __GS2-Exchange で交換処理に発行するスタンプシートの署名計算に使用する暗号鍵__ |
-| StaminaSetting | distributorNamespaceName | 交換したスタミナ回復処理を配送する GS2-Distributor のネームスペース名 |
-| MoneySetting | moneyNamespaceName | GS2-Money のネームスペース名 |
-| MoneySetting | showcaseNamespaceName | GS2-Showcase のネームスペース名 |
-| MoneySetting | showcaseName | GS2-Showcase の陳列棚名 |
-| __MoneySetting__ | __showcaseKeyId__ | __GS2-Showcase で商品購入時に発行するスタンプシートの署名計算に使用する暗号鍵__ |
-| MoneySetting | limitNamespaceName | 購入回数制限を実現する GS2-Limit のネームスペース名 |
-| MoneySetting | distributorNamespaceName | 購入した商品を配送する GS2-Distributor のネームスペース名 |
-| GoldSetting | inventoryNamespaceName | GS2-Inventory のゴールドのネームスペース名 |
-| GoldSetting | inventoryModelName | GS2-Inventoryのゴールドのモデルのネームスペース名 |
-| GoldSetting | itemModelName | アイテムモデルの名前 |
-| __GoldSetting__ | __identifierAcquireGoldClientId__ | __ゴールドの増加が可能な権限のクライアントID__ |
-| __GoldSetting__ | __identifierAcquireGoldClientSecret__ | __ゴールドの増加が可能な権限のクライアントシークレット__ |
+※initialize_credential_template.yaml テンプレートで作成したスタックの アウトプットリスト タブから  
+アウトプット名　__ApplicationClientId__　の項目の右側に出力されている値を　__Application Client Id__　へ貼り付けます。  
+アウトプット名　__ApplicationClientSecret__　の項目の右側に出力されている値を　__Application Client Secret__　へ貼り付けます。  
 
-| スクリプトファイル | 設定名 | 説明 |
------------------|------|------
-| InventorySetting | inventoryNamespaceName | GS2-Inventory のインベントリのネームスペース名 |
-| InventorySetting | inventoryModelName | GS2-Inventoryのインベントリのモデルのネームスペース名 |
-| __InventorySetting__ | __identifierAcquireItemClientId__ | __アイテムの増加が可能な権限のクライアントID__ |
-| __InventorySetting__ | __identifierAcquireItemClientSecret__ | __アイテムの増加が可能な権限のクライアントシークレット__ |
-| ExperienceSetting | experienceNamespaceName | GS2-Experience のネームスペース名 |
-| ExperienceSetting | playerExperienceModelName | GS2-Experienceのプレイヤー経験値テーブルのモデル名 |
-| ExperienceSetting | itemExperienceModelName | GS2-Experienceのアイテム経験値テーブルのモデル名 |
-| __ExperienceSetting__ | __identifierIncreaseExperienceClientId__ | __経験値の増加が可能な権限のクライアントID__ |
-| __ExperienceSetting__ | __identifierIncreaseExperienceClientSecret__ | __経験値の増加が可能な権限のクライアントシークレット__ |
+![LoginSetting](Docs/LoginSetting.png)
 
-| スクリプトファイル | 設定名 | 説明 |
------------------|------|------
-| QuestSetting | questNamespaceName | GS2-Quest のネームスペース名 |
-| __QuestSetting__ | __questKeyId__ | __GS2-Quest で報酬の付与処理に発行するスタンプシートの署名計算に使用する暗号鍵__ |
-| QuestSetting | distributorNamespaceName | 報酬を配送する GS2-Distributor のネームスペース名 |
-| QuestSetting | queueNamespaceName | 報酬の付与に使用するGS2-JobQueue のネームスペース名 |
-| LotterySetting | lotteryNamespaceName | GS2-Lottery のネームスペース名 |
-| LotterySetting | jobqueueNamespaceName | GS2-JobQueue のネームスペース名 |
-| LotterySetting | showcaseNamespaceName | GS2-Showcase のネームスペース名 |
-| LotterySetting | showcaseName | GS2-Showcase の陳列棚名 |
-| __LotterySetting__ | __showcaseKeyId__ | __GS2-Showcase で商品購入時に発行するスタンプシートの署名計算に使用する暗号鍵__ |
-| __LotterySetting__ | __lotteryKeyId__ | __GS2-Lottery で商品購入時に発行するスタンプシートの署名計算に使用する暗号鍵__ |
-| UnitSetting | inventoryNamespaceName | GS2-Inventory の抽選アイテム専用インベントリのネームスペース名 |
-| UnitSetting | inventoryModelName | GS2-Inventoryの抽選アイテム専用インベントリのモデルのネームスペース名 |
-| __UnitSetting__ | __identifierAcquireUnitClientId__ | __アイテムの増加が可能な権限のクライアントID__ |
-| __UnitSetting__ | __identifierAcquireUnitClientSecret__ | __アイテムの増加が可能な権限のクライアントシークレット__ |
+| スクリプトファイル | 設定名                           | 説明 |
+-----------------|-------------------------------|------
+| LoginSetting | Account Namespace Name        | GS2-Account のネームスペース名 |
+| __LoginSetting__ | __Account Encryption Key Id__ | __GS2-Account でアカウント情報の暗号化に使用する GS2-Key の暗号鍵GRN__ |
+| LoginSetting | Gateway Namespace Name        | GS2-Gateway のネームスペース名 |
 
-| スクリプトファイル | 設定名 | 説明 |
------------------|------|------
-| ChatSetting | chatNamespaceName | GS2-Chat のネームスペース名 |
-| ChatSetting | roomName | GS2-Chat のルーム名 |
-| FriendSetting | friendNamespaceName | GS2-Friend のネームスペース名 |
-
-| スクリプトファイル | 設定名 | 説明 |
------------------|------|------
-| MatchmakingSetting | matchmakingNamespaceName | GS2-Matchmaking のネームスペース名 |
-| RealtimeSetting | realtimeNamespaceName | GS2-Realtime のネームスペース名 |
-
-| スクリプトファイル | 設定名 | 説明 |
------------------|------|------
-| VersionSetting | versionNamespaceName | GS2-Version のアプリバージョンチェックのネームスペース名 |
-| VersionSetting | versionName | GS2-Version のアプリバージョンチェックのバージョン名 |
-| VersionSetting | currentVersionMajor | アプリの現在のバージョン番号　メジャー部分 |
-| VersionSetting | currentVersionMinor | アプリの現在のバージョン番号　マイナー部分 |
-| VersionSetting | currentVersionMicro | アプリの現在のバージョン番号　マイクロ部分 |
-| TermSetting | versionNamespaceName | GS2-Version の利用規約チェックのネームスペース名 |
-| TermSetting | versionName | GS2-Version の利用規約チェックのバージョン名 |
-| NewsSetting | newsNamespaceName | GS2-News のネームスペース名 |
+※__initialize_account_template.yaml__ テンプレートで作成したスタックの アウトプットリスト タブから  
+アウトプット名　__AccountEncryptionKeyId__　の項目の右側に出力されている値を　__Account Encryption Key Id__　へ貼り付けます。
 
 ### バージョンチェック機能の有効化
 
@@ -278,7 +214,7 @@ IAP パッケージのインポートを行います。
 （GS2-Inventory）
 
 `インベントリを開く`　・・・　アイテムを一覧表示します。アイテムをタップで消費（つかう）します。  
-`FireElement入手`、`WaterElement入手`　・・・　アイテムをそれぞれ5増加させます。  
+`FireElement入手`、`WaterElement入手`　・・・　２種類あるアイテムをそれぞれ5増加させます。  
 （GS2-Inventory）
 
 [⇒ゴールド/インベントリ 解説へ](Docs/Inventory.md)

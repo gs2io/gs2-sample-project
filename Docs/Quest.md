@@ -18,16 +18,13 @@
 | 設定名 | 説明 |
 ---|---
 | questNamespaceName | GS2-Quest のネームスペース名 |
-| questKeyId | GS2-Quest で報酬の付与処理に発行するスタンプシートの署名計算に使用する暗号鍵 |
-| distributorNamespaceName | 報酬を配送する GS2-Distributor のネームスペース名 |
-| queueNamespaceName | 報酬の付与に使用するGS2-JobQueue のネームスペース名 |
 
 | イベント | 説明 |
 ---|---
 | OnListCompletedQuestModel(List<EzCompletedQuestList> completedQuests) | クリア済みのクエスト一覧を取得したとき。 |
 | OnListGroupQuestModel(List<EzQuestGroupModel> questGroups) | クエストグループの一覧を取得したとき。 |
-| OnListQuestModel(List<EzQuestModel> quests) | クエストの一覧を取得したとき。 |
-| OnGetProgress(EzProgress progress) | 進行中で中断されたクエストを取得したとき。 |
+| OnListQuestModel(List<EzQuestModel> quests) | クエストモデルを取得したとき。 |
+| OnGetProgress(EzProgress progress) | 進行中のクエストを取得したとき。 |
 | OnStart(EzProgress progress) | クエストを開始したとき。 |
 | OnEnd(EzProgress progress, List<EzReward> rewards, bool isComplete) | クエストを完了したとき。 |
 | OnError(Gs2Exception error) | エラーが発生したときに呼び出されます。 |
@@ -44,40 +41,144 @@ QUEST STATE は、存在しなければ `None` 、存在すれば `QuestStarted`
 
 ### クエストの状態取得
 
+・UniTask有効時
 ```c#
-AsyncResult<EzGetProgressResult> result = null;
-yield return client.Quest.GetProgress(
-    r => { result = r; },
-    session,
-    questNamespaceName
-);
+var domain = gs2.Quest.Namespace(
+    namespaceName: questNamespaceName
+).Me(
+    gameSession: gameSession
+).Progress();
+try
+{
+    progress = await domain.ModelAsync();
+
+    onGetProgress.Invoke(progress);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+    return null;
+}
+```
+・コルーチン使用時
+```c#
+var domain = gs2.Quest.Namespace(
+    namespaceName: questNamespaceName
+).Me(
+    gameSession: gameSession
+).Progress();
+var future = domain.Model();
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    yield break;
+}
+
+progress = future.Result;
 ```
 
 ### クエストグループの一覧を取得
 
 ![クエストグループ一覧](QuestGroup.png)
 
-クエストグループの一覧を取得します。
+クエストグループの一覧を取得し選択ダイアログに表示します。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzListQuestGroupsResult> result = null;
-yield return client.Quest.ListQuestGroups(
-    r => { result = r; },
-    questNamespaceName
+questGroups.Clear();
+var domain = gs2.Quest.Namespace(
+    namespaceName: questNamespaceName
 );
+try
+{
+    questGroups = await domain.QuestGroupModelsAsync().ToListAsync();
+
+    onListGroupQuestModel.Invoke(questGroups);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+
+return questGroups;
+```
+・コルーチン使用時
+```c#
+questGroups.Clear();
+var domain = gs2.Quest.Namespace(
+    namespaceName: questNamespaceName
+);
+var it = domain.QuestGroupModels();
+while (it.HasNext())
+{
+    yield return it.Next();
+    if (it.Error != null)
+    {
+        onError.Invoke(it.Error);
+        callback.Invoke(null);
+        yield break;
+    }
+
+    if (it.Current != null)
+    {
+        questGroups.Add(it.Current);
+    }
+}
+
+onListGroupQuestModel.Invoke(questGroups);
+callback.Invoke(questGroups);
 ```
 
 完了済みのクエストを取得します、
 
+・UniTask有効時
 ```c#
-AsyncResult<EzDescribeCompletedQuestListsResult> result = null;
-yield return client.Quest.DescribeCompletedQuestLists(
-    r => { result = r; },
-    session,
-    questNamespaceName,
-    null,
-    30
+var domain = gs2.Quest.Namespace(
+    namespaceName: questNamespaceName
+).Me(
+    gameSession: gameSession
 );
+try
+{
+    completedQuests = await domain.CompletedQuestListsAsync().ToListAsync();
+
+    onListCompletedQuestsModel.Invoke(completedQuests);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+
+return completedQuests;
+```
+・コルーチン使用時
+```c#
+completedQuests.Clear();
+var domain = gs2.Quest.Namespace(
+    namespaceName: questNamespaceName
+).Me(
+    gameSession: gameSession
+);
+var it = domain.CompletedQuestLists();
+while (it.HasNext())
+{
+    yield return it.Next();
+    if (it.Error != null)
+    {
+        onError.Invoke(it.Error);
+        callback.Invoke(null);
+        yield break;
+    }
+
+    if (it.Current != null)
+    {
+        completedQuests.Add(it.Current);
+    }
+}
+
+onListCompletedQuestsModel.Invoke(completedQuests);
+callback.Invoke(completedQuests);
 ```
 
 ### クエストの一覧を取得
@@ -86,70 +187,121 @@ yield return client.Quest.DescribeCompletedQuestLists(
 
 クエストの一覧を取得します。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzListQuestsResult> result = null;
-yield return client.Quest.ListQuests(
-    r => { result = r; },
-    questNamespaceName,
-    SelectedQuestGroup.Name
+var domain = gs2.Quest.Namespace(
+    namespaceName: questNamespaceName
+).QuestGroupModel(
+    questGroupName: selectedQuestGroup.Name
 );
+try
+{
+    quests = await domain.QuestModelsAsync().ToListAsync();
+
+    onListQuestModel.Invoke(quests);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+
+return quests;
+```
+・コルーチン使用時
+```c#
+quests.Clear();
+var domain = gs2.Quest.Namespace(
+    namespaceName: questNamespaceName
+).QuestGroupModel(
+    questGroupName: selectedQuestGroup.Name
+);
+var it = domain.QuestModels();
+while (it.HasNext())
+{
+    yield return it.Next();
+    if (it.Error != null)
+    {
+        onError.Invoke(it.Error);
+        callback.Invoke(null);
+        yield break;
+    }
+
+    if (it.Current != null)
+    {
+        quests.Add(it.Current);
+    }
+}
+
+onListQuestModel.Invoke(quests);
+callback.Invoke(quests);
 ```
 
 ### クエストの開始
 
 クエストを開始します。
-戻り値にはスタンプシートが返ります。
-スタンプシートを実行することで必要なコストとしてクエストに設定された量のスタミナを消費し  
-クエストを開始します。
+GS2-QuestのCurrentQuestMasterにはconsumeActionsにクエスト開始に必要な消費アクションが設定されています。
+GS2Domainクラス（ソース内で "gs2" ）を使用した実装ではクライアント側でのスタンプシートの処理は __自動実行__ されます。  
+スタンプシートでクエスト開始に必要なコストとして設定された量のスタミナを消費し、クエストが開始状態になります。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzStartResult> result = null;
-yield return client.Quest.Start(
-    r => { result = r; },
-    session,
-    questNamespaceName,
-    SelectedQuestGroup.Name,
-    SelectedQuest.Name,
-    false,
-    config: new List<EzConfig>
+var domain = gs2.Quest.Namespace(
+    namespaceName: questNamespaceName
+).Me(
+    gameSession: gameSession
+);
+try
+{
+    var result = await domain.StartAsync(
+        questGroupName: selectedQuestGroup.Name,
+        questName: selectedQuest.Name,
+        force: null,
+        config: new[]
+        {
+            new EzConfig
+            {
+                Key = "slot",
+                Value = slot.ToString()
+            }
+        }
+    );
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+    return null;
+}
+```
+・コルーチン使用時
+```c#
+var domain = gs2.Quest.Namespace(
+    namespaceName: questNamespaceName
+).Me(
+    gameSession: gameSession
+);
+var future = domain.Start(
+    questGroupName: selectedQuestGroup.Name,
+    questName: selectedQuest.Name,
+    force: null,
+    config: new[]
     {
         new EzConfig
         {
             Key = "slot",
-            Value = MoneyModel.Slot.ToString(),
+            Value = MoneyModel.Slot.ToString()
         }
     }
 );
-
-stampSheet = result.Result.StampSheet;
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    callback.Invoke(null);
+    yield break;
+}
 ```
 
-```c#
-EzProgress progress = null;
-var machine = new StampSheetStateMachine(
-    stampSheet,
-    client,
-    distributorNamespaceName,
-    questKeyId
-);
-
-Gs2Exception exception = null;
-void OnError(Gs2Exception e)
-{
-    exception = e;
-};
-
-void OnComplete(EzStampSheet sheet, Gs2.Unity.Gs2Distributor.Result.EzRunStampSheetResult stampResult)
-{
-    var json = JsonMapper.ToObject(stampResult.Result);
-    var result = CreateProgressByStampSheetResult.FromJson(json);
-    progress = EzProgress.FromModel(result.Item);
-};
-
-yield return machine.Execute(onError);
-```
-
-クエストの開始スタンプシートの流れは以下になります。
+クエストの開始スタンプシートの流れは以下のようになります。
 
 ![クエスト開始](QuestStart.png)
 
@@ -157,21 +309,55 @@ yield return machine.Execute(onError);
 
 クエストを完了/失敗（破棄）します。  
 rewards には Start の戻り値 EzProgress の Rewards のうち、  
-実際に入手した報酬を設定します。
+実際のゲーム進行上で入手できた報酬を設定します。
 
-End の戻り値にはスタンプシートが返ります。  
-スタンプシートを実行することでクエストを終了状態にし、報酬を受け取れます。
+GS2-Quest の CurrentQuestMaster の completeAcquireActions にクエスト完了時の報酬の入手アクションが設定されています。
+GS2Domainクラス（ソース内で "gs2" ）を使用した実装ではクライアント側のスタンプシートの処理は __自動実行__ されます。  
+スタンプシートでクエスト報酬を入手し、クエストは未受注の状態になります。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzEndResult> result = null;
-yield return client.Quest.End(
-    r => { result = r; },
-    session,
-    questNamespaceName,
-    isComplete,
-    rewards,
-    Progress.TransactionId,
-    new List<EzConfig>
+var domain = gs2.Quest.Namespace(
+    namespaceName: questNamespaceName
+).Me(
+    gameSession: gameSession
+).Progress();
+try
+{
+    var domain2 = await domain.EndAsync(
+        isComplete: isComplete,
+        rewards: rewards.ToArray(),
+        config: new []
+        {
+            new EzConfig
+            {
+                Key = "slot",
+                Value = slot.ToString(),
+            }
+        }
+        );
+    progress = await domain.ModelAsync();
+    onEnd.Invoke(progress, rewards, isComplete);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+    return e;
+}
+
+return null;
+```
+・コルーチン使用時
+```c#
+var domain = gs2.Quest.Namespace(
+    namespaceName: questNamespaceName
+).Me(
+    gameSession: gameSession
+).Progress();
+var future = domain.End(
+    isComplete: isComplete,
+    rewards: rewards.ToArray(),
+    config: new []
     {
         new EzConfig
         {
@@ -180,18 +366,40 @@ yield return client.Quest.End(
         }
     }
 );
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    callback.Invoke(null);
+    yield break;
+}
+
+onEnd.Invoke(progress, rewards, isComplete);
+callback.Invoke(progress);
 ```
+Config には [GS2-Money](https://app.gs2.io/docs/index.html#gs2-money)  のウォレットスロット番号 __slot__ を渡します。
+ウォレットスロット番号はこのサンプルのためにプラットフォーム別に割り振った課金通貨の種別で、以下のように定義しています。
 
-```c#
-var machine = new StampSheetStateMachine(
-    stampSheet,
-    client,
-    distributorNamespaceName,
-    questKeyId
-);
+| プラットフォーム      | 番号 |
+|---------------|---|
+| スタンドアローン(その他) | 0 |
+| iOS           | 1 |
+| Android       | 2 |
 
-// スタンプシートの実行
-yield return machine.Execute(onError);
+Config はスタンプシートに動的なパラメータを渡すための仕組みです。  
+[⇒スタンプシートの変数](https://app.gs2.io/docs/index.html#d7e97677c7)  
+Config(EzConfig) はキー・バリュー形式で、渡したパラメータで #{Config で指定したキー値} のプレースホルダー文字列を置換することができます。
+以下のスタンプシートの定義中の　#{slot}　はウォレットスロット番号に置換されます。
+
+```yaml
+completeAcquireActions:
+  - action: Gs2Money:DepositByUserId
+    request:
+      namespaceName: ${MoneyNamespaceName}
+      userId: "#{userId}"
+      slot: "#{slot}"
+      price: 0
+      count: 10
 ```
 
 クエストの完了スタンプシートの流れは以下になります。
@@ -208,28 +416,40 @@ yield return machine.Execute(onError);
 スタンプシートによってジョブキュー( [GS2-JobQueue](https://app.gs2.io/docs/index.html#gs2-jobqueue) )に報酬を入手するジョブが登録されます。  
 クライアントがジョブキューを実行することで、実際に報酬を受け取る処理が実行されます。
 
-スタンプシートによるジョブ登録
+ジョブキューを進行させる処理、Gs2Domain.Dispatch を実行しておくことで、ジョブキューを自動で継続進行できます。
+
+・UniTask有効時
 ```c#
-public UnityAction<EzStampSheet, EzRunStampSheetResult> GetSheetCompleteAction()
+async UniTask Impl()
 {
-    return (sheet, sheetResult) =>
+    while (true)
     {
-        //スタンプシートによるジョブ登録
-        if (sheet.Action == "Gs2JobQueue:PushByUserId")
-        {
-            OnPushJob();
-        }
-    };
+        await _domain.DispatchAsync(_session);
+
+        await UniTask.Yield();
+    }
 }
+
+_dispatchCoroutine = StartCoroutine(Impl().ToCoroutine());
 ```
-
-ジョブキューの実行
-
+・コルーチン使用時
 ```c#
-AsyncResult<EzRunResult> result = null;
-yield return _client.JobQueue.Run(
-    r => { result = r; },
-    _gameSession,
-    _jobQueueNamespaceName
-);
+IEnumerator Impl()
+{
+    while (true)
+    {
+        var future = _domain.Dispatch(_session);
+        yield return future;
+        if (future != null)
+        {
+            yield break;
+        }
+        if (future.Result)
+        {
+            break;
+        }
+        yield return null;
+    }
+}
+_dispatchCoroutine = StartCoroutine(Impl());
 ```

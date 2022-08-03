@@ -1,12 +1,16 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Gs2.Core;
-using Gs2.Unity;
+using System.Linq;
+using Gs2.Core.Exception;
+using Gs2.Unity.Core;
 using Gs2.Unity.Gs2Version.Model;
-using Gs2.Unity.Gs2Version.Result;
 using Gs2.Unity.Util;
 using UnityEngine;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
+#endif
 
 namespace Gs2.Sample.Version
 {
@@ -16,8 +20,8 @@ namespace Gs2.Sample.Version
         public EzVersionModel Model;
         
         public IEnumerator CheckVersion(
-            Client client,
-            GameSession session,
+            Gs2Domain gs2,
+            GameSession gameSession,
             string versionNamespaceName,
             string versionName,
             int major,
@@ -27,8 +31,6 @@ namespace Gs2.Sample.Version
             ErrorEvent onError
         )
         {
-            AsyncResult<EzCheckVersionResult> result = null;
-            
             List<EzTargetVersion> targetVersions = new List<EzTargetVersion>();
             EzTargetVersion targetVersion = new EzTargetVersion();
             targetVersion.VersionName = versionName;
@@ -40,36 +42,75 @@ namespace Gs2.Sample.Version
             targetVersion.Version = version;
             targetVersions.Add(targetVersion);
             
-            yield return client.Version.CheckVersion(
-                r => {
-                    if (r.Error != null)
-                    {
-                        // エラーが発生した場合に到達
-                        // r.Error は発生した例外オブジェクトが格納されている
-                        Debug.Log(r.Error);
-                    }
-                    else
-                    {
-                        result = r;
-                    }
-                },
-                session,    // GameSession ログイン状態を表すセッションオブジェクト
-                versionNamespaceName,   //  ネームスペース名
-                targetVersions   //  比較する現在のアプリのバージョン値
+            var domain = gs2.Version.Namespace(
+                namespaceName: versionNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Checker();
+            var future = domain.CheckVersion(
+                targetVersions: targetVersions.ToArray()
             );
-            
-            if (result != null &&result.Error != null)
+            yield return future;
+            if (future.Error != null)
             {
                 onError.Invoke(
-                    result.Error
+                    future.Error
                 );
-                onCheckVersion.Invoke(targetVersions, null);
                 yield break;
             }
+
+            var projectToken = future.Result.ProjectToken;
+            var warnings = future.Result.Warnings;
+            var errors = future.Result.Errors;
             
-            var version_result = result.Result;
-            
-            onCheckVersion.Invoke(targetVersions, version_result);
+            onCheckVersion.Invoke(projectToken, warnings.ToList(), errors.ToList());
         }
+#if GS2_ENABLE_UNITASK
+        public async UniTask CheckVersionAsync(
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string versionNamespaceName,
+            string versionName,
+            int major,
+            int minor,
+            int micro,
+            CheckVersionEvent onCheckVersion,
+            ErrorEvent onError
+        )
+        {
+            List<EzTargetVersion> targetVersions = new List<EzTargetVersion>();
+            EzTargetVersion targetVersion = new EzTargetVersion();
+            targetVersion.VersionName = versionName;
+            
+            EzVersion version = new EzVersion();
+            version.Major = major;
+            version.Minor = minor;
+            version.Micro = micro;
+            targetVersion.Version = version;
+            targetVersions.Add(targetVersion);
+            
+            var domain = gs2.Version.Namespace(
+                namespaceName: versionNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Checker();
+            try
+            {
+                var result = await domain.CheckVersionAsync(
+                    targetVersions: targetVersions.ToArray()
+                );
+                
+                var projectToken = result.ProjectToken;
+                var warnings = result.Warnings;
+                var errors = result.Errors;
+            
+                onCheckVersion.Invoke(projectToken, warnings.ToList(), errors.ToList());
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+            }
+        }
+#endif
     }
 }

@@ -17,20 +17,17 @@ If the quest fails, the reward is set to return the stamina spent as cost.
 
 | Setting Name | Description |
 ---|---
-| questNamespaceName | Namespace name of GS2-Quest
-| questKeyId | cryptographic key used for the signature calculation of the stamp sheet issued by GS2-Quest for the reward granting process
-| distributorNamespaceName | namespace name of the GS2-Distributor who delivers the reward
-| queueNamespaceName | Namespace name of GS2-JobQueue used for granting rewards
+| questNamespaceName | GS2-Quest Namespace name |
 
 | Event | Description |
 ---|---
-| OnListCompletedQuestModel(List<EzCompletedQuestList> completedQuests) | When the list of completed quests is retrieved. | when a list of completed quests is retrieved.
-| OnListGroupQuestModel(List<EzQuestGroupModel> questGroups) | When a list of quest groups is retrieved.
-| OnListQuestModel(List<EzQuestModel> quests) | OnListQuestModel(List<EzQuestModel> quests)
-| OnGetProgress(EzProgress progress) | When a quest that is in progress and interrupted is retrieved. | OnGetProgress(EzProgress)
-| OnStart(EzProgress progress) | When a quest is started. | OnStart(EzProgress)
-| OnEnd(EzProgress progress, List<EzReward> rewards, bool isComplete) | When a quest is completed. | When a quest is completed.
-| OnError(Gs2Exception error) | Called when an error occurs. | OnError(Gs2Exception error)
+| OnListCompletedQuestModel(List<EzCompletedQuestList> completedQuests) | When the list of completed quests is retrieved. |
+| OnListGroupQuestModel(List<EzQuestGroupModel> questGroups) | When a list of quest groups is retrieved. |
+| OnListQuestModel(List<EzQuestModel> quests) | When retrieving the quest model. |
+| OnGetProgress(EzProgress progress) | When retrieving a quest in progress |
+| OnStart(EzProgress progress) | When a quest is started. |
+| OnEnd(EzProgress progress, List<EzReward> rewards, bool isComplete) | When a quest is completed. |
+| OnError(Gs2Exception error) | Called when an error occurs. |
 
 ## Quest Flow
 
@@ -44,108 +41,267 @@ Receive a refund of the required cost.
 
 ### Get Quest Status
 
+When UniTask is enabled
 ```c#
-AsyncResult<EzGetProgressResult> result = null;
-yield return client.Quest.GetProgress(
-    r => { result = r; }
-    session,
-    questNamespaceName
-);
+var domain = gs2.Quest.Namespace(
+    namespaceName: questNamespaceName
+).Me(
+    gameSession: gameSession
+).Progress();
+try
+{
+    progress = await domain.ModelAsync();
+
+    onGetProgress.Invoke(progress);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+    return null;
+}
+```
+When coroutine is used
+```c#
+var domain = gs2.Quest.Namespace(
+    namespaceName: questNamespaceName
+).Me(
+    gameSession: gameSession
+).Progress();
+var future = domain.Model();
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    yield break;
+}
+
+progress = future.Result;
 ```
 
 ### Get list of quest groups
 
+![Quest Groups List](QuestGroup_en.png)
+
 Obtains a list of quest groups.
 
+When UniTask is enabled
 ```c#
-AsyncResult<EzListQuestGroupsResult> result = null;
-yield return client.Quest.ListQuestGroups(
-    r => { result = r; }
-    questNamespaceName
+questGroups.Clear();
+var domain = gs2.Quest.Namespace(
+    namespaceName: questNamespaceName
 );
+try
+{
+    questGroups = await domain.QuestGroupModelsAsync().ToListAsync();
+
+    onListGroupQuestModel.Invoke(questGroups);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+
+return questGroups;
+```
+When coroutine is used
+```c#
+questGroups.Clear();
+var domain = gs2.Quest.Namespace(
+    namespaceName: questNamespaceName
+);
+var it = domain.QuestGroupModels();
+while (it.HasNext())
+{
+    yield return it.Next();
+    if (it.Error != null)
+    {
+        onError.Invoke(it.Error);
+        callback.Invoke(null);
+        yield break;
+    }
+
+    if (it.Current != null)
+    {
+        questGroups.Add(it.Current);
+    }
+}
+
+onListGroupQuestModel.Invoke(questGroups);
+callback.Invoke(questGroups);
 ```
 
 Retrieve completed quests.
 
+When UniTask is enabled
 ```c#
-AsyncResult<EzDescribeCompletedQuestListsResult> result = null;
-yield return client.Quest.DescribeCompletedQuestLists(
-    r => { result = r; }
-    session,
-    questNamespaceName,
-    null,
-    30
+var domain = gs2.Quest.Namespace(
+    namespaceName: questNamespaceName
+).Me(
+    gameSession: gameSession
 );
+try
+{
+    completedQuests = await domain.CompletedQuestListsAsync().ToListAsync();
+
+    onListCompletedQuestsModel.Invoke(completedQuests);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+
+return completedQuests;
+```
+When coroutine is used
+```c#
+completedQuests.Clear();
+var domain = gs2.Quest.Namespace(
+    namespaceName: questNamespaceName
+).Me(
+    gameSession: gameSession
+);
+var it = domain.CompletedQuestLists();
+while (it.HasNext())
+{
+    yield return it.Next();
+    if (it.Error != null)
+    {
+        onError.Invoke(it.Error);
+        callback.Invoke(null);
+        yield break;
+    }
+
+    if (it.Current != null)
+    {
+        completedQuests.Add(it.Current);
+    }
+}
+
+onListCompletedQuestsModel.Invoke(completedQuests);
+callback.Invoke(completedQuests);
 ```
 
 ### Get list of quests
 
+![Quest List](QuestList_en.png)
+
 Obtains a list of quests.
 
+When UniTask is enabled
 ```c#
-AsyncResult<EzListQuestsResult> result = null;
-yield return client.Quest.ListQuests(
-    r => { result = r; }
-    questNamespaceName,
-    SelectedQuestGroup.Name
+var domain = gs2.Quest.Namespace(
+    namespaceName: questNamespaceName
+).QuestGroupModel(
+    questGroupName: selectedQuestGroup.Name
 );
+try
+{
+    quests = await domain.QuestModelsAsync().ToListAsync();
+
+    onListQuestModel.Invoke(quests);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+
+return quests;
+```
+When coroutine is used
+```c#
+quests.Clear();
+var domain = gs2.Quest.Namespace(
+    namespaceName: questNamespaceName
+).QuestGroupModel(
+    questGroupName: selectedQuestGroup.Name
+);
+var it = domain.QuestModels();
+while (it.HasNext())
+{
+    yield return it.Next();
+    if (it.Error != null)
+    {
+        onError.Invoke(it.Error);
+        callback.Invoke(null);
+        yield break;
+    }
+
+    if (it.Current != null)
+    {
+        quests.Add(it.Current);
+    }
+}
+
+onListQuestModel.Invoke(quests);
+callback.Invoke(quests);
 ```
 
 ### Starting a quest
 
 Starts a quest.
-The return value is a stamp sheet.
-The stamp sheet consumes the amount of stamina set for the quest as the required cost of executing the stamp sheet, and  
-Starts a quest.
+GS2-Quest's CurrentQuestMaster has consumeActions set to consume actions required to start the quest.
+In implementations using the GS2Domain class ("gs2" in the source), the processing of the stamp sheet on the client side is __auto-executed__.  
+The amount of stamina set as the cost to start the quest in the stamp sheet is consumed, and the quest is placed in the start state.
 
+When UniTask is enabled
 ```c#
-AsyncResult<EzStartResult> result = null;
-yield return client.Quest.Start(
-    r => { result = r; }
-    session,
-    questNamespaceName,
-    SelectedQuestGroup.Name,
-    SelectedQuest,
-    false,
-    config: new List<EzConfig>
+var domain = gs2.Quest.Namespace(
+    namespaceName: questNamespaceName
+).Me(
+    gameSession: gameSession
+);
+try
+{
+    var result = await domain.StartAsync(
+        questGroupName: selectedQuestGroup.Name,
+        questName: selectedQuest.Name,
+        force: null,
+        config: new[]
+        {
+            new EzConfig
+            {
+                Key = "slot",
+                Value = slot.ToString()
+            }
+        }
+    );
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+    return null;
+}
+```
+When coroutine is used
+```c#
+var domain = gs2.Quest.Namespace(
+    namespaceName: questNamespaceName
+).Me(
+    gameSession: gameSession
+);
+var future = domain.Start(
+    questGroupName: selectedQuestGroup.Name,
+    questName: selectedQuest.Name,
+    force: null,
+    config: new[]
     {
         new EzConfig
         {
             Key = "slot",
-            Value = MoneyModel.Slot.ToString(),
+            Value = MoneyModel.Slot.ToString()
         }
     }
 );
-
-stampSheet = result.Result.StampSheet;
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    callback.Invoke(null);
+    yield break;
+}
 ```
 
-```c#
-EzProgress progress = null;
-var machine = new StampSheetStateMachine(
-    stampSheet,
-    client,
-    distributorNamespaceName,
-    questKeyId
-);
-
-Gs2Exception exception = null;
-void OnError(Gs2Exception e)
-{
-    exception = e;
-};
-
-void OnComplete(EzStampSheet sheet, Gs2.Unity.Gs2Distributor.Result.EzRunStampSheetResult stampResult)
-{
-    var json = JsonMapper.ToObject(stampResult.Result);
-    var result = CreateProgressByStampSheetResult.FromJson(json);
-    var progress = EzProgress.FromModel(result.Item); var result = CreateProgressByStampSheetResult;
-};
-
-yield return machine.Execute(onError);
-```
-
-The following is the flow of the quest start stamp sheet.
+The flow of the starting stamp sheet for the quest is as follows
 
 ![Quest Start](QuestStart_en.png)
 
@@ -155,19 +311,53 @@ Complete/fail (discard) the quest.
 rewards is the value of Rewards in EzProgress, the return value of Start.  
 Set the reward actually obtained.
 
-The return value of End is a stamp sheet.  
-By executing the stamp sheet, the quest is completed and the reward is received.
+The action to obtain the reward upon completion of the quest is set in completeAcquireActions of CurrentQuestMaster in GS2-Quest.
+In implementations using the GS2Domain class ("gs2" in the source), the client-side stamp sheet process is __auto-executed__.  
+The quest reward is obtained from the stamp sheet, and the quest remains unclaimed.
 
+When UniTask is enabled
 ```c#
-AsyncResult<EzEndResult> result = null;
-yield return client.Quest.End(
-    r => { result = r; }
-    session,
-    questNamespaceName,
-    isComplete,
-    rewards,
-    Progress.TransactionId,
-    new List<EzConfig>
+var domain = gs2.Quest.Namespace(
+    namespaceName: questNamespaceName
+).Me(
+    gameSession: gameSession
+).Progress();
+try
+{
+    var domain2 = await domain.EndAsync(
+        isComplete: isComplete,
+        rewards: rewards.ToArray(),
+        config: new []
+        {
+            new EzConfig
+            {
+                Key = "slot",
+                Value = slot.ToString(),
+            }
+        }
+        );
+    progress = await domain.ModelAsync();
+    onEnd.Invoke(progress, rewards, isComplete);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+    return e;
+}
+
+return null;
+```
+When coroutine is used
+```c#
+var domain = gs2.Quest.Namespace(
+    namespaceName: questNamespaceName
+).Me(
+    gameSession: gameSession
+).Progress();
+var future = domain.End(
+    isComplete: isComplete,
+    rewards: rewards.ToArray(),
+    config: new []
     {
         new EzConfig
         {
@@ -176,18 +366,40 @@ yield return client.Quest.End(
         }
     }
 );
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    callback.Invoke(null);
+    yield break;
+}
+
+onEnd.Invoke(progress, rewards, isComplete);
+callback.Invoke(progress);
 ```
+Config is passed the wallet slot number __slot__ of [GS2-Money](https://app.gs2.io/docs/en/index.html#gs2-money).
+The wallet slot number is the type of billing currency assigned by platform for this sample and is defined as follows
 
-```c#
-var machine = new StampSheetStateMachine(
-    stampSheet,
-    client,
-    distributorNamespaceName,
-    questKeyId
-);
+| Platform | Number |
+|---------------|---|
+| Standalone (Other) | 0 |
+| iOS | 1 |
+| Android | 2 |
 
-// Stamp sheet execution
-yield return machine.Execute(onError);
+Config is a mechanism for passing dynamic parameters to the stamp sheet.  
+[⇒Stamp Sheet Variables](https://app.gs2.io/docs/en/index.html#d7e97677c7)  
+Config(EzConfig) is a key-value format that allows you to replace the placeholder string for #{key value specified in Config} with the parameters you pass.
+In the following stamp sheet definition #{slot} will be replaced by the wallet slot number.
+
+```yaml
+completeAcquireActions:
+  - action: Gs2Money:DepositByUserId
+    request:
+      namespaceName: ${MoneyNamespaceName}
+      userId: "#{userId}"
+      slot: "#{slot}"
+      price: 0
+      count: 10
 ```
 
 The flow of the quest completion stamp sheet is as follows
@@ -204,29 +416,40 @@ If you set up multiple resource acquisitions as rewards for completing a quest, 
 The job queue ([GS2-JobQueue](https://app.gs2.io/docs/en/index.html#gs2-jobqueue)) is registered by the stamp sheet for the job to obtain the reward.  
 When the client executes the job queue, the process of actually receiving the reward is executed.
 
-Job Registration by Stamp Sheet
+The job queue can be continued automatically by running Gs2Domain.Dispatch, a process that advances the job queue.
 
+When UniTask is enabled
 ```c#
-public UnityAction<EzStampSheet, EzRunStampSheetResult> GetSheetCompleteAction()
+async UniTask Impl()
 {
-    return (sheet, sheetResult) =>
+    while (true)
     {
-        // Job registration by stamp sheet
-        if (sheet.Action == "Gs2JobQueue:PushByUserId")
-        {
-            OnPushJob();
-        }
-    };
+        await _domain.DispatchAsync(_session);
+
+        await UniTask.Yield();
+    }
 }
+
+_dispatchCoroutine = StartCoroutine(Impl().ToCoroutine());
 ```
-
-Job queue execution
-
+When coroutine is used
 ```c#
-AsyncResult<EzRunResult> result = null;
-yield return _client.JobQueue.Run(
-    r => { result = r; }
-    _gameSession,
-    _jobQueueNamespaceName
-);
+IEnumerator Impl()
+{
+    while (true)
+    {
+        var future = _domain.Dispatch(_session);
+        yield return future;
+        if (future != null)
+        {
+            yield break;
+        }
+        if (future.Result)
+        {
+            break;
+        }
+        yield return null;
+    }
+}
+_dispatchCoroutine = StartCoroutine(Impl());
 ```

@@ -42,15 +42,6 @@ namespace Gs2.Sample.Quest
         [SerializeField]
         public string questNamespaceName;
 
-        [SerializeField]
-        public string questKeyId;
-
-        [SerializeField] 
-        public string distributorNamespaceName;
-        
-        [SerializeField] 
-        public string jobQueueNamespaceName;
-        
         /// <summary>
         /// クエストグループを取得したとき
         /// </summary>

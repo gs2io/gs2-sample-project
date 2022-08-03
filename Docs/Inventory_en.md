@@ -17,8 +17,8 @@ This sample is used to manage gold (in-game currency).
 | inventoryNamespaceName | GS2-Inventory's namespace name
 | inventoryModelName | model name of GS2-Inventory
 | ItemModelName | Gold type name in GS2-Inventory's CurrentItemModelMaster |
-| identifierAcquireGoldClientId | client ID of the authority that can increase gold
-| identifierAcquireGoldClientSecret | client secret of the authority that can increase gold |
+| exchangeNamespaceName | GS2-Exchange namespace name                    |
+| exchangeRateName | Name of exchange rate for obtaining gold at GS2-Exchange       |
 
 | Event | Description |
 ---------|------
@@ -36,8 +36,9 @@ This sample is used to manage gold (in-game currency).
 ---|---
 | inventoryNamespaceName | inventory namespace name for GS2-Inventory
 | inventoryModelName | namespace name of the model in GS2-Inventory's inventory
-| identifierAcquireItemClientId | client ID of the authority that can increase items__ |
-| identifierAcquireItemClientSecret | client secret of the authority that allows item increase |
+| exchangeNamespaceName | GS2-Exchange namespace name               |
+| exchangeRateNameFire | Name of exchange rate for obtaining items from GS2-Exchange (Fire)      |
+| exchangeRateNameWater | Name of exchange rate for obtaining items from GS2-Exchange (water)      |
 
 | Event | Description |
 ---|---
@@ -47,118 +48,214 @@ This sample is used to manage gold (in-game currency).
 | onConsume(Product product) | Called when an item is consumed. | onConsume(Product product)
 | OnError(Gs2Exception error) | Called when an error occurs. | OnError(Gs2Exception error)
 
-## Get inventory model
+## Retrieve inventory model/item model
 
-Retrieve the inventory model.
+retrieve inventory and item models.
 
+When UniTask is enabled
 ```c#
-AsyncResult<EzGetInventoryModelResult> result = null;
-yield return client.Inventory.GetInventoryModel(
-    r => { result = r; }
-    inventoryNamespaceName,
-    inventoryModelName
-);
+{
+    var domain = gs2.Inventory.Namespace(
+        namespaceName: inventoryNamespaceName
+    ).InventoryModel(
+        inventoryName: inventoryModelName
+    );
+    try
+    {
+        Model = await domain.ModelAsync();
+    }
+    catch (Gs2Exception e)
+    {
+        onError.Invoke(e);
+        return;
+    }
+}
+{
+    ItemModels.Clear();
+    var domain = gs2.Inventory.Namespace(
+        namespaceName: inventoryNamespaceName
+    ).InventoryModel(
+        inventoryName: inventoryModelName
+    );
+    ItemModels = await domain.ItemModelsAsync().ToListAsync();
+
+}
+
+onGetInventoryModel.Invoke(inventoryModelName, Model, ItemModels);
+```
+When coroutine is used
+```c#
+{
+    var domain = gs2.Inventory.Namespace(
+        namespaceName: inventoryNamespaceName
+    ).InventoryModel(
+        inventoryName: inventoryModelName
+    );
+    var future = domain.Model();
+    yield return future;
+    if (future.Error != null)
+    {
+        onError.Invoke(future.Error);
+        yield break;
+    }
+
+    Model = future.Result;
+}
+{
+    ItemModels.Clear();
+    var it = gs2.Inventory.Namespace(
+        namespaceName: inventoryNamespaceName
+    ).InventoryModel(
+        inventoryName: inventoryModelName
+    ).ItemModels();
+    while (it.HasNext())
+    {
+        yield return it.Next();
+        if (it.Error != null)
+        {
+            onError.Invoke(it.Error);
+            break;
+        }
+
+        if (it.Current != null)
+        {
+            ItemModels.Add(it.Current);
+        }
+    }
+}
+
+onGetInventoryModel.Invoke(inventoryModelName, Model, ItemModels);
 ```
 
-## Get Gold/Inventory
+## Get Inventory
 
 Retrieves inventory information.  
 For inventory that is handled as gold (in-game currency), the  
 The Count of the target ItemSet represents the amount of gold.
 
+When UniTask is enabled
 ```c#
-AsyncResult<EzGetInventoryResult> result = null;
-yield return client.Inventory.GetInventory(
-    r => { result = r; }
-    session,
-    inventoryNamespaceName,
-    inventoryName
+var domain = gs2.Inventory.Namespace(
+    namespaceName: inventoryNamespaceName
+).Me(
+    gameSession: gameSession
+).Inventory(
+    inventoryName: inventoryName
 );
+try
+{
+    Inventory = await domain.ModelAsync();
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+When coroutine is used
+```c#
+var domain = gs2.Inventory.Namespace(
+    namespaceName: inventoryNamespaceName
+).Me(
+    gameSession: gameSession
+).Inventory(
+    inventoryName: inventoryName
+);
+var future = domain.Model();
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    yield break;
+}
+
+Inventory = future.Result;
 ```
 
 ## Consuming gold/items
 
 Consume gold/items, reduce quantity.
 
+When UniTask is enabled
 ```c#
-AsyncResult<EzConsumeResult> result = null;
-yield return client.Inventory.Consume(
-    r => { result = r; }
-    session,
-    inventoryNamespaceName,
-    inventoryModelName,
-    itemModelName,
-    consumeValue,
-    itemSetName
+var domain = gs2.Inventory.Namespace(
+    namespaceName: inventoryNamespaceName
+).Me(
+    gameSession: gameSession
+).Inventory(
+    inventoryName: inventoryName
 );
+var domain2 = domain.ItemSet(
+    itemName: itemName,
+    itemSetName: null
+);
+try
+{
+    var result = await domain2.ConsumeAsync(
+        consumeCount: consumeValue
+    );
+    
+    itemSets  = await result.ModelAsync();
+
+    onConsume.Invoke(Inventory, itemSets.ToList(), consumeValue);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+    return;
+}
+```
+When coroutine is used
+```c#
+var domain = gs2.Inventory.Namespace(
+    namespaceName: inventoryNamespaceName
+).Me(
+    gameSession: gameSession
+).Inventory(
+    inventoryName: inventoryName
+);
+var future = domain.ItemSet(
+    itemName: itemName,
+    itemSetName: null
+).Consume(
+    consumeCount: consumeValue
+);
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    yield break;
+}
 ```
 
 ## Obtain gold/items
 
 Obtain gold/items and increase quantity.
 
-Add a [GS2-Identifier](https://app.gs2.io/docs/en/index.html#gs2-identifier) user authorized to increase gold/items and  
-from the client.  
-Sample use for debugging purposes.
+Calls for exchange process by GS2-Exchange to increase gold/items.
+This is a sample of use for debugging purposes. 
 
 ```c#
+// *This process is only for sample confirmation.
+// The actual implementation in which the client directly increases the number of items is deprecated.
+
 {
-    // *This process is just to confirm that the sample works.
-    // Implementations that actually increase items directly by the client are deprecated.
-    
-    var restSession = new Gs2RestSession(
-        new BasicGs2Credential(
-            identifierAcquireItemClientId,
-            identifierAcquireItemClientSecret
-        )
-    );
-    var error = false;
-    yield return restSession.Open(
-        r =>
-        {
-            if (r.Error ! = null)
-            {
-                Invoke(r.Error);
-                Invoke(r.Error); error = true;
-            }
-        }
-    );
-
-    if (error)
+    var domain = gs2.Exchange.Namespace(
+        namespaceName: exchangeNamespaceName
+    ).Me(
+        gameSession: gameSession
+    ).Exchange();
+    try
     {
-        yield return restSession.Close(() => { });
-        yield break;
+        await domain.ExchangeAsync(
+            rateName: exchangeRateName,
+            count: value,
+            config: null
+        );
     }
-
-    var restClient = new Gs2InventoryRestClient(
-        restSession
-    );
-
-    yield return restClient.AcquireItemSetByUserId(
-        new AcquireItemSetByUserIdRequest()
-            .WithNamespaceName(inventoryNamespaceName)
-            WithUserId(session.AccessToken.UserId)
-            WithInventoryName(inventoryModelName)
-            .WithItemName(itemModelName)
-            .WithAcquireCount(value),
-        r =>
-        {
-            if (r.Error ! = null)
-            {
-                Invoke(r.Error);
-                Invoke(r.Error); error = true;
-            }
-            else
-            {
-                onAcquire.Invoke(
-                    EzInventory.FromModel(r.Result.Inventory),
-                    ToList(). r.Result.Items.Select(item => EzItemSet.FromModel(item)).ToList(),
-                    value
-                );
-            }
-        }
-    );
-
-    yield return restSession.Close(() => { });
+    catch (Gs2Exception e)
+    {
+        onError.Invoke(e);
+        return;
+    }
 }
 ```

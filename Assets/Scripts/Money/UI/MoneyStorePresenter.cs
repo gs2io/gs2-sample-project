@@ -2,6 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
+#endif
 
 namespace Gs2.Sample.Money
 {
@@ -110,41 +114,70 @@ namespace Gs2.Sample.Money
         {
             SetState(State.GetProductsProcessing);
             
+#if GS2_ENABLE_UNITASK
+            GetProductsTaskAsync().Forget();
+#else
             StartCoroutine(
-                _moneyModel.GetListProducts(
-                    r =>
-                    {
-                        _moneyModel.products = r.Result;
+                GetProductsTask()
+            );
+#endif
+        }
 
-                        if (r.Error == null)
-                        {
-                            OnGetProducts(_moneyModel.products);
-                            
-                            SetState(State.OpenMoneyStore);
-                        }
-                        else
-                        {
-                            SetState(State.GetProductsFailed);
-                        }
-                    },
-                    GameManager.Instance.Client,
-                    GameManager.Instance.Session,
-                    _moneySetting.showcaseNamespaceName,
-                    _moneySetting.showcaseName,
-                    _moneySetting.onGetProducts,
-                    _moneySetting.onError
-                )
+        public IEnumerator GetProductsTask()
+        {
+            yield return _moneyModel.GetProducts(
+                err =>
+                {
+                    if (err == null)
+                    {
+                        OnGetProducts(_moneyModel.Products);
+
+                        SetState(State.OpenMoneyStore);
+                    }
+                    else
+                    {
+                        SetState(State.GetProductsFailed);
+                    }
+                },
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _moneySetting.showcaseNamespaceName,
+                _moneySetting.showcaseName,
+                _moneySetting.onGetProducts,
+                _moneySetting.onError
             );
         }
+#if GS2_ENABLE_UNITASK
+        public async UniTask GetProductsTaskAsync()
+        {
+            var result = await _moneyModel.GetProductsAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _moneySetting.showcaseNamespaceName,
+                _moneySetting.showcaseName,
+                _moneySetting.onGetProducts,
+                _moneySetting.onError
+            );
+
+            if (result != null)
+            {
+                OnGetProducts(_moneyModel.Products);
+
+                SetState(State.OpenMoneyStore);
+            }
+            else
+            {
+                SetState(State.GetProductsFailed);
+            }
+        }
+#endif
         
         /// <summary>
-        /// 商品リストの初期化
+        /// 商品リストの取得
         /// </summary>
         /// <param name="products"></param>
         private void OnGetProducts(List<Product> products)
         {
-            _moneyModel.products = products;
-            
             _moneyStoreView.productPrefab.SetActive(false);
             
             if (_moneyStoreView.productsContent != null)
@@ -183,37 +216,55 @@ namespace Gs2.Sample.Money
             _moneyModel.selectedProduct = product;
             SetState(State.BuyProcessing);
 
+#if GS2_ENABLE_UNITASK
+            BuyTaskAsync().Forget();
+#else
             StartCoroutine(
                 BuyTask()
             );
+#endif
         }
         
         /// <summary>
         /// 課金通貨を購入
         /// </summary>
-        /// <returns></returns>
         private IEnumerator BuyTask()
         {
             yield return _moneyModel.Buy(
-                r =>
+                err =>
                 {
-                    SetState(r.Error == null
+                    SetState(err == null
                         ? State.BuySucceed
                         : State.BuyFailed);
                 },
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _moneySetting.showcaseNamespaceName,
                 _moneySetting.showcaseName,
-                _moneySetting.distributorNamespaceName,
-                _moneySetting.showcaseKeyId,
                 _moneySetting.onBuy,
                 _moneySetting.onError
             );
-
-            _moneySetting.onBuy.Invoke(_moneyModel.selectedProduct);
         }
+#if GS2_ENABLE_UNITASK
+        private async UniTask BuyTaskAsync()
+        {
+            var err = await _moneyModel.BuyAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _moneySetting.showcaseNamespaceName,
+                _moneySetting.showcaseName,
+                _moneySetting.onBuy,
+                _moneySetting.onError
+            );
+            
+            if (err == null)
+                SetState(State.BuySucceed);
+            else
+                SetState(State.BuyFailed);
 
+        }
+#endif
+        
         public void ClickToClose()
         {
             SetState(State.MainMenu);

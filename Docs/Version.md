@@ -4,8 +4,7 @@
 
 ## GS2-Deploy テンプレート
 
-- [initialize_version_template.yaml - アプリバージョンチェック](../Templates/initialize_version_template.yaml)
-- [initialize_term_template.yaml - 利用規約チェック](../Templates/initialize_term_template.yaml)
+- [initialize_version_template.yaml - アプリバージョンチェック/利用規約チェック](../Templates/initialize_version_template.yaml)
 
 ## バージョン設定 VersionSetting
 
@@ -49,7 +48,7 @@
 
 ## バージョンチェックの流れ
 
-現在のアプリのバージョンとサーバ側のマスターデータに設定されているバージョンを  
+現在のアプリのバージョンとGS2-Version側のマスターデータに設定されているバージョンを  
 それぞれ比較します。  
 `warningVersion` バージョンアップを促すバージョンより古いバージョンであればWarning、  
 `errorVersion` バージョンアップを必須とするバージョンより古いバージョンであればErrorとして  
@@ -58,55 +57,208 @@
 Errorの場合はアプリケーションのバージョンアップを促す表示を行い、  
 配信プラットフォームへの誘導等を行います。
 
+・UniTask有効時
 ```c#
+List<EzTargetVersion> targetVersions = new List<EzTargetVersion>();
+EzTargetVersion targetVersion = new EzTargetVersion();
+targetVersion.VersionName = versionName;
+
 EzVersion version = new EzVersion();
 version.Major = 0;
 version.Minor = 0;
 version.Micro = 0;
 targetVersion.Version = version;
-targetVersion.VersionName = versionName;
 targetVersions.Add(targetVersion);
 
-yield return client.Version.CheckVersion(
-    r =>
-    {
-        result = r;
-    },
-    session,    // GameSession ログイン状態を表すセッションオブジェクト
-    versionNamespaceName,   //  ネームスペース名
-    targetVersions
+var domain = gs2.Version.Namespace(
+    namespaceName: versionNamespaceName
+).Me(
+    gameSession: gameSession
+).Checker();
+try
+{
+    var result = await domain.CheckVersionAsync(
+        targetVersions: targetVersions.ToArray()
+    );
+    
+    var projectToken = result.ProjectToken;
+    var warnings = result.Warnings;
+    var errors = result.Errors;
+
+    onCheckVersion.Invoke(projectToken, warnings.ToList(), errors.ToList());
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+・コルーチン使用時
+```c#
+List<EzTargetVersion> targetVersions = new List<EzTargetVersion>();
+EzTargetVersion targetVersion = new EzTargetVersion();
+targetVersion.VersionName = versionName;
+
+EzVersion version = new EzVersion();
+version.Major = major;
+version.Minor = minor;
+version.Micro = micro;
+targetVersion.Version = version;
+targetVersions.Add(targetVersion);
+
+var domain = gs2.Version.Namespace(
+    namespaceName: versionNamespaceName
+).Me(
+    gameSession: gameSession
+).Checker();
+var future = domain.CheckVersion(
+    targetVersions: targetVersions.ToArray()
 );
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(
+        future.Error
+    );
+    yield break;
+}
+
+var projectToken = future.Result.ProjectToken;
+var warnings = future.Result.Warnings;
+var errors = future.Result.Errors;
+
+onCheckVersion.Invoke(projectToken, warnings.ToList(), errors.ToList());
 ```
 
 ## 利用規約確認チェックの流れ
 
-サーバ側のマスターデータに設定されている規約のバージョンと承認済みのバージョンを比較し  
+GS2-Version側のマスターデータに設定されている規約のバージョンと承認済みのバージョンを比較し  
 未承認のバージョンをErrorsとWarningsに結果として返します。  
 
+・UniTask有効時
 ```c#
-yield return client.Version.CheckVersion(
-    r =>
-    {
-        result = r;
-    },
-    session,    // GameSession ログイン状態を表すセッションオブジェクト
-    versionNamespaceName,   //  ネームスペース名
-    targetVersions
-);
+List<EzTargetVersion> targetVersions = new List<EzTargetVersion>();
+EzTargetVersion targetVersion = new EzTargetVersion();
+targetVersion.VersionName = versionName;
+
+EzVersion version = new EzVersion();
+version.Major = 0;
+version.Minor = 0;
+version.Micro = 0;
+targetVersion.Version = version;
+targetVersions.Add(targetVersion);
+
+var domain = gs2.Version.Namespace(
+    namespaceName: versionNamespaceName
+).Me(
+    gameSession: gameSession
+).Checker();
+try
+{
+    var result = await domain.CheckVersionAsync(
+        targetVersions: targetVersions.ToArray()
+    );
+    
+    var projectToken = result.ProjectToken;
+    var warnings = result.Warnings;
+    var errors = result.Errors;
+
+    onCheckVersion.Invoke(projectToken, warnings.ToList(), errors.ToList());
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
 ```
-
-ユーザーに利用規約の表示を行い、承諾を得た上で、承認されたことをサーバに送信します。  
-そのユーザーの承認済みのバージョンとしてサーバに保存されます。
-
+・コルーチン使用時
 ```c#
-AsyncResult<EzAcceptResult> result = null;
-var current = client.Version.Accept(
-    r =>
-    {
-        result = r;
-    },
-    session,
-    namespaceName: versionNamespaceName,
+List<EzTargetVersion> targetVersions = new List<EzTargetVersion>();
+EzTargetVersion targetVersion = new EzTargetVersion();
+targetVersion.VersionName = versionName;
+
+EzVersion version = new EzVersion();
+version.Major = 0;
+version.Minor = 0;
+version.Micro = 0;
+targetVersion.Version = version;
+targetVersions.Add(targetVersion);
+
+var domain = gs2.Version.Namespace(
+    namespaceName: versionNamespaceName
+).Me(
+    gameSession: gameSession
+).Checker();
+var future = domain.CheckVersion(
+    targetVersions: targetVersions.ToArray()
+);
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(
+        future.Error
+    );
+    yield break;
+}
+
+var projectToken = future.Result.ProjectToken;
+var warnings = future.Result.Warnings;
+var errors = future.Result.Errors;
+
+onCheckVersion.Invoke(projectToken, warnings.ToList(), errors.ToList());
+```
+ユーザーに利用規約の表示を行い承諾を得た上で、利用規約が承認されたことをGS2-Versionに送信します。  
+そのユーザーの承認済みの利用規約バージョンとしてGS2-Versionに保存されます。
+
+・UniTask有効時
+```c#
+var domain = gs2.Version.Namespace(
+    namespaceName: versionNamespaceName
+).Me(
+    gameSession: gameSession
+).AcceptVersion(
     versionName: versionName
 );
+try
+{
+    var result = await domain.AcceptAsync();
+    var item = await result.ModelAsync();
+    
+    onAcceptTerm.Invoke(item);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+・コルーチン使用時
+```c#
+var domain = gs2.Version.Namespace(
+    namespaceName: versionNamespaceName
+).Me(
+    gameSession: gameSession
+).AcceptVersion(
+    versionName: versionName
+);
+var future = domain.Accept();
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(
+        future.Error
+    );
+    yield break;
+}
+
+var future2 = future.Result.Model();
+yield return future2;
+if (future2.Error != null)
+{
+    onError.Invoke(
+        future2.Error
+    );
+    yield break;
+}
+
+var item = future2.Result;
+
+onAcceptTerm.Invoke(item);
 ```

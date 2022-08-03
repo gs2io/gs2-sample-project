@@ -45,10 +45,10 @@ namespace Gs2.Sample.Gold
         public string itemModelName;
 
         [SerializeField]
-        public string identifierAcquireGoldClientId;
+        public string exchangeNamespaceName;
 
         [SerializeField]
-        public string identifierAcquireGoldClientSecret;
+        public string exchangeRateName;
 
         [SerializeField]
         public GetInventoryModelEvent onGetInventoryModel = new GetInventoryModelEvent();

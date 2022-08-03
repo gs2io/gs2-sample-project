@@ -22,7 +22,7 @@ namespace Gs2.Sample.Matchmaking
     }
 
     [System.Serializable]
-    public class MatchmakingCompleteEvent : UnityEvent<EzGathering, List<string>>
+    public class MatchmakingCompleteEvent : UnityEvent<string>
     {
     }
     

@@ -15,22 +15,10 @@ namespace Gs2.Sample.Unit
         public string inventoryModelName;
 
         [SerializeField]
-        public string identifierAcquireUnitClientId;
-
-        [SerializeField]
-        public string identifierAcquireUnitClientSecret;
-
-        [SerializeField]
         public GetInventoryModelEvent onGetInventoryModel = new GetInventoryModelEvent();
 
         [SerializeField]
         public GetInventoryEvent onGetInventory = new GetInventoryEvent();
-
-        [SerializeField]
-        public GetItemSetWithSignatureEvent onGetItemSetWithSignature = new GetItemSetWithSignatureEvent();
-        
-        [SerializeField]
-        public AcquireEvent onAcquire = new AcquireEvent();
 
         [SerializeField]
         public ConsumeEvent onConsume = new ConsumeEvent();

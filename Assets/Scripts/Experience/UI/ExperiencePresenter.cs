@@ -5,6 +5,10 @@ using Gs2.Unity.Gs2Experience.Model;
 using Gs2.Unity.Gs2Inventory.Model;
 using UnityEngine;
 using UnityEngine.Assertions;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
+#endif
 
 namespace Gs2.Sample.Experience
 {
@@ -36,13 +40,12 @@ namespace Gs2.Sample.Experience
         /// <summary>
         /// 経験値の初期化
         /// </summary>
-        /// <returns></returns>
         public IEnumerator Initialize()
         {
             UIManager.Instance.AddLog("ExperiencePresenter::Initialize");
             
             yield return _experienceModel.GetPlayerExperienceModel(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 _experienceSetting.experienceNamespaceName,
                 _experienceSetting.playerExperienceModelName,
                 _experienceSetting.onGetExperienceModel,
@@ -50,7 +53,7 @@ namespace Gs2.Sample.Experience
             );
 
             yield return _experienceModel.GetItemExperienceModel(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 _experienceSetting.experienceNamespaceName,
                 _experienceSetting.itemExperienceModelName,
                 _experienceSetting.onGetExperienceModel,
@@ -59,61 +62,83 @@ namespace Gs2.Sample.Experience
             
             yield return Refresh();
         }
+#if GS2_ENABLE_UNITASK
+        public async UniTask InitializeAsync()
+        {
+            UIManager.Instance.AddLog("ExperiencePresenter::InitializeAsync");
+            
+            await _experienceModel.GetPlayerExperienceModelAsync(
+                GameManager.Instance.Domain,
+                _experienceSetting.experienceNamespaceName,
+                _experienceSetting.playerExperienceModelName,
+                _experienceSetting.onGetExperienceModel,
+                _experienceSetting.onError
+            );
+
+            await _experienceModel.GetItemExperienceModelAsync(
+                GameManager.Instance.Domain,
+                _experienceSetting.experienceNamespaceName,
+                _experienceSetting.itemExperienceModelName,
+                _experienceSetting.onGetExperienceModel,
+                _experienceSetting.onError
+            );
+            
+            await RefreshAsync();
+        }
+#endif
         
         /// <summary>
         /// プレイヤーの経験値を増加
         /// </summary>
         public void OnClickIncreasePlayerExperience()
         {
+#if GS2_ENABLE_UNITASK
+            IncreasePlayerExperienceAsync(increaseValue).Forget();
+#else
             StartCoroutine(
-                IncreaseExperience(increaseValue)
+                IncreasePlayerExperience(increaseValue)
             );
+#endif
         }
         
         /// <summary>
         /// プレイヤーの経験値を増加
         /// </summary>
-        /// <param name="_increaseValue"></param>
-        public IEnumerator IncreaseExperience(int _increaseValue)
+        private IEnumerator IncreasePlayerExperience(int _increaseValue)
         {
-            void RefreshStaminaAction(
-                EzExperienceModel experienceModelTemp,
-                EzStatus status,
-                int value
-            )
-            {
-                if (experienceModelTemp.Name != _experienceModel.playerExperienceModel.Name)
-                {
-                    return;
-                }
-
-                _experienceSetting.onIncreaseExperience.RemoveListener(RefreshStaminaAction);
-
-                UIManager.Instance.AddLog("ExperienceValue : " + status.ExperienceValue);
-            }
-
-            _experienceSetting.onIncreaseExperience.AddListener(RefreshStaminaAction);
-            
             yield return _experienceModel.IncreaseExperience(
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
-                _experienceSetting.identifierIncreaseExperienceClientId,
-                _experienceSetting.identifierIncreaseExperienceClientSecret,
-                _experienceSetting.experienceNamespaceName,
-                _experienceModel.playerExperienceModel,
+                _experienceSetting.exchangeNamespaceName,
+                _experienceSetting.playerEexchangeRateName,
                 GameManager.Instance.Session.AccessToken.UserId, // プレイヤーのUserId
                 _increaseValue,
-                _experienceSetting.onIncreaseExperience, 
                 _experienceSetting.onError
             );
             
             yield return Refresh();
         }
+#if GS2_ENABLE_UNITASK
+        private async UniTask IncreasePlayerExperienceAsync(int _increaseValue)
+        {
+            await _experienceModel.IncreaseExperienceAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _experienceSetting.exchangeNamespaceName,
+                _experienceSetting.playerEexchangeRateName,
+                GameManager.Instance.Session.AccessToken.UserId, // プレイヤーのUserId
+                _increaseValue,
+                _experienceSetting.onError
+            );
+            
+            await RefreshAsync();
+        }
+#endif
         
         /// <summary>
         /// プレイヤー経験値の更新
         /// </summary>
-        /// <returns></returns>
-        public IEnumerator Refresh()
+        private IEnumerator Refresh()
         {
             void RefreshStatuesAction(
                 EzExperienceModel _experienceModel,
@@ -153,18 +178,66 @@ namespace Gs2.Sample.Experience
             _experienceSetting.onGetStatuses.AddListener(RefreshStatuesAction);
             
             yield return _experienceModel.GetPlayerStatuses(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _experienceSetting.experienceNamespaceName,
                 _experienceSetting.onGetStatuses,
                 _experienceSetting.onError
             );
         }
-                
+#if GS2_ENABLE_UNITASK
+        private async UniTask RefreshAsync()
+        {
+            void RefreshStatuesAction(
+                EzExperienceModel _experienceModel,
+                List<EzStatus> _statuses
+            )
+            {
+                _experienceSetting.onGetStatuses.RemoveListener(RefreshStatuesAction);
+
+                if (_statuses.Count == 0)
+                {
+                    _experienceView.SetRank(1);
+                    var nextRankExperience = _experienceModel.RankThreshold.Values[0];
+                    _experienceView.SetExperience(0, nextRankExperience);
+                }
+                else
+                {
+                    foreach (var status in _statuses)
+                    {
+                        if (status.PropertyId == GameManager.Instance.Session.AccessToken.UserId)
+                        {
+                            _experienceView.SetRank(status);
+                            long nextRankExperience;
+                            if (status.RankCapValue <= status.RankValue)
+                            {
+                                nextRankExperience = _experienceModel.RankThreshold.Values[(int)status.RankValue - 2];
+                            }
+                            else
+                            {
+                                nextRankExperience = _experienceModel.RankThreshold.Values[(int)status.RankValue - 1];
+                            }
+                            _experienceView.SetExperience(status, nextRankExperience);
+                        }
+                    }
+                }
+            }
+
+            _experienceSetting.onGetStatuses.AddListener(RefreshStatuesAction);
+            
+            await _experienceModel.GetPlayerStatusesAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _experienceSetting.experienceNamespaceName,
+                _experienceSetting.onGetStatuses,
+                _experienceSetting.onError
+            );
+        }
+#endif
+
         /// <summary>
         /// アイテムをクリックした
         /// </summary>
-        /// <param name="item"></param>
         public void OnClickItem(EzItemSet item)
         {
             _experienceModel.selectedItem = item;
@@ -175,8 +248,7 @@ namespace Gs2.Sample.Experience
         /// <summary>
         /// アイテムステータスの表示
         /// </summary>
-        /// <param name="item"></param>
-        public void OpenItemStatus(EzItemSet item)
+        private void OpenItemStatus(EzItemSet item)
         {
             if (!_experienceModel.itemStatuses.ContainsKey(item.ItemSetId))
             {
@@ -220,40 +292,41 @@ namespace Gs2.Sample.Experience
         /// <summary>
         /// アイテムの経験値を増加
         /// </summary>
-        /// <param name="propertyId"></param>
-        /// <param name="value"></param>
         public void OnClickIncreaseExperience(
             string propertyId,
             int value
         )
         {
+#if GS2_ENABLE_UNITASK
+            IncreaseItemExperienceAsync(
+                propertyId,
+                value
+            ).Forget();
+#else
             StartCoroutine(
-                IncreaseExperience(
+                IncreaseItemExperience(
                     propertyId,
                     value
                 )
             );
+#endif
         }
 
         /// <summary>
         /// アイテムの経験値を増加
         /// </summary>
-        /// <param name="propertyId"></param>
-        /// <param name="value"></param>
-        public IEnumerator IncreaseExperience(
+        private IEnumerator IncreaseItemExperience(
             string propertyId,
             int value
         )
         {
             yield return _experienceModel.IncreaseExperience(
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
-                _experienceSetting.identifierIncreaseExperienceClientId,
-                _experienceSetting.identifierIncreaseExperienceClientSecret,
-                _experienceSetting.experienceNamespaceName,
-                _experienceModel.itemExperienceModel,
+                _experienceSetting.exchangeNamespaceName,
+                _experienceSetting.itemExchangeRateName,
                 propertyId,
                 value,
-                _experienceSetting.onIncreaseExperience,
                 _experienceSetting.onError
             );
             
@@ -261,20 +334,52 @@ namespace Gs2.Sample.Experience
             
             OpenItemStatus(_experienceModel.selectedItem);
         }
+#if GS2_ENABLE_UNITASK
+        private async UniTask IncreaseItemExperienceAsync(
+            string propertyId,
+            int value
+        )
+        {
+            await _experienceModel.IncreaseExperienceAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _experienceSetting.exchangeNamespaceName,
+                _experienceSetting.itemExchangeRateName,
+                propertyId,
+                value,
+                _experienceSetting.onError
+            );
+            
+            await RefreshItemExperienceAsync();
+            
+            OpenItemStatus(_experienceModel.selectedItem);
+        }
+#endif
         
         /// <summary>
         /// アイテム経験値の更新
         /// </summary>
-        /// <returns></returns>
         public IEnumerator RefreshItemExperience()
         {
             yield return _experienceModel.GetItemStatuses(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _experienceSetting.experienceNamespaceName,
                 _experienceSetting.onGetStatuses,
                 _experienceSetting.onError
             );
         }
+#if GS2_ENABLE_UNITASK
+        public async UniTask RefreshItemExperienceAsync()
+        {
+           await _experienceModel.GetItemStatusesAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _experienceSetting.experienceNamespaceName,
+                _experienceSetting.onGetStatuses,
+                _experienceSetting.onError
+           );
+        }
+#endif
     }
 }

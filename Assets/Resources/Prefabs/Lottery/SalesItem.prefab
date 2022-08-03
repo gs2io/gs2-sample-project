@@ -116,6 +116,7 @@ MonoBehaviour:
   onBuy:
     m_PersistentCalls:
       m_Calls: []
+  buyButton: {fileID: 4137852204597164314}
 --- !u!1 &1485033737001799521
 GameObject:
   m_ObjectHideFlags: 0

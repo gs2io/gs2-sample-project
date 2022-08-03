@@ -1,7 +1,13 @@
 ﻿using System;
 using System.Collections;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+#endif
 using Gs2.Core;
+using Gs2.Core.Exception;
 using Gs2.Core.Util;
+using Gs2.Unity.Core;
+using Gs2.Unity.Core.Exception;
 using Gs2.Unity.Gs2Distributor.Result;
 using Gs2.Unity.Gs2Stamina.Model;
 using Gs2.Unity.Gs2Stamina.Result;
@@ -37,22 +43,10 @@ namespace Gs2.Sample.Stamina
         {
             UIManager.Instance.AddLog("Stamina::Initialize");
             
-            void OnGetStaminaModel(
-                string staminaModelNameTemp,
-                EzStaminaModel staminaModel
-            )
-            {
-                _staminaSetting.onGetStaminaModel.RemoveListener(OnGetStaminaModel);
-
-                _staminaModel.staminaModel = staminaModel;
-            }
-
-            _staminaSetting.onGetStaminaModel.AddListener(OnGetStaminaModel);
-        
-            yield return GetStaminaModel(
-                GameManager.Instance.Client,
+            yield return _staminaModel.GetStaminaModel(
+                GameManager.Instance.Domain,
                 _staminaSetting.staminaNamespaceName,
-                _staminaSetting.staminaModelName,
+                _staminaSetting.staminaName,
                 _staminaSetting.onGetStaminaModel,
                 _staminaSetting.onError
             );
@@ -60,70 +54,49 @@ namespace Gs2.Sample.Stamina
             yield return Refresh();
         }
         
+#if GS2_ENABLE_UNITASK
         /// <summary>
-        /// スタミナモデルの取得
+        /// スタミナの初期化
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="staminaNamespaceName"></param>
-        /// <param name="staminaModelName"></param>
-        /// <param name="onGetStaminaModel"></param>
-        /// <param name="onError"></param>
         /// <returns></returns>
-        public static IEnumerator GetStaminaModel(
-            Gs2.Unity.Client client,
-            string staminaNamespaceName,
-            string staminaModelName,
-            GetStaminaModelEvent onGetStaminaModel,
-            Gs2.Unity.Util.ErrorEvent onError
-        )
+        public async UniTask InitializeAsync()
         {
-            AsyncResult<EzGetStaminaModelResult> result = null;
-            yield return client.Stamina.GetStaminaModel(
-                r =>
-                {
-                    result = r;
-                },
-                staminaNamespaceName,
-                staminaModelName
-            );
+            UIManager.Instance.AddLog("Stamina::InitializeAsync");
             
-            if (result.Error != null)
-            {
-                onError.Invoke(
-                    result.Error
-                );
-                yield break;
-            }
+            await _staminaModel.GetStaminaModelAsync(
+                GameManager.Instance.Domain,
+                _staminaSetting.staminaNamespaceName,
+                _staminaSetting.staminaName,
+                _staminaSetting.onGetStaminaModel,
+                _staminaSetting.onError
+            );
 
-            var staminaModel = result.Result.Item;
-
-            onGetStaminaModel.Invoke(staminaModelName, staminaModel);
+            await RefreshAsync();
         }
-        
+#endif
+
         public void OnClickStamina_ConsumeButton(int consumeValue)
         {
             UIManager.Instance.AddLog("OnClickStamina_ConsumeButton");
             UIManager.Instance.CloseDialog();
-            
+
+#if GS2_ENABLE_UNITASK
+            ConsumeStaminaAsync(consumeValue).Forget();
+#else
             StartCoroutine(
                 ConsumeStamina(
                     consumeValue
                 )
             );
+#endif
         }
 
         public IEnumerator ConsumeStamina(int consumeValue)
         {
             void RefreshStaminaAction(
-                EzStaminaModel staminaModelTemp,
                 EzStamina stamina
             )
             {
-                if (staminaModelTemp.Name != _staminaModel.staminaModel.Name)
-                {
-                    return;
-                }
-
                 _staminaSetting.onGetStamina.RemoveListener(RefreshStaminaAction);
 
                 UIManager.Instance.AddLog("stamina.Value : " + _staminaModel.stamina.Value);
@@ -132,9 +105,10 @@ namespace Gs2.Sample.Stamina
             _staminaSetting.onGetStamina.AddListener(RefreshStaminaAction);
 
             yield return _staminaModel.ConsumeStamina(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _staminaSetting.staminaNamespaceName,
+                _staminaSetting.staminaName,
                 consumeValue,
                 _staminaSetting.onConsumeStamina,
                 _staminaSetting.onGetStamina,
@@ -144,6 +118,35 @@ namespace Gs2.Sample.Stamina
             yield return Refresh();
         }
 
+#if GS2_ENABLE_UNITASK
+        async UniTask ConsumeStaminaAsync(int consumeValue)
+        {
+            void RefreshStaminaAction(
+                EzStamina stamina
+            )
+            {
+                _staminaSetting.onGetStamina.RemoveListener(RefreshStaminaAction);
+
+                UIManager.Instance.AddLog("stamina.Value : " + _staminaModel.stamina.Value);
+            }
+
+            _staminaSetting.onGetStamina.AddListener(RefreshStaminaAction);
+
+            await _staminaModel.ConsumeStaminaAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _staminaSetting.staminaNamespaceName,
+                _staminaSetting.staminaName,
+                consumeValue,
+                _staminaSetting.onConsumeStamina,
+                _staminaSetting.onGetStamina,
+                _staminaSetting.onError
+            );
+            
+            await RefreshAsync();
+        }
+#endif
+        
         private void Update()
         {
             if (_staminaModel.stamina != null)
@@ -190,21 +193,24 @@ namespace Gs2.Sample.Stamina
 
         public void OnUpdateStamina()
         {
+#if GS2_ENABLE_UNITASK
+            RefreshAsync().Forget();
+#else
             StartCoroutine(
                 Refresh()
             );
+#endif
         }
         
         /// <summary>
         /// スタミナの更新
         /// </summary>
-        /// <returns></returns>
-        public IEnumerator Refresh()
+        private IEnumerator Refresh()
         {
-            AsyncResult<EzGetStaminaResult> result = null;
+            EzStamina result = null;
             yield return _staminaModel.GetStamina(
                 r => result = r,
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _staminaSetting.staminaNamespaceName,
                 _staminaSetting.staminaName,
@@ -212,42 +218,31 @@ namespace Gs2.Sample.Stamina
                 _staminaSetting.onError
             );
 
-            if (result.Error == null)
+            if (result != null)
+            {
+                _staminaView.SetStamina(result);
+            }
+        }
+#if GS2_ENABLE_UNITASK
+        /// <summary>
+        /// スタミナの更新
+        /// </summary>
+        private async UniTask RefreshAsync()
+        {
+            var result = await _staminaModel.GetStaminaAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _staminaSetting.staminaNamespaceName,
+                _staminaSetting.staminaName,
+                _staminaSetting.onGetStamina,
+                _staminaSetting.onError
+            );
+            
+            if (result != null)
             {
                 _staminaView.SetStamina(_staminaModel.stamina);
             }
         }
-        
-        public UnityAction<EzStampTask, EzRunStampTaskResult> GetTaskCompleteAction()
-        {
-            return (task, taskResult) =>
-            {
-                UIManager.Instance.AddLog("StaminaPresenter::GetTaskCompleteAction");
-
-                if (task.Action == "Gs2Stamina:ConsumeStaminaByUserId")
-                {
-                    UIManager.Instance.AddLog("Gs2Stamina:ConsumeStaminaByUserId");
-                    StartCoroutine(
-                        Refresh()
-                    );
-                }
-            };
-        }
-
-        public UnityAction<EzStampSheet, EzRunStampSheetResult> GetSheetCompleteAction()
-        {
-            return (sheet, sheetResult) =>
-            {
-                UIManager.Instance.AddLog("StaminaPresenter::GetSheetCompleteAction");
-                
-                if (sheet.Action == "Gs2Stamina:RecoverStaminaByUserId")
-                {
-                    UIManager.Instance.AddLog("Gs2Stamina:RecoverStaminaByUserId");
-                    StartCoroutine(
-                        Refresh()
-                    );
-                }
-            };
-        }
+#endif
     }
 }
