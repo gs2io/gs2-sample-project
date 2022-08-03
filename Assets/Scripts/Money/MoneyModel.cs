@@ -7,16 +7,17 @@ using Gs2.Gs2Limit.Request;
 using Gs2.Gs2Money.Request;
 using Gs2.Sample.Core;
 using Gs2.Sample.MoneyStore;
-using Gs2.Unity;
-using Gs2.Unity.Gs2Limit.Result;
+using Gs2.Unity.Core;
 using Gs2.Unity.Gs2Money.Model;
-using Gs2.Unity.Gs2Money.Result;
 using Gs2.Unity.Gs2Showcase.Model;
-using Gs2.Unity.Gs2Showcase.Result;
 using Gs2.Unity.Util;
 using Gs2.Util.LitJson;
 using UnityEngine;
 using UnityEngine.Events;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
+#endif
 
 namespace Gs2.Sample.Money
 {
@@ -36,7 +37,7 @@ namespace Gs2.Sample.Money
         /// 販売中の課金通貨
         /// Billing Currency on Sale
         /// </summary>
-        public List<Product> products = new List<Product>();
+        public List<Product> Products = new List<Product>();
         
         /// <summary>
         /// 購入メニューで選択した課金通貨
@@ -48,81 +49,95 @@ namespace Gs2.Sample.Money
         /// 現在の課金通貨の取得
         /// Obtain current billing currency
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="moneyNamespaceName"></param>
-        /// <param name="slot"></param>
-        /// <param name="onGetWallet"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
         public IEnumerator GetWallet(
-            Client client,
-            GameSession session,
+            Gs2Domain gs2,
+            GameSession gameSession,
             string moneyNamespaceName,
             GetWalletEvent onGetWallet,
             ErrorEvent onError
         )
         {
-            AsyncResult<EzGetResult> result = null;
-            yield return client.Money.Get(
-                r =>
-                {
-                    result = r;
-                },
-                session,
-                moneyNamespaceName,
-                Slot
+            var domain = gs2.Money.Namespace(
+                namespaceName: moneyNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Wallet(
+                slot: Slot
             );
-            
-            if (result.Error != null)
+            var future = domain.Model();
+            yield return future;
+            if (future.Error != null)
             {
-                onError.Invoke(
-                    result.Error
-                );
+                onError.Invoke(future.Error);
                 yield break;
             }
-
-            Wallet = result.Result.Item;
+            
+            Wallet = future.Result;
 
             onGetWallet.Invoke(Wallet);
         }
+#if GS2_ENABLE_UNITASK
+        public async UniTask GetWalletAsync(
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string moneyNamespaceName,
+            GetWalletEvent onGetWallet,
+            ErrorEvent onError
+        )
+        {
+            var domain = gs2.Money.Namespace(
+                namespaceName: moneyNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Wallet(
+                slot: Slot
+            );
+            try
+            {
+                Wallet = await domain.ModelAsync();
+
+                onGetWallet.Invoke(Wallet);
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+            }
+        }
+#endif
         
         /// <summary>
-        /// 販売中の課金通貨一覧を取得
-        /// Get a list of billable currencies on sale
+        /// 販売中の課金通貨商品一覧を取得
+        /// Get a list of billable currency products on sale
         /// </summary>
-        /// <returns></returns>
-        public IEnumerator GetListProducts(
-            UnityAction<AsyncResult<List<Product>>> callback,
-            Client client,
-            GameSession session,
+        public IEnumerator GetProducts(
+            UnityAction<Gs2Exception> callback,
+            Gs2Domain gs2,
+            GameSession gameSession,
             string showcaseNamespaceName,
             string showcaseName,
             GetProductsEvent onGetProducts,
             ErrorEvent onError
         )
         {
-            AsyncResult<EzGetShowcaseResult> result = null;
-            yield return client.Showcase.GetShowcase(
-                r =>
-                {
-                    result = r;
-                },
-                session,
-                showcaseNamespaceName,
-                showcaseName
+            var domain = gs2.Showcase.Namespace(
+                namespaceName: showcaseNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Showcase(
+                showcaseName: showcaseName
             );
-            
-            if (result.Error != null)
+            var future = domain.Model();
+            yield return future;
+            if (future.Error != null)
             {
                 onError.Invoke(
-                    result.Error
+                    future.Error
                 );
-                callback.Invoke(new AsyncResult<List<Product>>(null, result.Error));
                 yield break;
             }
-
-            var products = new List<Product>();
-            foreach (var displayItem in result.Result.Item.DisplayItems)
+            
+            Products.Clear();
+            foreach (var displayItem in future.Result.DisplayItems)
             {
                 var depositRequest = GetAcquireAction<DepositByUserIdRequest>(
                     displayItem.SalesItem, 
@@ -141,24 +156,26 @@ namespace Gs2.Sample.Money
 
                 int? boughtCount = null;
                 if(countUpRequest != null) {
-                    AsyncResult<EzGetCounterResult> result2 = null;
-                    yield return client.Limit.GetCounter(
-                        r => { result2 = r; },
-                        session,
-                        countUpRequest.NamespaceName,
-                        countUpRequest.LimitName,
-                        countUpRequest.CounterName
+                    var domain2 = gs2.Limit.Namespace(
+                        namespaceName: countUpRequest.NamespaceName
+                    ).Me(
+                        gameSession: gameSession
+                    ).Counter(
+                        limitName: countUpRequest.LimitName,
+                        counterName: countUpRequest.CounterName
                     );
-                    if (result2.Error == null)
+                    var future2 = domain2.Model();
+                    yield return future2;
+                    if (future2.Error == null)
                     {
-                        boughtCount = result2.Result.Item.Count;
+                        boughtCount = future2.Result.Count;
                     }
-                    else if (result2.Error is NotFoundException)
+                    else if (future2.Error is NotFoundException)
                     {
                         boughtCount = 0;
                     }
                 }
-                products.Add(new Product
+                Products.Add(new Product
                 {
                     Id = displayItem.DisplayItemId,
                     ContentsId = recordReceiptRequest.ContentsId,
@@ -169,19 +186,103 @@ namespace Gs2.Sample.Money
                 });
             }
             
-            onGetProducts.Invoke(products);
+            onGetProducts.Invoke(Products);
             
-            callback.Invoke(new AsyncResult<List<Product>>(products, result.Error));
+            callback.Invoke(null);
         }
-             
+#if GS2_ENABLE_UNITASK
+        public async UniTask<List<Product>> GetProductsAsync(
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string showcaseNamespaceName,
+            string showcaseName,
+            GetProductsEvent onGetProducts,
+            ErrorEvent onError
+        )
+        {
+            var domain = gs2.Showcase.Namespace(
+                namespaceName: showcaseNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Showcase(
+                showcaseName: showcaseName
+            );
+            try
+            {
+                var showcase = await domain.ModelAsync();
+                
+                Products.Clear();
+                foreach (var displayItem in showcase.DisplayItems)
+                {
+                    var depositRequest = GetAcquireAction<DepositByUserIdRequest>(
+                        displayItem.SalesItem,
+                        "Gs2Money:DepositByUserId"
+                    );
+                    var recordReceiptRequest = GetConsumeAction<RecordReceiptRequest>(
+                        displayItem.SalesItem,
+                        "Gs2Money:RecordReceipt"
+                    );
+                    var countUpRequest = GetConsumeAction<CountUpByUserIdRequest>(
+                        displayItem.SalesItem,
+                        "Gs2Limit:CountUpByUserId"
+                    );
+                    var price = depositRequest.Price;
+                    var count = depositRequest.Count;
+
+                    int? boughtCount = null;
+                    if (countUpRequest != null)
+                    {
+                        var domain2 = gs2.Limit.Namespace(
+                            namespaceName: countUpRequest.NamespaceName
+                        ).Me(
+                            gameSession: gameSession
+                        ).Counter(
+                            limitName: countUpRequest.LimitName,
+                            counterName: countUpRequest.CounterName
+                        );
+                        try
+                        {
+                            var item = await domain2.ModelAsync();
+                            boughtCount = item.Count;
+                        }
+                        catch (NotFoundException e)
+                        {
+                            boughtCount = 0;
+                        }
+                        catch (Gs2Exception e)
+                        {
+                            onError.Invoke(e);
+                        }
+                    }
+
+                    Products.Add(new Product
+                    {
+                        Id = displayItem.DisplayItemId,
+                        ContentsId = recordReceiptRequest.ContentsId,
+                        Price = price,
+                        CurrencyCount = count,
+                        BoughtCount = boughtCount,
+                        BoughtLimit = countUpRequest == null ? null : countUpRequest.MaxValue,
+                    });
+                }
+
+                onGetProducts.Invoke(Products);
+
+                return Products;
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+            }
+
+            return null;
+        }
+#endif
+
         /// <summary>
         /// 入手アクション取得
         /// Obtain aquire action
         /// </summary>
-        /// <param name="salesItem"></param>
-        /// <param name="action"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
         private T GetAcquireAction<T>(
             EzSalesItem salesItem,
             string action
@@ -199,10 +300,6 @@ namespace Gs2.Sample.Money
         /// 消費アクション取得
         /// Consumption Action Acquisition
         /// </summary>
-        /// <param name="salesItem"></param>
-        /// <param name="action"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
         private T GetConsumeAction<T>(
             EzSalesItem salesItem,
             string action
@@ -220,29 +317,17 @@ namespace Gs2.Sample.Money
         /// 課金通貨を購入する
         /// Purchase billable currency
         /// </summary>
-        /// <param name="callback"></param>
-        /// <param name="client"></param>
-        /// <param name="session"></param>
-        /// <param name="showcaseNamespaceName"></param>
-        /// <param name="showcaseName"></param>
-        /// <param name="distributorNamespaceName"></param>
-        /// <param name="showcaseKeyId"></param>
-        /// <param name="onBuy"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
         public IEnumerator Buy(
-            UnityAction<AsyncResult<object>> callback,
-            Client client,
-            GameSession session,
+            UnityAction<Gs2Exception> callback,
+            Gs2Domain gs2,
+            GameSession gameSession,
             string showcaseNamespaceName,
             string showcaseName,
-            string distributorNamespaceName,
-            string showcaseKeyId,
             BuyEvent onBuy,
             ErrorEvent onError
         )
         {
-            string receipt = null;
+            string receipt;
             {
 #if GS2_ENABLE_PURCHASING
                 AsyncResult<PurchaseParameters> result = null;
@@ -255,7 +340,9 @@ namespace Gs2.Sample.Money
                     onError.Invoke(
                         result.Error
                     );
-                    callback.Invoke(new AsyncResult<object>(null, result.Error));
+                    callback.Invoke(
+                        result.Error
+                    );
                     yield break;
                 }
 
@@ -264,20 +351,19 @@ namespace Gs2.Sample.Money
                 receipt = result.Result.receipt;
 #endif
             }
-            
-            string stampSheet = null;
             {
                 // Showcase 商品の購入をリクエスト
                 // Request to purchase an item
-                AsyncResult<EzBuyResult> result = null;
-                yield return client.Showcase.Buy(
-                    r => { result = r; },
-                    session,
-                    showcaseNamespaceName,
-                    showcaseName,
-                    selectedProduct.Id,
-                    null,
-                    new List<EzConfig>
+                var domain = gs2.Showcase.Namespace(
+                    namespaceName: showcaseNamespaceName
+                ).Me(
+                    gameSession: gameSession
+                ).Showcase(
+                    showcaseName: showcaseName
+                );
+                var future = domain.Buy(
+                    displayItemId: selectedProduct.Id,
+                    config: new []
                     {
                         new EzConfig
                         {
@@ -291,60 +377,98 @@ namespace Gs2.Sample.Money
                         },
                     }
                 );
-
-                if (result.Error != null)
+                yield return future;
+                if (future.Error != null)
                 {
                     onError.Invoke(
-                        result.Error
+                        future.Error
                     );
-                    callback.Invoke(new AsyncResult<object>(null, result.Error));
+                    callback.Invoke(
+                        future.Error
+                    );
                     yield break;
                 }
 
-                // スタンプシートを取得
-                // Get Stamp Sheet
-                stampSheet = result.Result.StampSheet;
+                // 商品購入に成功
+                // Successful product purchase
+
+                onBuy.Invoke(selectedProduct);
+
+                callback.Invoke(null);
+            }
+        }
+#if GS2_ENABLE_UNITASK
+        public async UniTask<Gs2Exception> BuyAsync(
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string showcaseNamespaceName,
+            string showcaseName,
+            BuyEvent onBuy,
+            ErrorEvent onError
+        )
+        {
+            string receipt;
+            {
+#if GS2_ENABLE_PURCHASING
+                try
+                {
+                    PurchaseParameters result = await new IAPUtil().BuyAsync(
+                        selectedProduct.ContentsId
+                    );
+                    
+                    // 課金通貨商品購入 レシート情報
+                    // Billed Currency Product Purchase Receipt Information
+                    receipt = result.receipt;
+                }
+                catch (Gs2Exception e)
+                {
+                    onError.Invoke(e);
+                    return e;
+                }
+#endif
             }
             {
-                // スタンプシート ステートマシンを生成
-                // Generate Stamp Sheet State Machine
-                var machine = new StampSheetStateMachine(
-                    stampSheet,
-                    client,
-                    distributorNamespaceName,
-                    showcaseKeyId
+                // Showcase 商品の購入をリクエスト
+                // Request to purchase an item
+                var domain = gs2.Showcase.Namespace(
+                    namespaceName: showcaseNamespaceName
+                ).Me(
+                    gameSession: gameSession
+                ).Showcase(
+                    showcaseName: showcaseName
                 );
+                try
+                {
+                    var result = await domain.BuyAsync(
+                        displayItemId: selectedProduct.Id,
+                        config: new[]
+                        {
+                            new EzConfig
+                            {
+                                Key = "slot",
+                                Value = Slot.ToString(),
+                            },
+                            new EzConfig
+                            {
+                                Key = "receipt",
+                                Value = receipt,
+                            },
+                        }
+                    );
+                }
+                catch (Gs2Exception e)
+                {
+                    onError.Invoke(e);
+                    return e;
+                }
 
-                Gs2Exception exception = null;
-                void OnError(Gs2Exception e)
-                {
-                    exception = e;
-                }
-                
-                onError.AddListener(OnError);
-                
-                // スタンプシートの実行
-                // Stamp sheet execution
-                yield return machine.Execute(onError);
-                
-                onError.RemoveListener(OnError);
-                
-                if (exception != null)
-                {
-                    // スタンプシート実行エラー
-                    // Stamp sheet execution error
-                    callback.Invoke(new AsyncResult<object>(null, exception));
-                    yield break;
-                }
+                // 商品購入に成功
+                // Successful product purchase
+                onBuy.Invoke(selectedProduct);
+                return null;
             }
-            // 商品購入に成功
-            // Successful product purchase
-
-            onBuy.Invoke(selectedProduct);
-            
-            callback.Invoke(new AsyncResult<object>(null, null));
         }
-        
+#endif
 
     }
 }

@@ -1,15 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using Gs2.Core;
 using Gs2.Core.Exception;
-using Gs2.Sample.Core;
-using Gs2.Sample.JobQueue;
 using Gs2.Sample.Money;
 using Gs2.Sample.Stamina;
 using Gs2.Unity.Gs2Quest.Model;
-using Gs2.Unity.Gs2Quest.Result;
 using UnityEngine;
 using UnityEngine.Assertions;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
+#endif
 
 namespace Gs2.Sample.Quest
 {
@@ -30,9 +30,6 @@ namespace Gs2.Sample.Quest
         private StaminaPresenter _staminaPresenter;
         [SerializeField]
         private MoneyPresenter _moneyPresenter;
-        
-        [SerializeField]
-        private JobQueueModel _jobQueueModel;
         
         public enum State
         {
@@ -239,57 +236,78 @@ namespace Gs2.Sample.Quest
         /// <summary>
         /// クエストの初期化　現在進行しているクエストのチェック
         /// </summary>
-        /// <returns></returns>
         public IEnumerator Initialize()
         {
             UIManager.Instance.AddLog("QuestPresenter::Initialize");
             
-            // 報酬受け取りのJobQueue
-            _jobQueueModel.Initialize(
-                _questSetting.jobQueueNamespaceName,
-                _questSetting.onError
-            );
-            _jobQueueModel.onExecJob.AddListener(
-                (job, body) =>
-                {
-                    _staminaPresenter.OnUpdateStamina();
-                    _moneyPresenter.OnUpdateWallet();
-                }
-            );
-            
-            AsyncResult<EzGetProgressResult> result = null;
-            yield return _questModel.GetProgress(
-                r => result = r,
-                GameManager.Instance.Client,
-                GameManager.Instance.Session,
-                _questSetting.questNamespaceName,
-                _questSetting.onGetProgress,
-                _questSetting.onError
-            );
+            // クエストグループリストを取得
+            {
+                List<EzQuestGroupModel> result = null;
+                yield return _questModel.GetQuestGroups(
+                    r => result = r,
+                    GameManager.Instance.Domain,
+                    _questSetting.questNamespaceName,
+                    _questSetting.onListGroupQuestModel,
+                    _questSetting.onError
+                );
+            }
+            // クエストの進行情報を取得
+            {
+                EzProgress result = null;
+                yield return _questModel.GetProgress(
+                    r => result = r,
+                    GameManager.Instance.Domain,
+                    GameManager.Instance.Session,
+                    _questSetting.questNamespaceName,
+                    _questSetting.onGetProgress,
+                    _questSetting.onError
+                );
 
-            if (result.Error != null)
-	        {
-                if (result.Error is NotFoundException)
+                if (result == null)
                 {
                     SetQuestState(QuestState.None);
-
-                    yield break;
-                }
-                else
-                {
-                    SetState(State.Error);
-                    
-                    _questSetting.onError.Invoke(
-                        result.Error
-                    );
-
                     yield break;
                 }
             }
-
             SetQuestState(QuestState.QuestStarted);
         }
+#if GS2_ENABLE_UNITASK
+        /// <summary>
+        /// クエストの初期化　現在進行しているクエストのチェック
+        /// </summary>
+        public async UniTask InitializeAsync()
+        {
+            UIManager.Instance.AddLog("QuestPresenter::InitializeAsync");
+            
+            // クエストグループリストを取得
+            {
+                List<EzQuestGroupModel> result = await _questModel.GetQuestGroupsAsync(
+                    GameManager.Instance.Domain,
+                    _questSetting.questNamespaceName,
+                    _questSetting.onListGroupQuestModel,
+                    _questSetting.onError
+                );
+            }
+            // クエストの進行情報を取得
+            {
+                EzProgress result = await _questModel.GetProgressAsync(
+                    GameManager.Instance.Domain,
+                    GameManager.Instance.Session,
+                    _questSetting.questNamespaceName,
+                    _questSetting.onGetProgress,
+                    _questSetting.onError
+                );
 
+                if (result == null)
+                {
+                    SetQuestState(QuestState.None);
+                    return;
+                }
+            }
+            SetQuestState(QuestState.QuestStarted);
+        }
+#endif
+        
         public void Finish()
         {
         }
@@ -297,49 +315,66 @@ namespace Gs2.Sample.Quest
         /// <summary>
         /// 現在進行しているクエストのチェック
         /// </summary>
-        /// <returns></returns>
         public IEnumerator CheckCurrentProgressTask()
         {
-            AsyncResult<EzGetProgressResult> result = null;
+            EzProgress result = null;
             yield return _questModel.GetProgress(
                 r => result = r,
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _questSetting.questNamespaceName,
                 _questSetting.onGetProgress,
                 _questSetting.onError
             );
-
-            if (result.Error != null)
+            
+            if (result == null)
             {
-                if (result.Error is NotFoundException)
-                {
-                    _questClearView.SetProgress("進行しているクエストはありません。");
-                    _questClearView.SetInteractable(false);
-                    
-                    SetState(State.QuestProgressError);
-                    
-                    yield break;
-                }
-                else
-                {
-                    SetState(State.Error);
-                    
-                    _questSetting.onError.Invoke(
-                        result.Error
-                    );
+                _questClearView.SetProgress(UIManager.Instance.GetLocalizationText("QuestNotFound"));
+                _questClearView.SetInteractable(false);
 
-                    yield break;
-                }
+                SetState(State.QuestProgressError);
+                yield break;
             }
 
-            UIManager.Instance.AddLog("QuestModel::Progress::RandomSeed:" + _questModel.Progress.RandomSeed);
-            _questClearView.SetProgress(_questModel.SelectedQuest.Metadata);
+            UIManager.Instance.AddLog("QuestModel::Progress::RandomSeed:" + _questModel.progress.RandomSeed);
+            _questClearView.SetProgress(_questModel.selectedQuest.Metadata);
 
             _questClearView.SetInteractable(true);
             
             SetState(State.OpenQuestClear);
         }
+        
+#if GS2_ENABLE_UNITASK
+        /// <summary>
+        /// 現在進行しているクエストのチェック
+        /// </summary>
+        public async UniTask CheckCurrentProgressTaskAsync()
+        {
+            EzProgress result = await _questModel.GetProgressAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _questSetting.questNamespaceName,
+                _questSetting.onGetProgress,
+                _questSetting.onError
+            );
+            
+            if (result == null)
+            {
+                _questClearView.SetProgress(UIManager.Instance.GetLocalizationText("QuestNotFound"));
+                _questClearView.SetInteractable(false);
+
+                SetState(State.QuestProgressError);
+                return;
+            }
+
+            UIManager.Instance.AddLog("QuestModel::Progress::RandomSeed:" + _questModel.progress.RandomSeed);
+            _questClearView.SetProgress(_questModel.selectedQuest.Metadata);
+
+            _questClearView.SetInteractable(true);
+            
+            SetState(State.OpenQuestClear);
+        }
+#endif
         
         /// <summary>
         /// クエストグループ選択メニューを開く
@@ -348,10 +383,14 @@ namespace Gs2.Sample.Quest
         {
             gameObject.SetActive(true);
             SetState(State.GetQuestGroupProcessing);
-
+            
+#if GS2_ENABLE_UNITASK
+            GetQuestGroupsTaskAsync().Forget();
+#else
             StartCoroutine(
                 GetQuestGroupsTask()
             );
+#endif
         }
         
         /// <summary>
@@ -365,60 +404,96 @@ namespace Gs2.Sample.Quest
         /// <summary>
         /// クエストグループとクリア状況を取得
         /// </summary>
-        /// <returns></returns>
         public IEnumerator GetQuestGroupsTask()
         {
             {
-                AsyncResult<EzListQuestGroupsResult> result = null;
+                List<EzQuestGroupModel> result = null;
                 yield return _questModel.GetQuestGroups(
                     r => result = r,
-                    GameManager.Instance.Client,
+                    GameManager.Instance.Domain,
                     _questSetting.questNamespaceName,
                     _questSetting.onListGroupQuestModel,
                     _questSetting.onError
                 );
 
-                if (result.Error != null)
+                if (result == null)
                 {
                     SetState(State.GetQuestGroupFailed);
                     yield break;
                 }
 
-                OnGetListGroupQuestModelFunc(_questModel.QuestGroups);
+                OnGetListGroupQuestModelFunc(_questModel.questGroups);
                 SetState(State.OpenQuestGroupMenu);
             }
 
             {
-                AsyncResult<EzDescribeCompletedQuestListsResult> result = null;
+                List<EzCompletedQuestList> result = null;
                 yield return _questModel.GetCompleteQuests(
                     r => result = r,
-                    GameManager.Instance.Client,
+                    GameManager.Instance.Domain,
                     GameManager.Instance.Session,
                     _questSetting.questNamespaceName,
                     _questSetting.onListCompletedQuestsModel,
                     _questSetting.onError
                 );
 
-                if (result.Error != null)
+                if (result == null)
                 {
                     SetState(State.GetQuestGroupFailed);
-                    
-                    _questSetting.onError.Invoke(
-                        result.Error
-                    );
-                    
                     yield break;
                 }
             }
 
             SetState(State.OpenQuestGroupMenu);
-
         }
+        
+#if GS2_ENABLE_UNITASK
+        /// <summary>
+        /// クエストグループとクリア状況を取得
+        /// </summary>
+        public async UniTask GetQuestGroupsTaskAsync()
+        {
+            {
+                List<EzQuestGroupModel> result = await _questModel.GetQuestGroupsAsync(
+                    GameManager.Instance.Domain,
+                    _questSetting.questNamespaceName,
+                    _questSetting.onListGroupQuestModel,
+                    _questSetting.onError
+                );
+
+                if (result == null)
+                {
+                    SetState(State.GetQuestGroupFailed);
+                    return;
+                }
+
+                OnGetListGroupQuestModelFunc(_questModel.questGroups);
+                SetState(State.OpenQuestGroupMenu);
+            }
+
+            {
+                List<EzCompletedQuestList> result = await _questModel.GetCompleteQuestsAsync(
+                    GameManager.Instance.Domain,
+                    GameManager.Instance.Session,
+                    _questSetting.questNamespaceName,
+                    _questSetting.onListCompletedQuestsModel,
+                    _questSetting.onError
+                );
+
+                if (result == null)
+                {
+                    SetState(State.GetQuestGroupFailed);
+                    return;
+                }
+            }
+
+            SetState(State.OpenQuestGroupMenu);
+        }
+#endif
         
         /// <summary>
         /// クエストグループの項目UI操作
         /// </summary>
-        /// <param name="questGroups"></param>
         private void OnGetListGroupQuestModelFunc(List<EzQuestGroupModel> questGroups)
         {
             _selectQuestView.questGroupInfo.SetActive(false);
@@ -441,7 +516,7 @@ namespace Gs2.Sample.Quest
                     questGroupView.Initialize(new QuestGroupInformation(questGroup),
                         () =>
                         {
-                            _questModel.CurrentCompletedQuestList = _questModel.CompletedQuests.Find(completedQuestList =>
+                            _questModel.currentCompletedQuestList = _questModel.completedQuests.Find(completedQuestList =>
                                 completedQuestList.QuestGroupName == questGroup.Name);
 
                             ClickToSelect(questGroup);
@@ -459,43 +534,71 @@ namespace Gs2.Sample.Quest
         {
             if (_questSelectState == State.OpenQuestGroupMenu)
             {
-                _questModel.SelectedQuestGroup = questGroup;
+                _questModel.selectedQuestGroup = questGroup;
                 SetState(State.SelectQuestGroup);
                 
-                // クエストリストを取得
+#if GS2_ENABLE_UNITASK
+                GetQuestsTaskAsync().Forget();
+#else
                 StartCoroutine(
                     GetQuestsTask()
                 );
+#endif
             }
         }
 
         /// <summary>
         /// クエストの一覧を取得
         /// </summary>
-        /// <returns></returns>
         public IEnumerator GetQuestsTask()
         {
-            AsyncResult<EzListQuestsResult> result = null;
+            List<EzQuestModel> result = null;
             yield return _questModel.GetQuests(
                 r => result = r,
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 _questSetting.questNamespaceName,
                 _questSetting.onListQuestModel,
                 _questSetting.onError
             );
 
-            if (result.Error != null)
+            if (result == null)
             {
                 SetState(State.GetQuestFailed);
                 yield break;
             }
 
-            OnGetListQuestModel(_questModel.Quests);
+            OnGetListQuestModel(_questModel.quests);
 
             // クエストメニューを開く
             SetState(State.OpenQuestMenu);
         }
+        
+#if GS2_ENABLE_UNITASK
+        /// <summary>
+        /// クエストの一覧を取得
+        /// </summary>
+        public async UniTask GetQuestsTaskAsync()
+        {
+            List<EzQuestModel> result = await _questModel.GetQuestsAsync(
+                GameManager.Instance.Domain,
+                _questSetting.questNamespaceName,
+                _questSetting.onListQuestModel,
+                _questSetting.onError
+            );
 
+            if (result == null)
+            {
+                SetState(State.GetQuestFailed);
+                return;
+            }
+
+            OnGetListQuestModel(_questModel.quests);
+
+            // クエストメニューを開く
+            SetState(State.OpenQuestMenu);
+        }
+#endif
+        
         /// <summary>
         /// クエストを選択する
         /// </summary>
@@ -503,35 +606,36 @@ namespace Gs2.Sample.Quest
         {
             if (_questSelectState == State.OpenQuestMenu)
             {
-                _questModel.SelectedQuest = quest;
+                _questModel.selectedQuest = quest;
                 SetState(State.SelectQuest);
                 
-                // クエストを開始
+#if GS2_ENABLE_UNITASK
+                StartTaskAsync().Forget();
+#else
                 StartCoroutine(
                     StartTask()
                 );
+#endif
             }
         }
 
         /// <summary>
         /// クエストを開始
         /// </summary>
-        /// <returns></returns>
         public IEnumerator StartTask()
         {
-            AsyncResult<EzProgress> result = null;
+            EzProgress result = null;
             yield return _questModel.QuestStart(
                 r => result = r,
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _questSetting.questNamespaceName,
-                _questSetting.distributorNamespaceName,
-                _questSetting.questKeyId,
+                MoneyModel.Slot,
                 _questSetting.onStart,
                 _questSetting.onError
             );
 
-            if (result.Error != null)
+            if (result == null)
             {
                 SetState(State.StartQuestFailed);
                 yield break;
@@ -546,6 +650,37 @@ namespace Gs2.Sample.Quest
             UIManager.Instance.OpenDialog1("Notice", "QuestStart");
         }
         
+#if GS2_ENABLE_UNITASK
+        /// <summary>
+        /// クエストを開始
+        /// </summary>
+        public async UniTask StartTaskAsync()
+        {
+            EzProgress result = await _questModel.QuestStartAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _questSetting.questNamespaceName,
+                MoneyModel.Slot,
+                _questSetting.onStart,
+                _questSetting.onError
+            );
+
+            if (result == null)
+            {
+                SetState(State.StartQuestFailed);
+                return;
+            }
+
+            _staminaPresenter.OnUpdateStamina();
+            
+            SetState(State.StartQuestSuccess);
+            
+            SetQuestState(QuestState.QuestStarted);
+            
+            UIManager.Instance.OpenDialog1("Notice", "QuestStart");
+        }
+#endif
+        
         /// <summary>
         /// クエスト完了ダイアログを開く
         /// </summary>
@@ -553,10 +688,13 @@ namespace Gs2.Sample.Quest
         {
             gameObject.SetActive(true);
             SetState(State.GetQuestClearProcessing);
-
+#if GS2_ENABLE_UNITASK
+            CheckCurrentProgressTaskAsync().Forget();
+#else
             StartCoroutine(
                 CheckCurrentProgressTask()
             );
+#endif
         }
         
         /// <summary>
@@ -570,7 +708,6 @@ namespace Gs2.Sample.Quest
         /// <summary>
         /// クエストリストの表示
         /// </summary>
-        /// <param name="quests"></param>
         private void OnGetListQuestModel(List<EzQuestModel> quests)
         {
             _selectQuestView.questInfo.SetActive(false);
@@ -590,7 +727,7 @@ namespace Gs2.Sample.Quest
                     var questInfo = Instantiate<GameObject>(_selectQuestView.questInfo,
                         _selectQuestView.questsContent.transform);
                     var questView = questInfo.GetComponent<QuestView>();
-                    questView.Initialize(new QuestInformation(quest, _questModel.CurrentCompletedQuestList),
+                    questView.Initialize(new QuestInformation(quest, _questModel.currentCompletedQuestList),
                         () =>
                         {
                             ClickToSelect(quest);
@@ -608,12 +745,19 @@ namespace Gs2.Sample.Quest
         {
             SetState(State.SendCompleteResult);
 
+#if GS2_ENABLE_UNITASK
+            EndTaskAsync(
+                _questModel.progress.Rewards,
+                true
+            ).Forget();
+#else
             StartCoroutine(
                 EndTask(
-                    _questModel.Progress.Rewards,
+                    _questModel.progress.Rewards,
                     true
                 )
             );
+#endif
         }
         
         /// <summary>
@@ -622,13 +766,20 @@ namespace Gs2.Sample.Quest
         public void OnSendFailedResult()
         {
             SetState(State.SendFailedResult);
-
+            
+#if GS2_ENABLE_UNITASK
+            EndTaskAsync(
+                _questModel.progress.Rewards,
+                false
+            ).Forget();
+#else
             StartCoroutine(
                 EndTask(
-                    _questModel.Progress.Rewards,
+                    _questModel.progress.Rewards,
                     false
                 )
             );
+#endif
         }
 
         /// <summary>
@@ -640,23 +791,20 @@ namespace Gs2.Sample.Quest
             bool isComplete
         )
         {
-            AsyncResult<object> result = null;
+            EzProgress result = null;
             yield return _questModel.QuestEnd(
                 r => result = r,
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _questSetting.questNamespaceName,
                 isComplete,
                 rewards,
                 MoneyModel.Slot,
-                _questSetting.distributorNamespaceName,
-                _questSetting.questKeyId,
-                _jobQueueModel.GetSheetCompleteAction(),
                 _questSetting.onEnd,
                 _questSetting.onError
             );
 
-            if (result.Error != null)
+            if (result == null)
             {
                 SetState(State.Error);
 
@@ -667,6 +815,9 @@ namespace Gs2.Sample.Quest
             
             SetQuestState(QuestState.None);
 
+            _staminaPresenter.OnUpdateStamina();
+            _moneyPresenter.OnUpdateWallet();
+            
             if (isComplete)
             {
                 UIManager.Instance.OpenDialog1("Notice", "QuestComp");
@@ -676,5 +827,49 @@ namespace Gs2.Sample.Quest
                 UIManager.Instance.OpenDialog1("Notice", "QuestFailed");
             }
         }
+#if GS2_ENABLE_UNITASK
+        /// <summary>
+        /// クエスト完了リクエスト
+        /// </summary>
+        /// <returns></returns>
+        public async UniTask EndTaskAsync(
+            List<EzReward> rewards,
+            bool isComplete
+        )
+        {
+            Gs2Exception error = await _questModel.QuestEndAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _questSetting.questNamespaceName,
+                isComplete,
+                rewards,
+                MoneyModel.Slot,
+                _questSetting.onEnd,
+                _questSetting.onError
+            );
+
+            if (error != null)
+            {
+                SetState(State.Error);
+                return;
+            }
+
+            SetState(State.MainMenu);
+            
+            SetQuestState(QuestState.None);
+
+            _staminaPresenter.OnUpdateStamina();
+            _moneyPresenter.OnUpdateWallet();
+            
+            if (isComplete)
+            {
+                UIManager.Instance.OpenDialog1("Notice", "QuestComp");
+            }
+            else
+            {
+                UIManager.Instance.OpenDialog1("Notice", "QuestFailed");
+            }
+        }
+#endif
     }
 }

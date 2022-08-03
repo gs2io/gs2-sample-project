@@ -1,11 +1,11 @@
 ﻿using System.Collections;
-using Gs2.Core;
-using Gs2.Sample.Core;
 using Gs2.Sample.Money;
 using Gs2.Unity.Gs2Stamina.Model;
-using Gs2.Unity.Gs2Stamina.Result;
 using UnityEngine;
 using UnityEngine.Assertions;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+#endif
 
 namespace Gs2.Sample.Stamina
 {
@@ -47,6 +47,7 @@ namespace Gs2.Sample.Stamina
             /// スタミナ回復商品を購入
             /// </summary>
             BuyProcessing,
+
             /// <summary>
             /// スタミナ回復商品購入に成功
             /// </summary>
@@ -117,16 +118,13 @@ namespace Gs2.Sample.Stamina
         /// <summary>
         /// 商品情報の初期化
         /// </summary>
-        /// <param name="stamina"></param>
         private void OnGetStamina(EzStamina stamina)
         {
-            _staminaModel.stamina = stamina;
-
             _staminaStoreView.Initialize(
                 stamina,
                 10,
                 5,
-                () => { ClickToBuy(); }
+                _moneyPresenter.GetWalletBalance()
             );
         }
 
@@ -134,21 +132,25 @@ namespace Gs2.Sample.Stamina
         {
             SetState(State.GetStaminaProcessing);
             
+#if GS2_ENABLE_UNITASK
+            GetStaminaTaskAsync().Forget();
+#else
             StartCoroutine(
                 GetStaminaTask()
             );
+#endif
         }
 
         /// <summary>
         /// スタミナを取得
+        /// Get Stamina
         /// </summary>
-        /// <returns></returns>
         private IEnumerator GetStaminaTask()
         {
-            AsyncResult<EzGetStaminaResult> result = null;
+            EzStamina result = null;
             yield return _staminaModel.GetStamina(
                 r => result = r,
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _staminaSetting.staminaNamespaceName,
                 _staminaSetting.staminaName,
@@ -156,17 +158,44 @@ namespace Gs2.Sample.Stamina
                 _staminaSetting.onError
             );
                 
-            if (result.Error != null)
+            if (result == null)
             {
                 SetState(State.GetStaminaFailed);
                 yield break;
             }
             
             OnGetStamina(_staminaModel.stamina);
-            
+
             SetState(State.OpenStaminaStore);
         }
-        
+#if GS2_ENABLE_UNITASK
+        /// <summary>
+        /// スタミナを取得
+        /// Get Stamina
+        /// </summary>
+        private async UniTask GetStaminaTaskAsync()
+        {
+            var result = await _staminaModel.GetStaminaAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _staminaSetting.staminaNamespaceName,
+                _staminaSetting.staminaName,
+                _staminaSetting.onGetStamina,
+                _staminaSetting.onError
+            );
+
+            if (result == null)
+            {
+                SetState(State.GetStaminaFailed);
+            }
+            else
+            {
+                OnGetStamina(result);
+                SetState(State.OpenStaminaStore);
+            }
+        }
+#endif
+
         /// <summary>
         /// スタミナ回復商品を購入
         /// </summary>
@@ -176,27 +205,56 @@ namespace Gs2.Sample.Stamina
             {
                 SetState(State.BuyProcessing);
                 
+#if GS2_ENABLE_UNITASK
+                BuyTaskAsync().Forget();
+#else
                 StartCoroutine(
-                    _staminaModel.Buy(
-                        r =>
-                        {
-                            SetState(r.Error == null
-                                ? State.BuySucceed
-                                : State.BuyFailed);
-                        },
-                        GameManager.Instance.Client,
-                        GameManager.Instance.Session,
-                        _staminaSetting.exchangeNamespaceName,
-                        _staminaSetting.exchangeRateName,
-                        MoneyModel.Slot,
-                        _staminaSetting.distributorNamespaceName,
-                        _staminaSetting.exchangeKeyId,
-                        _staminaSetting.onBuy,
-                        _staminaSetting.onError
-                    )
+                    BuyTask()
                 );
+#endif
             }
         }
+        
+        /// <summary>
+        /// スタミナ回復商品を購入
+        /// </summary>
+        public IEnumerator BuyTask()
+        {
+            yield return _staminaModel.Buy(
+                e =>
+                {
+                    SetState(e == null
+                        ? State.BuySucceed
+                        : State.BuyFailed);
+                },
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _staminaSetting.exchangeNamespaceName,
+                _staminaSetting.exchangeRateName,
+                MoneyModel.Slot,
+                _staminaSetting.onBuy,
+                _staminaSetting.onError
+            );
+        }
+#if GS2_ENABLE_UNITASK
+        public async UniTask BuyTaskAsync()
+        {
+            var err = await _staminaModel.BuyAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _staminaSetting.exchangeNamespaceName,
+                _staminaSetting.exchangeRateName,
+                MoneyModel.Slot,
+                _staminaSetting.onBuy,
+                _staminaSetting.onError
+            );
+            
+            if (err != null)
+                SetState(State.BuyFailed);
+            else
+                SetState(State.BuySucceed);
+        }
+#endif
 
         public void ClickToClose()
         {

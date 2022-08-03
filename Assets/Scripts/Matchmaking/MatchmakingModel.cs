@@ -1,12 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using Gs2.Core;
-using Gs2.Unity;
+using Gs2.Core.Exception;
+using Gs2.Unity.Core;
 using Gs2.Unity.Gs2Matchmaking.Model;
-using Gs2.Unity.Gs2Matchmaking.Result;
 using Gs2.Unity.Util;
 using UnityEngine;
-using UnityEngine.Events;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
+#endif
 
 namespace Gs2.Sample.Matchmaking
 {
@@ -29,140 +31,275 @@ namespace Gs2.Sample.Matchmaking
         /// </summary>
         public List<string> JoinedPlayerIds = new List<string>();
         
+        public List<EzGathering> ResultGatherings = new List<EzGathering>();
+        
+        public Gs2Exception Error;
+        
         /// <summary>
         /// だれでも参加可能、参加人数を指定でギャザリングを新規作成
         /// </summary>
         /// <returns></returns>
         public IEnumerator CreateGathering(
-            Client client,
-            GameSession session,
-            UnityAction<AsyncResult<EzCreateGatheringResult>> callback,
+            Gs2Domain gs2,
+            GameSession gameSession,
             string matchmakingNamespaceName,
             UpdateJoinedPlayerIdsEvent onUpdateJoinedPlayerIds,
             ErrorEvent onError
             )
         {
-            Gathering = null;
-            AsyncResult<EzCreateGatheringResult> result = null;
-            yield return client.Matchmaking.CreateGathering(
-                r => { result = r; },
-                session,
-                matchmakingNamespaceName,
-                new EzPlayer
+            Error = null;
+            var domain = gs2.Matchmaking.Namespace(
+                namespaceName: matchmakingNamespaceName
+            ).Me(
+                gameSession: gameSession
+            );
+            var future = domain.CreateGathering(
+                player: new EzPlayer
                 {
                     RoleName = "default"
                 },
-                new List<EzAttributeRange>(),
-                new List<EzCapacityOfRole>
-                {
+                attributeRanges: null,
+                capacityOfRoles: new [] {
                     new EzCapacityOfRole
                     {
                         RoleName = "default",
                         Capacity = Capacity
-                    },
+                    }
                 },
-                new List<string>(),
-                null
+                allowUserIds: null,
+                expiresAt: null,
+                expiresAtTimeSpan: null
             );
-            
-            if (result.Error != null)
+            yield return future;
+            if (future.Error != null)
             {
+                Error = future.Error;
                 onError.Invoke(
-                    result.Error
+                    future.Error
                 );
-                callback.Invoke(result);
                 yield break;
             }
 
+            var future2 = future.Result.Model();
+            yield return future2;
+            if (future2.Error != null)
+            {
+                Error = future.Error;
+                onError.Invoke(
+                    future2.Error
+                );
+                yield break;
+            }
+            
             JoinedPlayerIds.Clear();
-            Gathering = result.Result.Item;
-            JoinedPlayerIds.Add(session.AccessToken.UserId);
+            Gathering = future2.Result;
+            JoinedPlayerIds.Add(gameSession.AccessToken.UserId);
 
             onUpdateJoinedPlayerIds.Invoke(Gathering, JoinedPlayerIds);
-            
-            callback.Invoke(result);
         }
-
-        /// <summary>
-        /// 既存のギャザリングに参加する
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerator JoinGathering(
-            UnityAction<AsyncResult<EzDoMatchmakingResult>> callback,
-            Client client,
-            GameSession session,
+#if GS2_ENABLE_UNITASK
+        public async UniTask CreateGatheringAsync(
+            Gs2Domain gs2,
+            GameSession gameSession,
             string matchmakingNamespaceName,
-            string contextToken,
+            UpdateJoinedPlayerIdsEvent onUpdateJoinedPlayerIds,
             ErrorEvent onError
         )
         {
-            Gathering = null;
-            AsyncResult<EzDoMatchmakingResult> result = null;
+            Error = null;
+            var domain = gs2.Matchmaking.Namespace(
+                namespaceName: matchmakingNamespaceName
+            ).Me(
+                gameSession: gameSession
+            );
+            try
+            {
+                var result = await domain.CreateGatheringAsync(
+                    player: new EzPlayer
+                    {
+                        RoleName = "default"
+                    },
+                    attributeRanges: null,
+                    capacityOfRoles: new[]
+                    {
+                        new EzCapacityOfRole
+                        {
+                            RoleName = "default",
+                            Capacity = Capacity
+                        }
+                    },
+                    allowUserIds: null,
+                    expiresAt: null,
+                    expiresAtTimeSpan: null
+                );
+                Gathering = await result.ModelAsync();
 
-            yield return client.Matchmaking.DoMatchmaking(
-                r => { result = r; },
-                session,
-                matchmakingNamespaceName,
+                JoinedPlayerIds.Clear();
+                JoinedPlayerIds.Add(gameSession.AccessToken.UserId);
+
+                onUpdateJoinedPlayerIds.Invoke(Gathering, JoinedPlayerIds);
+            }
+            catch (Gs2Exception e)
+            {
+                Error = e;
+                onError.Invoke(e);
+            }
+        }
+#endif
+        
+        /// <summary>
+        /// ギャザリングを検索する
+        /// </summary>
+        public IEnumerator JoinGathering(
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string matchmakingNamespaceName,
+            ErrorEvent onError
+        )
+        {
+            ResultGatherings.Clear();
+            Error = null;
+            var domain = gs2.Matchmaking.Namespace(
+                namespaceName: matchmakingNamespaceName
+            ).Me(
+                gameSession: gameSession
+            );
+            var it = domain.DoMatchmaking(
                 new EzPlayer
                 {
                     RoleName = "default"
-                },
-                contextToken
+                }
             );
-                
-            if (result.Error != null)
+            while (it.HasNext())
             {
-                onError.Invoke(
-                    result.Error
-                );
-                callback.Invoke(result);
-                yield break;
+                yield return it.Next();
+                if (it.Error != null)
+                {
+                    Error = it.Error;
+                    onError.Invoke(it.Error);
+                    break;
+                }
+
+                if (it.Current != null)
+                {
+                    ResultGatherings.Add(it.Current);
+                }
             }
-            
+                
             JoinedPlayerIds.Clear();
-            Gathering = result.Result.Item;
-            
-            callback.Invoke(result);
         }
+#if GS2_ENABLE_UNITASK
+        public async UniTask JoinGatheringAsync(
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string matchmakingNamespaceName,
+            ErrorEvent onError
+        )
+        {
+            ResultGatherings.Clear();
+            Error = null;
+            Gathering = null;
+            var domain = gs2.Matchmaking.Namespace(
+                namespaceName: matchmakingNamespaceName
+            ).Me(
+                gameSession: gameSession
+            );
+            try
+            {
+                ResultGatherings = await domain.DoMatchmakingAsync(
+                    new EzPlayer
+                    {
+                        RoleName = "default"
+                    }
+                ).ToListAsync();
+                JoinedPlayerIds.Clear();
+            }
+            catch (Gs2Exception e)
+            {
+                Error = e;
+                onError.Invoke(e);
+            }
+        }
+#endif
         
         /// <summary>
         /// ギャザリングから離脱する
         /// </summary>
         /// <returns></returns>
         public IEnumerator CancelMatchmaking(
-            UnityAction<AsyncResult<EzCancelMatchmakingResult>> callback,
-            Client client,
-            GameSession session,
+            Gs2Domain gs2,
+            GameSession gameSession,
             string matchmakingNamespaceName,
             MatchmakingCancelEvent onMatchmakingCancel,
             ErrorEvent onError
             )
         {
-            AsyncResult<EzCancelMatchmakingResult> result = null;
-            yield return client.Matchmaking.CancelMatchmaking(
-                r => { result = r; },
-                session,
-                matchmakingNamespaceName,
-                Gathering.Name
+            Error = null;
+            var domain = gs2.Matchmaking.Namespace(
+                namespaceName: matchmakingNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Gathering(
+                gatheringName: Gathering.Name
             );
-        
-            if (result.Error != null)
+            var future = domain.CancelMatchmaking();
+            yield return future;
+            if (future.Error != null)
             {
-                onError.Invoke(
-                    result.Error
-                );
-                callback.Invoke(result);
+                onError.Invoke(future.Error);
                 yield break;
             }
-
-            onMatchmakingCancel.Invoke(
-                Gathering
-            );
-
+ 
+            var domain2 = future.Result;
+            var future2 = domain2.Model();
+            yield return future2;
+            if (future.Error != null)
+            {
+                Error = future.Error;
+                onError.Invoke(future.Error);
+                yield break;
+            }
+            
+            onMatchmakingCancel.Invoke(future2.Result);
+            
             Gathering = null;
             JoinedPlayerIds.Clear();
-            
-            callback.Invoke(result);
         }
+#if GS2_ENABLE_UNITASK
+        /// <summary>
+        /// ギャザリングから離脱する
+        /// </summary>
+        public async UniTask CancelMatchmakingAsync(
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string matchmakingNamespaceName,
+            MatchmakingCancelEvent onMatchmakingCancel,
+            ErrorEvent onError
+        )
+        {
+            Error = null;
+            var domain = gs2.Matchmaking.Namespace(
+                namespaceName: matchmakingNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Gathering(
+                gatheringName: Gathering.Name
+            );
+            try
+            {
+                var result = await domain.CancelMatchmakingAsync();
+                Gathering = await result.ModelAsync();
+                
+                onMatchmakingCancel.Invoke(Gathering);
+                Gathering = null;
+                JoinedPlayerIds.Clear();
+            }
+            catch (Gs2Exception e)
+            {
+                Error = e;
+                onError.Invoke(e);
+            }
+        }
+#endif
     }
 }

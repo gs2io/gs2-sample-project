@@ -1,9 +1,37 @@
 ﻿using System;
+using System.Collections.Generic;
+using Gs2.Unity.Gs2Inventory.Model;
 using Gs2.Unity.Util;
 using UnityEngine;
+using UnityEngine.Events;
 
- namespace Gs2.Sample.Inventory
+namespace Gs2.Sample.Inventory
 {
+    [Serializable]
+    public class GetInventoryModelEvent : UnityEvent<string, EzInventoryModel, List<EzItemModel>>
+    {
+    }
+
+    [Serializable]
+    public class GetInventoryEvent : UnityEvent<EzInventory, List<EzItemSet>>
+    {
+    }
+
+    [Serializable]
+    public class GetItemSetWithSignatureEvent : UnityEvent<string, string, string, string>
+    {
+    }
+
+    [Serializable]
+    public class AcquireEvent : UnityEvent<EzInventory, List<EzItemSet>, int>
+    {
+    }
+
+    [Serializable]
+    public class ConsumeEvent : UnityEvent<EzInventory, List<EzItemSet>, int>
+    {
+    }
+    
     [Serializable]
     public class InventorySetting : MonoBehaviour
     {
@@ -14,10 +42,13 @@ using UnityEngine;
         public string inventoryModelName;
 
         [SerializeField]
-        public string identifierAcquireItemClientId;
+        public string exchangeNamespaceName;
 
         [SerializeField]
-        public string identifierAcquireItemClientSecret;
+        public string exchangeRateNameFire;
+
+        [SerializeField]
+        public string exchangeRateNameWater;
 
         [SerializeField]
         public GetInventoryModelEvent onGetInventoryModel = new GetInventoryModelEvent();
@@ -27,7 +58,7 @@ using UnityEngine;
 
         [SerializeField]
         public AcquireEvent onAcquire = new AcquireEvent();
-
+        
         [SerializeField]
         public ConsumeEvent onConsume = new ConsumeEvent();
 

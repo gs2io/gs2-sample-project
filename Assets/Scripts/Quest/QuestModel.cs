@@ -1,356 +1,529 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using Gs2.Core;
+using System.Linq;
 using Gs2.Core.Exception;
-using Gs2.Gs2Quest.Result;
 using Gs2.Sample.Money;
-using Gs2.Unity;
+using Gs2.Unity.Core;
 using Gs2.Unity.Gs2Quest.Model;
-using Gs2.Unity.Gs2Quest.Result;
 using Gs2.Unity.Util;
-using Gs2.Util.LitJson;
 using UnityEngine;
 using UnityEngine.Events;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
+#endif
 
 namespace Gs2.Sample.Quest
 {
     public class QuestModel : MonoBehaviour
     {
-        public List<EzQuestGroupModel> QuestGroups;
+        public List<EzQuestGroupModel> questGroups = new List<EzQuestGroupModel>();
 
-        public List<EzCompletedQuestList> CompletedQuests;
+        public List<EzCompletedQuestList> completedQuests = new List<EzCompletedQuestList>();
 
-        public EzQuestGroupModel SelectedQuestGroup;
+        public EzQuestGroupModel selectedQuestGroup;
         
-        public List<EzQuestModel> Quests;
+        public List<EzQuestModel> quests = new List<EzQuestModel>();
 
-        public EzQuestModel SelectedQuest;
+        public EzQuestModel selectedQuest;
         
-        public EzProgress Progress;
+        public EzProgress progress;
         
-        public EzCompletedQuestList CurrentCompletedQuestList;
+        public EzCompletedQuestList currentCompletedQuestList;
         
         /// <summary>
         /// クエストグループの一覧を取得
         /// Get a list of quest groups
         /// </summary>
-        /// <param name="callback"></param>
-        /// <param name="client"></param>
-        /// <param name="questNamespaceName"></param>
-        /// <param name="onListGroupQuestModel"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
         public IEnumerator GetQuestGroups(
-            UnityAction<AsyncResult<EzListQuestGroupsResult>> callback,
-            Client client,
+            UnityAction<List<EzQuestGroupModel>> callback,
+            Gs2Domain gs2,
             string questNamespaceName,
             ListQuestGroupModelEvent onListGroupQuestModel,
             ErrorEvent onError
         )
         {
-            AsyncResult<EzListQuestGroupsResult> result = null;
-            yield return client.Quest.ListQuestGroups(
-                r => { result = r; },
-                questNamespaceName
+            questGroups.Clear();
+            var domain = gs2.Quest.Namespace(
+                namespaceName: questNamespaceName
             );
-            
-            if (result.Error != null)
+            var it = domain.QuestGroupModels();
+            while (it.HasNext())
             {
-                onError.Invoke(
-                    result.Error
-                );
-                callback.Invoke(result);
-                yield break;
+                yield return it.Next();
+                if (it.Error != null)
+                {
+                    onError.Invoke(it.Error);
+                    callback.Invoke(null);
+                    yield break;
+                }
+
+                if (it.Current != null)
+                {
+                    questGroups.Add(it.Current);
+                }
             }
             
-            QuestGroups = result.Result.Items;
-            
-            onListGroupQuestModel.Invoke(result.Result.Items);
-            
-            callback.Invoke(result);
+            onListGroupQuestModel.Invoke(questGroups);
+            callback.Invoke(questGroups);
         }
-        
+#if GS2_ENABLE_UNITASK
+        public async UniTask<List<EzQuestGroupModel>> GetQuestGroupsAsync(
+            Gs2Domain gs2,
+            string questNamespaceName,
+            ListQuestGroupModelEvent onListGroupQuestModel,
+            ErrorEvent onError
+        )
+        {
+            questGroups.Clear();
+            var domain = gs2.Quest.Namespace(
+                namespaceName: questNamespaceName
+            );
+            try
+            {
+                questGroups = await domain.QuestGroupModelsAsync().ToListAsync();
+
+                onListGroupQuestModel.Invoke(questGroups);
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+                return null;
+            }
+
+            return questGroups;
+        }
+#endif
+
         /// <summary>
         /// クエストの一覧を取得
         /// Get a list of quests
         /// </summary>
-        /// <param name="callback"></param>
-        /// <param name="client"></param>
-        /// <param name="questNamespaceName"></param>
-        /// <param name="onListQuestModel"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
         public IEnumerator GetQuests(
-            UnityAction<AsyncResult<EzListQuestsResult>> callback,
-            Client client,
+            UnityAction<List<EzQuestModel>> callback,
+            Gs2Domain gs2,
             string questNamespaceName,
             ListQuestModelEvent onListQuestModel,
             ErrorEvent onError
         )
         {
-            AsyncResult<EzListQuestsResult> result = null;
-            yield return client.Quest.ListQuests(
-                r => { result = r; },
-                questNamespaceName,
-                SelectedQuestGroup.Name
+            quests.Clear();
+            var domain = gs2.Quest.Namespace(
+                namespaceName: questNamespaceName
+            ).QuestGroupModel(
+                questGroupName: selectedQuestGroup.Name
             );
-            
-            if (result.Error != null)
+            var it = domain.QuestModels();
+            while (it.HasNext())
             {
-                onError.Invoke(
-                    result.Error
-                );
-                callback.Invoke(result);
-                yield break;
+                yield return it.Next();
+                if (it.Error != null)
+                {
+                    onError.Invoke(it.Error);
+                    callback.Invoke(null);
+                    yield break;
+                }
+
+                if (it.Current != null)
+                {
+                    quests.Add(it.Current);
+                }
             }
             
-            Quests = result.Result.Items;
-            
-            onListQuestModel.Invoke(result.Result.Items);
-            
-            callback.Invoke(result);
+            onListQuestModel.Invoke(quests);
+            callback.Invoke(quests);
         }
+#if GS2_ENABLE_UNITASK
+        public async UniTask<List<EzQuestModel>> GetQuestsAsync(
+            Gs2Domain gs2,
+            string questNamespaceName,
+            ListQuestModelEvent onListQuestModel,
+            ErrorEvent onError
+        )
+        {
+            var domain = gs2.Quest.Namespace(
+                namespaceName: questNamespaceName
+            ).QuestGroupModel(
+                questGroupName: selectedQuestGroup.Name
+            );
+            try
+            {
+                quests = await domain.QuestModelsAsync().ToListAsync();
+
+                onListQuestModel.Invoke(quests);
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+            }
+
+            return quests;
+        }
+#endif
         
         /// <summary>
         /// 完了済みのクエストを取得
         /// Retrieve completed quests
         /// </summary>
-        /// <param name="callback"></param>
-        /// <param name="client"></param>
-        /// <param name="session"></param>
-        /// <param name="questNamespaceName"></param>
-        /// <param name="onListCompletedQuestsModel"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
         public IEnumerator GetCompleteQuests(
-            UnityAction<AsyncResult<EzDescribeCompletedQuestListsResult>> callback,
-            Client client,
-            GameSession session,
+            UnityAction<List<EzCompletedQuestList>> callback,
+            Gs2Domain gs2,
+            GameSession gameSession,
             string questNamespaceName,
             ListCompletedQuestsEvent onListCompletedQuestsModel,
             ErrorEvent onError
         )
         {
-            AsyncResult<EzDescribeCompletedQuestListsResult> result = null;
-            yield return client.Quest.DescribeCompletedQuestLists(
-                r => { result = r; },
-                session,
-                questNamespaceName,
-                null,
-                30
+            completedQuests.Clear();
+            var domain = gs2.Quest.Namespace(
+                namespaceName: questNamespaceName
+            ).Me(
+                gameSession: gameSession
             );
-            
-            if (result.Error != null)
+            var it = domain.CompletedQuestLists();
+            while (it.HasNext())
             {
-                onError.Invoke(
-                    result.Error
-                );
-                callback.Invoke(result);
-                yield break;
+                yield return it.Next();
+                if (it.Error != null)
+                {
+                    onError.Invoke(it.Error);
+                    callback.Invoke(null);
+                    yield break;
+                }
+
+                if (it.Current != null)
+                {
+                    completedQuests.Add(it.Current);
+                }
             }
             
-            CompletedQuests = result.Result.Items;
-            
-            onListCompletedQuestsModel.Invoke(result.Result.Items);
-            
-            callback.Invoke(result);
+            onListCompletedQuestsModel.Invoke(completedQuests);
+            callback.Invoke(completedQuests);
         }
-        
+#if GS2_ENABLE_UNITASK
+        public async UniTask<List<EzCompletedQuestList>> GetCompleteQuestsAsync(
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string questNamespaceName,
+            ListCompletedQuestsEvent onListCompletedQuestsModel,
+            ErrorEvent onError
+        )
+        {
+            var domain = gs2.Quest.Namespace(
+                namespaceName: questNamespaceName
+            ).Me(
+                gameSession: gameSession
+            );
+            try
+            {
+                completedQuests = await domain.CompletedQuestListsAsync().ToListAsync();
+
+                onListCompletedQuestsModel.Invoke(completedQuests);
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+            }
+
+            return completedQuests;
+        }
+#endif
+
         /// <summary>
         /// クエストを開始する
         /// Start a quest
         /// </summary>
-        /// <param name="callback"></param>
-        /// <param name="client"></param>
-        /// <param name="session"></param>
-        /// <param name="questNamespaceName"></param>
-        /// <param name="slot"></param>
-        /// <param name="distributorNamespaceName"></param>
-        /// <param name="questKeyId"></param>
-        /// <param name="onStart"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
         public IEnumerator QuestStart(
-            UnityAction<AsyncResult<EzProgress>> callback,
-            Client client,
-            GameSession session,
+            UnityAction<EzProgress> callback,
+            Gs2Domain gs2,
+            GameSession gameSession,
             string questNamespaceName,
-            string distributorNamespaceName,
-            string questKeyId,
+            int slot,
             StartEvent onStart,
             ErrorEvent onError
         )
         {
-            string stampSheet;
-            {
-                AsyncResult<EzStartResult> result = null;
-                yield return client.Quest.Start(
-                    r => { result = r; },
-                    session,
-                    questNamespaceName,
-                    SelectedQuestGroup.Name,
-                    SelectedQuest.Name,
-                    false,
-                    config: new List<EzConfig>
+            var domain = gs2.Quest.Namespace(
+                namespaceName: questNamespaceName
+            ).Me(
+                gameSession: gameSession
+            );
+            var future = domain.Start(
+                questGroupName: selectedQuestGroup.Name,
+                questName: selectedQuest.Name,
+                force: null,
+                config: new[]
+                {
+                    new EzConfig
                     {
-                        new EzConfig
-                        {
-                            Key = "slot",
-                            Value = MoneyModel.Slot.ToString(),
-                        }
+                        Key = "slot",
+                        Value = MoneyModel.Slot.ToString()
                     }
-                );
-
-                if (result.Error != null)
-                {
-                    onError.Invoke(
-                        result.Error
-                    );
-                    callback.Invoke(new AsyncResult<EzProgress>(null, result.Error));
-                    yield break;
                 }
-
-                stampSheet = result.Result.StampSheet;
-            }
-            EzProgress progress = null;
+            );
+            yield return future;
+            if (future.Error != null)
             {
-                var machine = new StampSheetStateMachine(
-                    stampSheet,
-                    client,
-                    distributorNamespaceName,
-                    questKeyId
-                );
-
-                Gs2Exception exception = null;
-                void OnError(Gs2Exception e)
-                {
-                    exception = e;
-                };
-                
-                void OnComplete(EzStampSheet sheet, Gs2.Unity.Gs2Distributor.Result.EzRunStampSheetResult stampResult)
-                {
-                    var json = JsonMapper.ToObject(stampResult.Result);
-                    var result = CreateProgressByStampSheetResult.FromJson(json);
-                    progress = EzProgress.FromModel(result.Item);
-                };
-                
-                onError.AddListener(OnError);
-                machine.OnCompleteStampSheet.AddListener(OnComplete);
-
-                // スタンプシートを実行
-                // Execute stamp sheet
-                yield return machine.Execute(onError);
-                
-                onError.RemoveListener(OnError);
-                
-                if (exception != null)
-                {
-                    onError.Invoke(
-                        exception
-                    );
-                    callback.Invoke(new AsyncResult<EzProgress>(null, exception));
-                    yield break;
-                }
+                onError.Invoke(future.Error);
+                callback.Invoke(null);
+                yield break;
             }
 
-            Progress = progress;
-            
-            onStart.Invoke(Progress);
-            
-            callback.Invoke(new AsyncResult<EzProgress>(Progress, null));
+            var domain2 = future.Result.Progress();
+            var futurew2 = domain2.Model();
+            yield return futurew2;
+            if (futurew2.Error != null)
+            {
+                onError.Invoke(futurew2.Error);
+                callback.Invoke(null);
+                yield break;
+            }
+
+            onStart.Invoke(futurew2.Result);
+            callback.Invoke(futurew2.Result);
         }
+#if GS2_ENABLE_UNITASK
+        public async UniTask<EzProgress> QuestStartAsync(
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string questNamespaceName,
+            int slot,
+            StartEvent onStart,
+            ErrorEvent onError
+        )
+        {
+            {
+                var domain = gs2.Quest.Namespace(
+                    namespaceName: questNamespaceName
+                ).Me(
+                    gameSession: gameSession
+                );
+                try
+                {
+                    var result = await domain.StartAsync(
+                        questGroupName: selectedQuestGroup.Name,
+                        questName: selectedQuest.Name,
+                        force: null,
+                        config: new[]
+                        {
+                            new EzConfig
+                            {
+                                Key = "slot",
+                                Value = slot.ToString()
+                            }
+                        }
+                    );
+                }
+                catch (Gs2Exception e)
+                {
+                    onError.Invoke(e);
+                    return null;
+                }
+            }
+            {
+                var domain = gs2.Quest.Namespace(
+                    namespaceName: questNamespaceName
+                ).Me(
+                    gameSession: gameSession
+                ).Progress();
+                try
+                {
+                    progress = await domain.ModelAsync();
+                }
+                catch (Gs2Exception e)
+                {
+                    onError.Invoke(e);
+                }
+
+                onStart.Invoke(progress);
                 
+                return progress;
+            }
+        }
+#endif
+
         /// <summary>
         /// 進行中のクエストを取得
         /// Get quests in progress
         /// </summary>
-        /// <param name="callback"></param>
-        /// <param name="client"></param>
-        /// <param name="session"></param>
-        /// <param name="questNamespaceName"></param>
-        /// <param name="onGetProgress"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
         public IEnumerator GetProgress(
-            UnityAction<AsyncResult<EzGetProgressResult>> callback,
-            Client client,
-            GameSession session,
+            UnityAction<EzProgress> callback,
+            Gs2Domain gs2,
+            GameSession gameSession,
             string questNamespaceName,
             GetProgressEvent onGetProgress,
             ErrorEvent onError
         )
         {
-            AsyncResult<EzGetProgressResult> result = null;
-            yield return client.Quest.GetProgress(
-                r => { result = r; },
-                session,
-                questNamespaceName
-            );
-            
-            if (result.Error != null)
             {
-                if (!(result.Error is NotFoundException))
+                var domain = gs2.Quest.Namespace(
+                    namespaceName: questNamespaceName
+                ).Me(
+                    gameSession: gameSession
+                ).Progress();
+                var future = domain.Model();
+                yield return future;
+                if (future.Error != null)
                 {
-                    onError.Invoke(
-                        result.Error
-                    );
+                    onError.Invoke(future.Error);
+                    yield break;
                 }
 
-                callback.Invoke(result);
-                yield break;
+                progress = future.Result;
+            }
+            if (progress != null) {
+                foreach (var questGroup in questGroups)
+                {
+                    quests.Clear();
+                    var domain = gs2.Quest.Namespace(
+                        namespaceName: questNamespaceName
+                    ).QuestGroupModel(
+                        questGroupName: questGroup.Name
+                    );
+                    var it = domain.QuestModels();
+                    while (it.HasNext())
+                    {
+                        yield return it.Next();
+                        if (it.Error != null)
+                        {
+                            onError.Invoke(it.Error);
+                            callback.Invoke(null);
+                            yield break;
+                        }
+
+                        if (it.Current != null)
+                        {
+                            quests.Add(it.Current);
+                        }
+                    }
+                    var quest = quests.Find(q => q.QuestModelId == progress.QuestModelId);
+                    if (quest != null)
+                    {
+                        selectedQuest = quest;
+                        selectedQuestGroup = questGroup;
+                    }
+                }
+            }
+
+            onGetProgress.Invoke(progress);
+            callback.Invoke(progress);
+        }
+#if GS2_ENABLE_UNITASK
+        public async UniTask<EzProgress> GetProgressAsync(
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string questNamespaceName,
+            GetProgressEvent onGetProgress,
+            ErrorEvent onError
+        )
+        {
+            var domain = gs2.Quest.Namespace(
+                namespaceName: questNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Progress();
+            try
+            {
+                progress = await domain.ModelAsync();
+
+                onGetProgress.Invoke(progress);
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+                return null;
+            }
+            if (progress != null) {
+                foreach (var questGroup in questGroups)
+                {
+                    quests.Clear();
+                    var domain2 = gs2.Quest.Namespace(
+                        namespaceName: questNamespaceName
+                    ).QuestGroupModel(
+                        questGroupName: questGroup.Name
+                    );
+                    quests = await domain2.QuestModelsAsync().ToListAsync();
+                    var quest = quests.Find(q => q.QuestModelId == progress.QuestModelId);
+                    if (quest != null)
+                    {
+                        selectedQuest = quest;
+                        selectedQuestGroup = questGroup;
+                    }
+                }
             }
             
-            SelectedQuestGroup = result.Result.QuestGroup;
-            SelectedQuest = result.Result.Quest;
-            Progress = result.Result.Item;
-            
-            onGetProgress.Invoke(result.Result.Item);
-            
-            callback.Invoke(result);
+            onGetProgress.Invoke(progress);
+            return progress;
         }
+#endif
         
         /// <summary>
         /// クエストを完了する
         /// Complete the quest
         /// </summary>
-        /// <param name="callback"></param>
-        /// <param name="client"></param>
-        /// <param name="session"></param>
-        /// <param name="questNamespaceName"></param>
-        /// <param name="rewards"></param>
-        /// <param name="isComplete"></param>
-        /// <param name="slot"></param>
-        /// <param name="distributorNamespaceName"></param>
-        /// <param name="questKeyId"></param>
-        /// <param name="onEnd"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
         public IEnumerator QuestEnd(
-            UnityAction<AsyncResult<object>> callback,
-            Client client,
-            GameSession session,
+            UnityAction<EzProgress> callback,
+            Gs2Domain gs2,
+            GameSession gameSession,
             string questNamespaceName,
             bool isComplete,
             List<EzReward> rewards,
             int slot,
-            string distributorNamespaceName,
-            string questKeyId,
-            UnityAction<EzStampSheet, Gs2.Unity.Gs2Distributor.Result.EzRunStampSheetResult> OnComplete,
             EndEvent onEnd,
             ErrorEvent onError
         )
         {
-            string stampSheet;
+            var domain = gs2.Quest.Namespace(
+                namespaceName: questNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Progress();
+            var future = domain.End(
+                isComplete: isComplete,
+                rewards: rewards.ToArray(),
+                config: new []
+                {
+                    new EzConfig
+                    {
+                        Key = "slot",
+                        Value = slot.ToString(),
+                    }
+                }
+            );
+            yield return future;
+            if (future.Error != null)
             {
-                AsyncResult<EzEndResult> result = null;
-                yield return client.Quest.End(
-                    r => { result = r; },
-                    session,
-                    questNamespaceName,
-                    isComplete,
-                    rewards,
-                    Progress.TransactionId,
-                    new List<EzConfig>
+                onError.Invoke(future.Error);
+                callback.Invoke(null);
+                yield break;
+            }
+
+            onEnd.Invoke(progress, rewards, isComplete);
+            callback.Invoke(progress);
+        }
+#if GS2_ENABLE_UNITASK
+        public async UniTask<Gs2Exception> QuestEndAsync(
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string questNamespaceName,
+            bool isComplete,
+            List<EzReward> rewards,
+            int slot,
+            EndEvent onEnd,
+            ErrorEvent onError
+        )
+        {
+            var domain = gs2.Quest.Namespace(
+                namespaceName: questNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Progress();
+            try
+            {
+                var domain2 = await domain.EndAsync(
+                    isComplete: isComplete,
+                    rewards: rewards.ToArray(),
+                    config: new []
                     {
                         new EzConfig
                         {
@@ -358,58 +531,18 @@ namespace Gs2.Sample.Quest
                             Value = slot.ToString(),
                         }
                     }
-                );
-
-                if (result.Error != null)
-                {
-                    onError.Invoke(
-                        result.Error
                     );
-                    callback.Invoke(new AsyncResult<object>(null, result.Error));
-                    yield break;
-                }
-
-                // スタンプシートを取得
-                // Get Stamp Sheet
-                stampSheet = result.Result.StampSheet;
+                progress = await domain.ModelAsync();
+                onEnd.Invoke(progress, rewards, isComplete);
             }
+            catch (Gs2Exception e)
             {
-                var machine = new StampSheetStateMachine(
-                    stampSheet,
-                    client,
-                    distributorNamespaceName,
-                    questKeyId
-                );
-
-                Gs2Exception exception = null;
-                void OnError(Gs2Exception e)
-                {
-                    exception = e;
-                }
-
-                machine.OnCompleteStampSheet.AddListener(OnComplete);
-                onError.AddListener(OnError);
-                
-                // スタンプシートの実行
-                // Stamp sheet execution
-                yield return machine.Execute(onError);
-                
-                onError.RemoveListener(OnError);
-                
-                if (exception != null)
-                {
-                    // スタンプシート実行エラー
-                    // Stamp sheet execution error
-                    callback.Invoke(new AsyncResult<object>(null, exception));
-                    yield break;
-                }
+                onError.Invoke(e);
+                return e;
             }
-            // クエストを完了
-            // Complete the quest
-            
-            onEnd.Invoke(Progress, rewards, isComplete);
-            
-            callback.Invoke(new AsyncResult<object>(Progress, null));
+
+            return null;
         }
+#endif
     }
 }

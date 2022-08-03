@@ -12,12 +12,13 @@
 ![インスペクターウィンドウ](Experience.png)
 
 | 設定名 | 説明 |
-|---|---|
-| experienceNamespaceName | GS2-Experience のネームスペース名 |
+|---|----------------------------------|
+| experienceNamespaceName | GS2-Experienceのネームスペース名         |
 | playerExperienceModelName | GS2-Experienceのプレイヤー経験値テーブルのモデル名 |
-| itemExperienceModelName | GS2-Experienceのアイテム経験値テーブルのモデル名 |
-| identifierIncreaseExperienceClientId | 経験値の増加が可能な権限のクライアントID |
-| identifierIncreaseExperienceClientSecret | 経験値の増加が可能な権限のクライアントシークレット |
+| itemExperienceModelName | GS2-Experienceのアイテム経験値テーブルのモデル名  |
+| exchangeNamespaceName | GS2-Exchangeのネームスペース名 |
+| playerEexchangeRateName | GS2-Exchangeのプレイヤー経験値入手交換レート名    |
+| itemExchangeRateName | GS2-Exchangeのアイテム経験値入手交換レート名     |
 
 | イベント | 説明 |
 |---|---|
@@ -30,84 +31,88 @@
 
 プレイヤーの経験値を取得します。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzListStatusesResult> result = null;
-yield return client.Experience.ListStatuses(
-    r =>
+try
+{
+    var _statuses = await gs2.Experience.Namespace(
+        namespaceName: experienceNamespaceName
+    ).Me(
+        gameSession: gameSession
+    ).StatusesAsync().ToListAsync();
+
+    playerStatuses = _statuses.ToDictionary(status => status.PropertyId);
+
+    onGetStatuses.Invoke(playerExperienceModel, _statuses);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+・コルーチン使用時
+```c#
+var _statuses = new List<EzStatus>();
+var it = gs2.Experience.Namespace(
+    namespaceName: experienceNamespaceName
+).Me(
+    gameSession: gameSession
+).Statuses();
+while (it.HasNext())
+{
+    yield return it.Next();
+    if (it.Error != null)
     {
-        result = r;
-    },
-    session,
-    experienceNamespaceName,
-    playerExperienceModel.Name,
-    pageToken
-);
+        onError.Invoke(it.Error);
+        break;
+    }
+
+    if (it.Current != null)
+    {
+        _statuses.Add(it.Current);
+    }
+}
+
+playerStatuses = _statuses.ToDictionary(status => status.PropertyId);
+
+onGetStatuses.Invoke(playerExperienceModel, _statuses);
 ```
 
 ## プレイヤーの経験値の増加
 
-プレイヤーの経験値の増加を実行します。ランクごとの閾値を超えるとランクが増加します。  
+プレイヤーの経験値の増加を実行します。Gs2-Exchangeで経験値を増加させています。  
+ランクごとの閾値を超えるとランクが増加します。    
 設定されているランクキャップまで増加可能で、ランクがランク値まで到達すると増加は止まります。
 
 ```c#
+// ※この処理はサンプルの動作確認のためものです。
+// 実際にクライアントが直接経験値の増加を行う実装は非推奨となります。
+// *This process is only for sample confirmation.
+// The actual implementation of direct experience increase by the client is deprecated.
+
+var domain = gs2.Exchange.Namespace(
+    namespaceName: exchangeNamespaceName
+).Me(
+    gameSession: gameSession
+).Exchange();
+try
 {
-    // ※この処理はサンプルの動作確認のためものです。
-    // 実際にクライアントが直接経験値の増加を行う実装は非推奨となります。
-    
-    var restSession = new Gs2RestSession(
-        new BasicGs2Credential(
-            identifierIncreaseExperienceClientId,
-            identifierIncreaseExperienceClientSecret
-        )
-    );
-    var error = false;
-    yield return restSession.Open(
-        r =>
+    var result = await domain.ExchangeAsync(
+        rateName: exchangeRateName,
+        count: value,
+        config: new[]
         {
-            if (r.Error != null)
+            new EzConfig
             {
-                onError.Invoke(r.Error);
-                error = true;
+                Key = "propertyId",
+                Value = propertyId
             }
         }
     );
-
-    if (error)
-    {
-        yield return restSession.Close(() => { });
-        yield break;
-    }
-
-    var restClient = new Gs2ExperienceRestClient(
-        restSession
-    );
-
-    yield return restClient.AddExperienceByUserId(
-        new AddExperienceByUserIdRequest()
-            .WithNamespaceName(experienceNamespaceName)
-            .WithUserId(session.AccessToken.UserId)
-            .WithExperienceName(experienceModel.Name)
-            .WithPropertyId(propertyId)
-            .WithExperienceValue(value),
-        r =>
-        {
-            if (r.Error != null)
-            {
-                onError.Invoke(r.Error);
-                error = true;
-            }
-            else
-            {
-                onIncreaseExperience.Invoke(
-                    experienceModel,
-                    EzStatus.FromModel(r.Result.Item),
-                    value
-                );
-            }
-        }
-    );
-    
-    yield return restSession.Close(() => { });
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
 }
 ```
 

@@ -9,9 +9,14 @@ namespace Gs2.Sample.Stamina
     public class GetStaminaModelEvent : UnityEvent<string, EzStaminaModel>
     {
     }
-
+    
     [System.Serializable]
-    public class GetStaminaEvent : UnityEvent<EzStaminaModel, EzStamina>
+    public class ConsumeStaminaEvent : UnityEvent<EzStaminaModel, EzStamina, int>
+    {
+    }
+    
+    [System.Serializable]
+    public class GetStaminaEvent : UnityEvent<EzStamina>
     {
     }
 
@@ -20,11 +25,6 @@ namespace Gs2.Sample.Stamina
     {
     }
 
-    [System.Serializable]
-    public class ConsumeStaminaEvent : UnityEvent<EzStaminaModel, EzStamina, int>
-    {
-    }
-    
     [System.Serializable]
     public class StaminaBuyEvent : UnityEvent
     {
@@ -36,9 +36,6 @@ namespace Gs2.Sample.Stamina
         [SerializeField]
         public string staminaNamespaceName;
 
-        [SerializeField]
-        public string staminaModelName;
-
         [SerializeField] 
         public string staminaName;
         
@@ -47,19 +44,16 @@ namespace Gs2.Sample.Stamina
 
         [SerializeField] 
         public string exchangeRateName;
-
-        [SerializeField] 
-        public string exchangeKeyId;
         
-        [SerializeField] 
-        public string distributorNamespaceName;
-        
+        /// <summary>
+        /// スタミナモデルを取得したとき
+        /// </summary>
         [SerializeField]
         public GetStaminaModelEvent onGetStaminaModel = new GetStaminaModelEvent();
 
-        [SerializeField]
-        public RecoverStaminaEvent onRecoverStamina = new RecoverStaminaEvent();
-
+        /// <summary>
+        /// スタミナを消費したとき
+        /// </summary>
         [SerializeField]
         public ConsumeStaminaEvent onConsumeStamina = new ConsumeStaminaEvent();
         

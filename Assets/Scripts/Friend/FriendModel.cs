@@ -1,11 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using Gs2.Core;
-using Gs2.Unity;
+using Gs2.Core.Exception;
+using Gs2.Unity.Core;
 using Gs2.Unity.Gs2Friend.Model;
-using Gs2.Unity.Gs2Friend.Result;
 using Gs2.Unity.Util;
 using UnityEngine;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
+#endif
 
 namespace Gs2.Sample.Friend
 {
@@ -45,54 +48,65 @@ namespace Gs2.Sample.Friend
 	    /// 自分のプロフィールを取得
 	    /// Get your own profile
 	    /// </summary>
-	    /// <param name="client"></param>
-	    /// <param name="session"></param>
-	    /// <param name="friendNamespaceName"></param>
-	    /// <param name="onGetProfile"></param>
-	    /// <param name="onError"></param>
-	    /// <returns></returns>
 	    public IEnumerator GetProfile(
-		    Client client,
-		    GameSession session,
+		    Gs2Domain gs2,
+		    GameSession gameSession,
 		    string friendNamespaceName,
 		    GetProfileEvent onGetProfile,
 		    ErrorEvent onError
 	    )
 	    {
-		    AsyncResult<EzGetProfileResult> result = null;
-		    yield return client.Friend.GetProfile(
-			    callback: r => { result = r; },
-			    session,
-			    friendNamespaceName
-		    );
-
-		    if (result.Error != null)
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).Me(
+			    gameSession: gameSession
+		    ).Profile();
+		    var future = domain.Model();
+		    yield return future;
+		    if (future.Error != null)
 		    {
-			    onError.Invoke(result.Error);
+			    onError.Invoke(future.Error);
 			    yield break;
 		    }
 
-		    myProfile = result.Result.Item;
+		    myProfile = future.Result;
 		    
 		    onGetProfile.Invoke(myProfile);
 	    }
+#if GS2_ENABLE_UNITASK
+		public async UniTask GetProfileAsync(
+		    Gs2Domain gs2,
+		    GameSession gameSession,
+		    string friendNamespaceName,
+		    GetProfileEvent onGetProfile,
+		    ErrorEvent onError
+	    )
+	    {
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).Me(
+			    gameSession: gameSession
+		    ).Profile();
+		    try
+		    {
+			    myProfile = await domain.ModelAsync();
+			    
+			    onGetProfile.Invoke(myProfile);
+		    }
+		    catch (Gs2Exception e)
+		    {
+			    onError.Invoke(e);
+		    }
+	    }
+#endif
 	    
 	    /// <summary>
 	    /// 自分のプロフィールを更新
 	    /// Update own profile
 	    /// </summary>
-	    /// <param name="client"></param>
-	    /// <param name="session"></param>
-	    /// <param name="friendNamespaceName"></param>
-	    /// <param name="publicProfile"></param>
-	    /// <param name="followerProfile"></param>
-	    /// <param name="friendProfile"></param>
-	    /// <param name="onUpdateProfile"></param>
-	    /// <param name="onError"></param>
-	    /// <returns></returns>
 	    public IEnumerator UpdateProfile(
-		    Client client,
-		    GameSession session,
+		    Gs2Domain gs2,
+		    GameSession gameSession,
 		    string friendNamespaceName,
 		    string publicProfile,
 		    string followerProfile,
@@ -101,626 +115,1109 @@ namespace Gs2.Sample.Friend
 		    ErrorEvent onError
 	    )
 	    {
-		    AsyncResult<EzUpdateProfileResult> result = null;
-		    yield return client.Friend.UpdateProfile(
-			    callback: r => { result = r; },
-			    session,
-			    friendNamespaceName,
-			    publicProfile,
-			    followerProfile,
-			    friendProfile
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).Me(
+			    gameSession: gameSession
+		    ).Profile(
 		    );
-
-		    if (result.Error != null)
+		    var future = domain.UpdateProfile(
+			    publicProfile: publicProfile,
+			    followerProfile: followerProfile,
+			    friendProfile: friendProfile
+		    );
+		    yield return future;
+		    if (future.Error != null)
 		    {
-			    onError.Invoke(result.Error);
+			    onError.Invoke(future.Error);
 			    yield break;
 		    }
-
-		    myProfile = result.Result.Item;
+		    
+		    var result = future.Result;
+		    var future2 = result.Model();
+		    yield return future2;
+		    if (future2.Error != null)
+		    {
+			    onError.Invoke(future2.Error);
+			    yield break;
+		    }
+		    
+		    myProfile = future2.Result;
 		    
 		    onUpdateProfile.Invoke(myProfile);
 	    }
+#if GS2_ENABLE_UNITASK
+	    public async UniTask UpdateProfileAsync(
+		    Gs2Domain gs2,
+		    GameSession gameSession,
+		    string friendNamespaceName,
+		    string publicProfile,
+		    string followerProfile,
+		    string friendProfile,
+		    UpdateProfileEvent onUpdateProfile,
+		    ErrorEvent onError
+	    )
+	    {
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).Me(
+			    gameSession: gameSession
+		    ).Profile();
+		    try
+		    {
+			    var result = await domain.UpdateProfileAsync(
+				    publicProfile: publicProfile,
+				    followerProfile: followerProfile,
+				    friendProfile: friendProfile
+			    );
+			    myProfile = await result.ModelAsync();
+			    
+			    onUpdateProfile.Invoke(myProfile);
+		    }
+		    catch (Gs2Exception e)
+		    {
+			    onError.Invoke(e);
+		    }
+	    }
+#endif
 	    
 	    /// <summary>
 	    /// フレンドの一覧を取得
 	    /// Get a list of friends
 	    /// </summary>
-	    /// <param name="client"></param>
-	    /// <param name="session"></param>
-	    /// <param name="friendNamespaceName"></param>
-	    /// <param name="onDescribeFriends"></param>
-	    /// <param name="onError"></param>
-	    /// <returns></returns>
 	    public IEnumerator DescribeFriends(
-		    Client client,
-		    GameSession session,
+		    Gs2Domain gs2,
+		    GameSession gameSession,
 		    string friendNamespaceName,
 		    DescribeFriendsEvent onDescribeFriends,
 		    ErrorEvent onError
 	    )
 	    {
-		    AsyncResult<EzDescribeFriendsResult> result = null;
-		    yield return client.Friend.DescribeFriends(
-			    callback: r => { result = r; },
-			    session,
-			    friendNamespaceName,
-			    false,
-			    30,
-			    null
+		    Friends.Clear();
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).Me(
+			    gameSession: gameSession
 		    );
-
-		    if (result.Error != null)
+		    var it = domain.Friends();
+		    while (it.HasNext())
 		    {
-			    onError.Invoke(result.Error);
-			    yield break;
+			    yield return it.Next();
+			    if (it.Error != null)
+			    {
+				    onError.Invoke(it.Error);
+				    break;
+			    }
+
+			    if (it.Current != null)
+			    {
+				    Friends.Add(it.Current);
+			    }
 		    }
 
-		    Friends = result.Result.Items;
-		    
 		    onDescribeFriends.Invoke(Friends);
 	    }
+#if GS2_ENABLE_UNITASK
+	    public async UniTask DescribeFriendsAsync(
+		    Gs2Domain gs2,
+		    GameSession gameSession,
+		    string friendNamespaceName,
+		    DescribeFriendsEvent onDescribeFriends,
+		    ErrorEvent onError
+	    )
+	    {
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).Me(
+			    gameSession: gameSession
+		    );
+		    try
+		    {
+			    Friends = await domain.FriendsAsync().ToListAsync();
+			    
+			    onDescribeFriends.Invoke(Friends);
+		    }
+		    catch (Gs2Exception e)
+		    {
+			    onError.Invoke(e);
+		    }
+	    }
+#endif
 	    
 	    /// <summary>
 	    /// 送信したフレンドリクエストの一覧を取得
 	    /// Get a list of friend requests you have sent
 	    /// </summary>
-	    /// <param name="client"></param>
-	    /// <param name="session"></param>
-	    /// <param name="friendNamespaceName"></param>
-	    /// <param name="onDescribeSendRequests"></param>
-	    /// <param name="onError"></param>
-	    /// <returns></returns>
 	    public IEnumerator DescribeSendRequests(
-		    Client client,
-		    GameSession session,
+		    Gs2Domain gs2,
+		    GameSession gameSession,
 		    string friendNamespaceName,
 		    DescribeSendRequestsEvent onDescribeSendRequests,
 		    ErrorEvent onError
 	    )
 	    {
-		    AsyncResult<EzDescribeSendRequestsResult> result = null;
-		    yield return client.Friend.DescribeSendRequests(
-			    callback: r => { result = r; },
-			    session,
-			    friendNamespaceName
+		    Requests.Clear();
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).Me(
+			    gameSession: gameSession
 		    );
-
-		    if (result.Error != null)
+		    var it = domain.SendRequests();
+		    while (it.HasNext())
 		    {
-			    onError.Invoke(result.Error);
-			    yield break;
-		    }
+			    yield return it.Next();
+			    if (it.Error != null)
+			    {
+				    onError.Invoke(it.Error);
+				    break;
+			    }
 
-		    Requests = result.Result.Items;
+			    if (it.Current != null)
+			    {
+				    Requests.Add(it.Current);
+			    }
+		    }
 		    
 		    onDescribeSendRequests.Invoke(Requests);
 	    }
-	    
+#if GS2_ENABLE_UNITASK
+	    public async UniTask DescribeSendRequestsAsync(
+		    Gs2Domain gs2,
+		    GameSession gameSession,
+		    string friendNamespaceName,
+		    DescribeSendRequestsEvent onDescribeSendRequests,
+		    ErrorEvent onError
+	    )
+	    {
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).Me(
+			    gameSession: gameSession
+		    );
+		    try
+		    {
+			    Requests = await domain.SendRequestsAsync().ToListAsync();
+			    
+			    onDescribeSendRequests.Invoke(Requests);
+		    }
+		    catch (Gs2Exception e)
+		    {
+			    onError.Invoke(e);
+		    }
+	    }
+#endif
+
 	    /// <summary>
 	    /// 受信したフレンドリクエスト一覧を取得
 	    /// Get a list of received friend requests
 	    /// </summary>
-	    /// <param name="client"></param>
-	    /// <param name="session"></param>
-	    /// <param name="friendNamespaceName"></param>
-	    /// <param name="onDescribeReceiveRequests"></param>
-	    /// <param name="onError"></param>
-	    /// <returns></returns>
 	    public IEnumerator DescribeReceiveRequests(
-		    Client client,
-		    GameSession session,
+		    Gs2Domain gs2,
+		    GameSession gameSession,
 		    string friendNamespaceName,
 		    DescribeReceiveRequestsEvent onDescribeReceiveRequests,
 		    ErrorEvent onError
 	    )
 	    {
-		    AsyncResult<EzDescribeReceiveRequestsResult> result = null;
-		    yield return client.Friend.DescribeReceiveRequests(
-			    callback: r => { result = r; },
-			    session,
-			    friendNamespaceName
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).Me(
+			    gameSession: gameSession
 		    );
-
-		    if (result.Error != null)
+		    var it = domain.ReceiveRequests();
+		    while (it.HasNext())
 		    {
-			    onError.Invoke(result.Error);
-			    yield break;
-		    }
+			    yield return it.Next();
+			    if (it.Error != null)
+			    {
+				    onError.Invoke(it.Error);
+				    break;
+			    }
 
-		    Requests = result.Result.Items;
+			    if (it.Current != null)
+			    {
+				    Requests.Add(it.Current);
+			    }
+		    }
 		    
 		    onDescribeReceiveRequests.Invoke(Requests);
 	    }
-	    
+#if GS2_ENABLE_UNITASK
+	    public async UniTask DescribeReceiveRequestsAsync(
+		    Gs2Domain gs2,
+		    GameSession gameSession,
+		    string friendNamespaceName,
+		    DescribeReceiveRequestsEvent onDescribeReceiveRequests,
+		    ErrorEvent onError
+	    )
+	    {
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).Me(
+			    gameSession: gameSession
+		    );
+		    try
+		    {
+			    Requests = await domain.ReceiveRequestsAsync().ToListAsync();
+			    
+			    onDescribeReceiveRequests.Invoke(Requests);
+		    }
+		    catch (Gs2Exception e)
+		    {
+			    onError.Invoke(e);
+		    }
+	    }
+#endif
+
 	    /// <summary>
 	    /// フレンド情報を取得
 	    /// Get friend information
 	    /// </summary>
-	    /// <param name="client"></param>
-	    /// <param name="session"></param>
-	    /// <param name="friendNamespaceName"></param>
-	    /// <param name="targetUserId"></param>
-	    /// <param name="onGetFriend"></param>
-	    /// <param name="onError"></param>
-	    /// <returns></returns>
 	    public IEnumerator GetFriend(
-		    Client client,
-		    GameSession session,
+		    Gs2Domain gs2,
+		    GameSession gameSession,
 		    string friendNamespaceName,
 		    string targetUserId,
 		    GetFriendEvent onGetFriend,
 		    ErrorEvent onError
 	    )
 	    {
-		    AsyncResult<EzGetFriendResult> result = null;
-		    yield return client.Friend.GetFriend(
-			    callback: r => { result = r; },
-			    session,
-			    friendNamespaceName,
-			    targetUserId,
-			    true // プロフィールも一緒に取得するか / get a profile together?
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).Me(
+			    gameSession: gameSession
+		    ).Friend(
+			    withProfile: false // プロフィールも一緒に取得するか / get a profile together?
+		    ).FriendUser(
+			    targetUserId: targetUserId
 		    );
-
-		    if (result.Error != null)
+		    var future = domain.Model();
+		    yield return future;
+		    if (future.Error != null)
 		    {
-			    onError.Invoke(result.Error);
+			    onError.Invoke(future.Error);
 			    yield break;
 		    }
-
-		    var item = result.Result.Item;
+ 
+		    var item = future.Result;
 		    
 		    onGetFriend.Invoke(item);
 	    }
-	    
+#if GS2_ENABLE_UNITASK
+	    public async UniTask GetFriendAsync(
+		    Gs2Domain gs2,
+		    GameSession gameSession,
+		    string friendNamespaceName,
+		    string targetUserId,
+		    GetFriendEvent onGetFriend,
+		    ErrorEvent onError
+	    )
+	    {
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).Me(
+			    gameSession: gameSession
+		    ).Friend(
+			    withProfile: false // プロフィールも一緒に取得するか / get a profile together?
+		    ).FriendUser(
+			    targetUserId: targetUserId
+		    );
+		    try
+		    {
+			    var item = await domain.ModelAsync();
+			    
+			    onGetFriend.Invoke(item);
+		    }
+		    catch (Gs2Exception e)
+		    {
+			    onError.Invoke(e);
+		    }
+	    }
+#endif
+
 	    /// <summary>
 	    /// フレンドを削除
 	    /// Remove Friend
 	    /// </summary>
-	    /// <param name="client"></param>
-	    /// <param name="session"></param>
-	    /// <param name="friendNamespaceName"></param>
-	    /// <param name="targetUserId"></param>
-	    /// <param name="onDeleteFriend"></param>
-	    /// <param name="onError"></param>
-	    /// <returns></returns>
 	    public IEnumerator DeleteFriend(
-		    Client client,
-		    GameSession session,
+		    Gs2Domain gs2,
+		    GameSession gameSession,
 		    string friendNamespaceName,
 		    string targetUserId,
 		    DeleteFriendEvent onDeleteFriend,
 		    ErrorEvent onError
 	    )
 	    {
-		    AsyncResult<EzDeleteFriendResult> result = null;
-		    yield return client.Friend.DeleteFriend(
-			    callback: r => { result = r; },
-			    session,
-			    friendNamespaceName,
-			    targetUserId
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).Me(
+			    gameSession: gameSession
+		    ).Friend(
+			    withProfile: false // プロフィールも一緒に取得するか / get a profile together?
+		    ).FriendUser(
+			    targetUserId: targetUserId
 		    );
-
-		    if (result.Error != null)
+		    var future = domain.DeleteFriend();
+		    yield return future;
+		    if (future.Error != null)
 		    {
-			    onError.Invoke(result.Error);
+			    onError.Invoke(future.Error);
 			    yield break;
 		    }
-
-		    var item = result.Result.Item;
+ 
+		    var result = future.Result;
+		    var future2 = result.Model();
+		    yield return future2;
+		    if (future2.Error != null)
+		    {
+			    onError.Invoke(future2.Error);
+			    yield break;
+		    }
+		    
+		    var item = future2.Result;
 		    onDeleteFriend.Invoke(item);
 	    }
-	    
+#if GS2_ENABLE_UNITASK
+	    public async UniTask DeleteFriendAsync(
+		    Gs2Domain gs2,
+		    GameSession gameSession,
+		    string friendNamespaceName,
+		    string targetUserId,
+		    DeleteFriendEvent onDeleteFriend,
+		    ErrorEvent onError
+	    )
+	    {
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).Me(
+			    gameSession: gameSession
+		    ).Friend(
+			    withProfile: false // プロフィールも一緒に取得するか / get a profile together?
+		    ).FriendUser(
+			    targetUserId: targetUserId
+		    );
+		    try
+		    {
+			    var result = await domain.DeleteFriendAsync();
+			    var item = await result.ModelAsync();
+			    
+			    onDeleteFriend.Invoke(item);
+		    }
+		    catch (Gs2Exception e)
+		    {
+			    onError.Invoke(e);
+		    }
+	    }
+#endif
+
 	    /// <summary>
 	    /// 他プレイヤーの公開プロフィールを取得
 	    /// Get public profiles of other players
 	    /// </summary>
-	    /// <param name="client"></param>
-	    /// <param name="friendNamespaceName"></param>
-	    /// <param name="targetUserId"></param>
-	    /// <param name="onGetPublicProfile"></param>
-	    /// <param name="onError"></param>
-	    /// <returns></returns>
 	    public IEnumerator GetPublicProfile(
-		    Client client,
+		    Gs2Domain gs2,
 		    string friendNamespaceName,
 		    string targetUserId,
 		    GetPublicProfileEvent onGetPublicProfile,
 		    ErrorEvent onError
 	    )
 	    {
-		    AsyncResult<EzGetPublicProfileResult> result = null;
-		    yield return client.Friend.GetPublicProfile(
-			    callback: r => { result = r; },
-			    friendNamespaceName,
-			    targetUserId
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).User(
+			    userId: targetUserId
+		    ).PublicProfile(
 		    );
-
-		    if (result.Error != null)
+		    var future = domain.Model();
+		    yield return future;
+		    if (future.Error != null)
 		    {
-			    onError.Invoke(result.Error);
+			    onError.Invoke(future.Error);
 			    yield break;
 		    }
-
-		    var item = result.Result.Item;
+ 
+		    var item = future.Result;
 		    onGetPublicProfile.Invoke(item);
 	    }
-	    
+#if GS2_ENABLE_UNITASK
+	    public async UniTask GetPublicProfileAsync(
+		    Gs2Domain gs2,
+		    string friendNamespaceName,
+		    string targetUserId,
+		    GetPublicProfileEvent onGetPublicProfile,
+		    ErrorEvent onError
+	    )
+	    {
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).User(
+			    userId: targetUserId
+		    ).PublicProfile(
+		    );
+		    try
+		    {
+			    var item = await domain.ModelAsync();
+
+			    onGetPublicProfile.Invoke(item);
+		    }
+		    catch (Gs2Exception e)
+		    {
+			    onError.Invoke(e);
+		    }
+	    }
+#endif
+
 	    /// <summary>
 	    /// フレンドリクエストを送信
 	    /// Send a friend request
 	    /// </summary>
-	    /// <param name="client"></param>
-	    /// <param name="session"></param>
-	    /// <param name="friendNamespaceName"></param>
-	    /// <param name="targetUserId"></param>
-	    /// <param name="onSendRequest"></param>
-	    /// <param name="onError"></param>
-	    /// <returns></returns>
         public IEnumerator SendRequest(
-	        Client client,
-            GameSession session,
+		    Gs2Domain gs2,
+		    GameSession gameSession,
             string friendNamespaceName,
             string targetUserId,
 	        SendRequestEvent onSendRequest,
 	        ErrorEvent onError
         )
         {
-		    AsyncResult<EzSendRequestResult> result = null;
-		    yield return client.Friend.SendRequest(
-		        callback: r => { result = r; },
-		        session,
-		        friendNamespaceName,
-		        targetUserId
-		    );
-
-		    if (result.Error != null)
-		    {
-			    onError.Invoke(result.Error);
+	        var domain = gs2.Friend.Namespace(
+		        namespaceName: friendNamespaceName
+	        ).Me(
+		        gameSession: gameSession
+	        );
+	        var future = domain.SendRequest(
+		        targetUserId: targetUserId
+	        );
+	        yield return future;
+	        if (future.Error != null)
+	        {
+		        onError.Invoke(future.Error);
 		        yield break;
-		    }
-
-		    var item = result.Result.Item;
+	        }
+	        var result = future.Result;
+	        var future2 = result.Model();
+	        yield return future2;
+	        var item = future2.Result;
 		    onSendRequest.Invoke(item);
         }
-        
+#if GS2_ENABLE_UNITASK
+	    public async UniTask SendRequestAsync(
+		    Gs2Domain gs2,
+		    GameSession gameSession,
+		    string friendNamespaceName,
+		    string targetUserId,
+		    SendRequestEvent onSendRequest,
+		    ErrorEvent onError
+	    )
+	    {
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).Me(
+			    gameSession: gameSession
+		    );
+		    try
+		    {
+			    var result = await domain.SendRequestAsync(
+				    targetUserId: targetUserId
+			    );
+			    var item = await result.ModelAsync();
+
+			    onSendRequest.Invoke(item);
+		    }
+		    catch (Gs2Exception e)
+		    {
+			    onError.Invoke(e);
+		    }
+	    }
+#endif
+
 	    /// <summary>
 	    /// フレンドリクエストを承諾
 	    /// Accept Friend Request
 	    /// </summary>
-	    /// <param name="client"></param>
-	    /// <param name="session"></param>
-	    /// <param name="friendNamespaceName"></param>
-	    /// <param name="fromUserId"></param>
-	    /// <param name="onAccept"></param>
-	    /// <param name="onError"></param>
-	    /// <returns></returns>
         public IEnumerator Accept(
-	        Client client,
-	        GameSession session,
+		    Gs2Domain gs2,
+		    GameSession gameSession,
 	        string friendNamespaceName,
 	        string fromUserId,
 	        AcceptEvent onAccept,
 	        ErrorEvent onError
         )
         {
-	        AsyncResult<EzAcceptResult> result = null;
-	        yield return client.Friend.Accept(
-		        callback: r => { result = r; },
-		        session,
-		        friendNamespaceName,
-		        fromUserId
+	        var domain = gs2.Friend.Namespace(
+		        namespaceName: friendNamespaceName
+	        ).Me(
+		        gameSession: gameSession
+	        ).ReceiveFriendRequest(
+		        fromUserId: fromUserId
 	        );
-
-	        if (result.Error != null)
+	        var future = domain.Accept();
+	        yield return future;
+	        if (future.Error != null)
 	        {
-		        onError.Invoke(result.Error);
+		        onError.Invoke(future.Error);
 		        yield break;
 	        }
-
-	        var item = result.Result.Item;
+	        
+	        var result = future.Result;
+	        var future2 = result.Model();
+	        yield return future2;
+	        var item = future2.Result;
 	        onAccept.Invoke(item);
         }
-        
+#if GS2_ENABLE_UNITASK
+	    public async UniTask AcceptAsync(
+		    Gs2Domain gs2,
+		    GameSession gameSession,
+		    string friendNamespaceName,
+		    string fromUserId,
+		    AcceptEvent onAccept,
+		    ErrorEvent onError
+	    )
+	    {
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).Me(
+			    gameSession: gameSession
+		    ).ReceiveFriendRequest(
+			    fromUserId: fromUserId
+		    );
+		    try
+		    {
+			    var result  = await domain.AcceptAsync();
+			    var item = await result.ModelAsync();
+			    
+			    onAccept.Invoke(item);
+		    }
+		    catch (Gs2Exception e)
+		    {
+			    onError.Invoke(e);
+		    }
+	    }
+#endif
+
 	    /// <summary>
 	    /// フレンドリクエストを拒否
 	    /// Deny friend request
 	    /// </summary>
-	    /// <param name="client"></param>
-	    /// <param name="session"></param>
-	    /// <param name="friendNamespaceName"></param>
-	    /// <param name="fromUserId"></param>
-	    /// <param name="onReject"></param>
-	    /// <param name="onError"></param>
-	    /// <returns></returns>
         public IEnumerator Reject(
-	        Client client,
-	        GameSession session,
+		    Gs2Domain gs2,
+		    GameSession gameSession,
 	        string friendNamespaceName,
 	        string fromUserId,
 	        RejectEvent onReject,
 	        ErrorEvent onError
         )
         {
-	        AsyncResult<EzRejectResult> result = null;
-	        yield return client.Friend.Reject(
-		        callback: r => { result = r; },
-		        session,
-		        friendNamespaceName,
-		        fromUserId
+	        var domain = gs2.Friend.Namespace(
+		        namespaceName: friendNamespaceName
+	        ).Me(
+		        gameSession: gameSession
+	        ).ReceiveFriendRequest(
+		        fromUserId: fromUserId
 	        );
-
-	        if (result.Error != null)
+	        var future = domain.Reject();
+	        yield return future;
+	        if (future.Error != null)
 	        {
-		        onError.Invoke(result.Error);
+		        onError.Invoke(future.Error);
 		        yield break;
 	        }
-
-	        var item = result.Result.Item;
+	        
+	        var result = future.Result;
+	        var future2 = result.Model();
+	        yield return future2;
+	        var item = future2.Result;
 	        onReject.Invoke(item);
         }
-        
+#if GS2_ENABLE_UNITASK
+	    public async UniTask RejectAsync(
+		    Gs2Domain gs2,
+		    GameSession gameSession,
+		    string friendNamespaceName,
+		    string fromUserId,
+		    RejectEvent onReject,
+		    ErrorEvent onError
+	    )
+	    {
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).Me(
+			    gameSession: gameSession
+		    ).ReceiveFriendRequest(
+			    fromUserId: fromUserId
+		    );
+		    try
+		    {
+			    var result = await domain.RejectAsync();
+			    var item = await result.ModelAsync();
+			    onReject.Invoke(item);
+		    }
+		    catch (Gs2Exception e)
+		    {
+			    onError.Invoke(e);
+		    }
+	    }
+#endif
+
 	    /// <summary>
 	    /// 送信したフレンドリクエストを削除
 	    /// Delete a friend request you have sent
 	    /// </summary>
-	    /// <param name="client"></param>
-	    /// <param name="session"></param>
-	    /// <param name="friendNamespaceName"></param>
-	    /// <param name="targetUserId"></param>
-	    /// <param name="onDeleteRequest"></param>
-	    /// <param name="onError"></param>
-	    /// <returns></returns>
         public IEnumerator DeleteRequest(
-	        Client client,
-	        GameSession session,
+		    Gs2Domain gs2,
+		    GameSession gameSession,
 	        string friendNamespaceName,
 	        string targetUserId,
 	        DeleteRequestEvent onDeleteRequest,
 	        ErrorEvent onError
         )
         {
-	        AsyncResult<EzDeleteRequestResult> result = null;
-	        yield return client.Friend.DeleteRequest(
-		        callback: r => { result = r; },
-		        session,
-		        friendNamespaceName,
-		        targetUserId
+	        var domain = gs2.Friend.Namespace(
+		        namespaceName: friendNamespaceName
+	        ).Me(
+		        gameSession: gameSession
+	        ).SendFriendRequest(
+		        targetUserId: targetUserId
 	        );
-
-	        if (result.Error != null)
+	        var future = domain.DeleteRequest();
+	        yield return future;
+	        if (future.Error != null)
 	        {
-		        onError.Invoke(result.Error);
+		        onError.Invoke(future.Error);
 		        yield break;
 	        }
-
-	        var item = result.Result.Item;
+	        var result = future.Result;
+	        var future2 = result.Model();
+	        yield return future2;
+	        var item = future2.Result;
 	        onDeleteRequest.Invoke(item);
         }
-        
+#if GS2_ENABLE_UNITASK
+	    public async UniTask DeleteRequestAsync(
+		    Gs2Domain gs2,
+		    GameSession gameSession,
+		    string friendNamespaceName,
+		    string targetUserId,
+		    DeleteRequestEvent onDeleteRequest,
+		    ErrorEvent onError
+	    )
+	    {
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).Me(
+			    gameSession: gameSession
+		    ).SendFriendRequest(
+			    targetUserId: targetUserId
+		    );
+		    try
+		    {
+			    var result = await domain.DeleteRequestAsync();
+			    var item = await result.ModelAsync();
+			    onDeleteRequest.Invoke(item);
+		    }
+		    catch (Gs2Exception e)
+		    {
+			    onError.Invoke(e);
+		    }
+	    }
+#endif
+
         /// <summary>
         /// ブラックリストを取得
         /// Get Blacklist
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="session"></param>
-        /// <param name="friendNamespaceName"></param>
-        /// <param name="onGetBlackList"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
         public IEnumerator GetBlackList(
-	        Client client,
-	        GameSession session,
+	        Gs2Domain gs2,
+	        GameSession gameSession,
 	        string friendNamespaceName,
 	        GetBlackListEvent onGetBlackList,
 	        ErrorEvent onError
         )
         {
-	        AsyncResult<EzGetBlackListResult> result = null;
-	        yield return client.Friend.GetBlackList(
-		        callback: r => { result = r; },
-		        session,
-		        friendNamespaceName
+	        BlackList.Clear();
+	        var domain = gs2.Friend.Namespace(
+		        namespaceName: friendNamespaceName
+	        ).Me(
+		        gameSession: gameSession
 	        );
-
-	        if (result.Error != null)
+	        var it = domain.BlackLists();
+	        while (it.HasNext())
 	        {
-		        onError.Invoke(result.Error);
-		        yield break;
-	        }
+		        yield return it.Next();
+		        if (it.Error != null)
+		        {
+			        onError.Invoke(it.Error);
+			        break;
+		        }
 
-	        BlackList = result.Result.Items;
+		        if (it.Current != null)
+		        {
+			        BlackList.Add(it.Current);
+		        }
+	        }
 		    
 	        onGetBlackList.Invoke(BlackList);
         }
-        
+#if GS2_ENABLE_UNITASK
+	    public async UniTask GetBlackListAsync(
+		    Gs2Domain gs2,
+		    GameSession gameSession,
+		    string friendNamespaceName,
+		    GetBlackListEvent onGetBlackList,
+		    ErrorEvent onError
+	    )
+	    {
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).Me(
+			    gameSession: gameSession
+		    );
+		    try
+		    {
+			    BlackList = await domain.BlackListsAsync().ToListAsync();
+			    onGetBlackList.Invoke(BlackList);
+		    }
+		    catch (Gs2Exception e)
+		    {
+			    onError.Invoke(e);
+		    }
+	    }
+#endif
+
         /// <summary>
         /// ブラックリストにユーザーを登録
         /// Register users on the blacklist
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="session"></param>
-        /// <param name="friendNamespaceName"></param>
-        /// <param name="targetUserId"></param>
-        /// <param name="onRegisterBlackList"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
         public IEnumerator RegisterBlackList(
-	        Client client,
-	        GameSession session,
+	        Gs2Domain gs2,
+	        GameSession gameSession,
 	        string friendNamespaceName,
 	        string targetUserId,
 	        RegisterBlackListEvent onRegisterBlackList,
 	        ErrorEvent onError
         )
         {
-	        AsyncResult<EzRegisterBlackListResult> result = null;
-	        yield return client.Friend.RegisterBlackList(
-		        callback: r => { result = r; },
-		        session,
-		        friendNamespaceName,
-		        targetUserId
+	        var domain = gs2.Friend.Namespace(
+		        namespaceName: friendNamespaceName
+	        ).Me(
+		        gameSession: gameSession
+	        ).BlackList();
+	        var future = domain.RegisterBlackList(
+		        targetUserId: targetUserId
 	        );
-
-	        if (result.Error != null)
+	        yield return future;
+	        if (future.Error != null)
 	        {
-		        onError.Invoke(result.Error);
+		        onError.Invoke(future.Error);
 		        yield break;
 	        }
-
-	        var item = result.Result.Item;
+	        var result = future.Result;
+	        var future2 = result.Model();
+	        yield return future2;
+	        var item = future2.Result;
 	        onRegisterBlackList.Invoke(item);
         }
-        
+#if GS2_ENABLE_UNITASK
+	    public async UniTask RegisterBlackListAsync(
+		    Gs2Domain gs2,
+		    GameSession gameSession,
+		    string friendNamespaceName,
+		    string targetUserId,
+		    RegisterBlackListEvent onRegisterBlackList,
+		    ErrorEvent onError
+	    )
+	    {
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).Me(
+			    gameSession: gameSession
+		    ).BlackList();
+		    try
+		    {
+			    var result = await domain.RegisterBlackListAsync(
+				    targetUserId: targetUserId
+			    );
+			    var item = await result.ModelAsync();
+			    onRegisterBlackList.Invoke(item);
+		    }
+		    catch (Gs2Exception e)
+		    {
+			    onError.Invoke(e);
+		    }
+	    }
+#endif
+
         /// <summary>
         /// ブラックリストからユーザーを削除
         /// Remove users from blacklist
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="session"></param>
-        /// <param name="friendNamespaceName"></param>
-        /// <param name="targetUserId"></param>
-        /// <param name="onUnregisterBlackList"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
         public IEnumerator UnregisterBlackList(
-	        Client client,
-	        GameSession session,
+	        Gs2Domain gs2,
+	        GameSession gameSession,
 	        string friendNamespaceName,
 	        string targetUserId,
 	        UnregisterBlackListEvent onUnregisterBlackList,
 	        ErrorEvent onError
         )
         {
-	        AsyncResult<EzUnregisterBlackListResult> result = null;
-	        yield return client.Friend.UnregisterBlackList(
-		        callback: r => { result = r; },
-		        session,
-		        friendNamespaceName,
-		        targetUserId
+	        var domain = gs2.Friend.Namespace(
+		        namespaceName: friendNamespaceName
+	        ).Me(
+		        gameSession: gameSession
+	        ).BlackList();
+	        var future = domain.UnregisterBlackList(
+		        targetUserId: targetUserId
 	        );
-
-	        if (result.Error != null)
+	        yield return future;
+	        if (future.Error != null)
 	        {
-		        onError.Invoke(result.Error);
+		        onError.Invoke(future.Error);
 		        yield break;
 	        }
-
-	        var item = result.Result.Item;
+	        
+	        var result = future.Result;
+	        var future2 = result.Model();
+	        yield return future2;
+	        if (future2.Error != null)
+	        {
+		        onError.Invoke(future2.Error);
+		        yield break;
+	        }
+	        
+	        var item = future2.Result;
 	        onUnregisterBlackList.Invoke(item);
         }
-        
+#if GS2_ENABLE_UNITASK
+	    public async UniTask UnregisterBlackListAsync(
+		    Gs2Domain gs2,
+		    GameSession gameSession,
+		    string friendNamespaceName,
+		    string targetUserId,
+		    UnregisterBlackListEvent onUnregisterBlackList,
+		    ErrorEvent onError
+	    )
+	    {
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).Me(
+			    gameSession: gameSession
+		    ).BlackList();
+		    try
+		    {
+			    var result = await domain.UnregisterBlackListAsync(
+				    targetUserId: targetUserId
+			    );
+			    var item = await result.ModelAsync();
+			    onUnregisterBlackList.Invoke(item);
+		    }
+		    catch (Gs2Exception e)
+		    {
+			    onError.Invoke(e);
+		    }
+	    }
+#endif
+
         /// <summary>
         /// 他プレイヤーをフォローする
         /// Follow other players
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="session"></param>
-        /// <param name="friendNamespaceName"></param>
-        /// <param name="targetUserId"></param>
-        /// <param name="onFollow"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
         public IEnumerator Follow(
-	        Client client,
-	        GameSession session,
+	        Gs2Domain gs2,
+	        GameSession gameSession,
 	        string friendNamespaceName,
 	        string targetUserId,
 	        FollowEvent onFollow,
 	        ErrorEvent onError
         )
         {
-	        AsyncResult<EzFollowResult> result = null;
-	        yield return client.Friend.Follow(
-		        callback: r => { result = r; },
-		        session,
-		        friendNamespaceName,
-		        targetUserId
+	        var domain = gs2.Friend.Namespace(
+		        namespaceName: friendNamespaceName
+	        ).Me(
+		        gameSession: gameSession
+	        ).FollowUser(
+		        targetUserId: targetUserId,
+		        withProfile: false
 	        );
-
-	        if (result.Error != null)
+	        var future = domain.Follow();
+	        yield return future;
+	        if (future.Error != null)
 	        {
-		        onError.Invoke(result.Error);
+		        onError.Invoke(future.Error);
 		        yield break;
 	        }
-
-	        var item = result.Result.Item;
+	        
+	        var result = future.Result;
+	        var future2 = result.Model();
+	        yield return future2;
+	        var item = future2.Result;
 	        onFollow.Invoke(item);
         }
-        
+#if GS2_ENABLE_UNITASK
+	    public async UniTask FollowAsync(
+		    Gs2Domain gs2,
+		    GameSession gameSession,
+		    string friendNamespaceName,
+		    string targetUserId,
+		    FollowEvent onFollow,
+		    ErrorEvent onError
+	    )
+	    {
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).Me(
+			    gameSession: gameSession
+		    ).FollowUser(
+			    targetUserId: targetUserId,
+			    withProfile: false
+		    );
+		    try
+		    {
+			    var result = await domain.FollowAsync();
+			    var item = await result.ModelAsync();
+			    onFollow.Invoke(item);
+		    }
+		    catch (Gs2Exception e)
+		    {
+			    onError.Invoke(e);
+		    }
+	    }
+#endif
+
         /// <summary>
         /// フォローしている相手をアンフォローする
         /// Unfollowing someone you are following
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="session"></param>
-        /// <param name="friendNamespaceName"></param>
-        /// <param name="targetUserId"></param>
-        /// <param name="onUnfollow"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
         public IEnumerator Unfollow(
-	        Client client,
-	        GameSession session,
+	        Gs2Domain gs2,
+	        GameSession gameSession,
 	        string friendNamespaceName,
 	        string targetUserId,
 	        UnfollowEvent onUnfollow,
 	        ErrorEvent onError
         )
         {
-	        AsyncResult<EzUnfollowResult> result = null;
-	        yield return client.Friend.Unfollow(
-		        callback: r => { result = r; },
-		        session,
-		        friendNamespaceName,
-		        targetUserId
+	        var domain = gs2.Friend.Namespace(
+		        namespaceName: friendNamespaceName
+	        ).Me(
+		        gameSession: gameSession
+	        ).FollowUser(
+		        targetUserId: targetUserId,
+		        withProfile: false
 	        );
-
-	        if (result.Error != null)
+	        var future = domain.Unfollow();
+	        yield return future;
+	        if (future.Error != null)
 	        {
-		        onError.Invoke(result.Error);
+		        onError.Invoke(future.Error);
+		        yield break;
+	        }
+ 
+	        var result = future.Result;
+	        var future2 = result.Model();
+	        yield return future2;
+	        if (future2.Error != null)
+	        {
+		        onError.Invoke(future2.Error);
 		        yield break;
 	        }
 
-	        var item = result.Result.Item;
+	        var item = future2.Result;
 	        onUnfollow.Invoke(item);
         }
-        
+#if GS2_ENABLE_UNITASK
+	    public async UniTask UnfollowAsync(
+		    Gs2Domain gs2,
+		    GameSession gameSession,
+		    string friendNamespaceName,
+		    string targetUserId,
+		    UnfollowEvent onUnfollow,
+		    ErrorEvent onError
+	    )
+	    {
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).Me(
+			    gameSession: gameSession
+		    ).FollowUser(
+			    targetUserId: targetUserId,
+			    withProfile: false
+		    );
+		    try
+		    {
+			    var item = await domain.ModelAsync();
+			    var result = await domain.UnfollowAsync();
+			    onUnfollow.Invoke(item);
+		    }
+		    catch (Gs2Exception e)
+		    {
+			    onError.Invoke(e);
+		    }
+	    }
+#endif
+
         /// <summary>
         /// フォローしているユーザー一覧を取得
         /// Get a list of users you are following
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="session"></param>
-        /// <param name="friendNamespaceName"></param>
-        /// <param name="onDescribeFollowUsers"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
         public IEnumerator DescribeFollowUsers(
-	        Client client,
-	        GameSession session,
+	        Gs2Domain gs2,
+	        GameSession gameSession,
 	        string friendNamespaceName,
 	        DescribeFollowUsersEvent onDescribeFollowUsers,
 	        ErrorEvent onError
         )
         {
-	        AsyncResult<EzDescribeFollowUsersResult> result = null;
-	        yield return client.Friend.DescribeFollowUsers(
-		        callback: r => { result = r; },
-		        session,
-		        friendNamespaceName,
-		        true
+	        FollowUsers.Clear();
+	        var domain = gs2.Friend.Namespace(
+		        namespaceName: friendNamespaceName
+	        ).Me(
+		        gameSession: gameSession
 	        );
-
-	        if (result.Error != null)
+	        var it = domain.Follows();
+	        while (it.HasNext())
 	        {
-		        onError.Invoke(result.Error);
-		        yield break;
-	        }
+		        yield return it.Next();
+		        if (it.Error != null)
+		        {
+			        onError.Invoke(it.Error);
+			        break;
+		        }
 
-	        FollowUsers = result.Result.Items;
+		        if (it.Current != null)
+		        {
+			        FollowUsers.Add(it.Current);
+		        }
+	        }
 		    
 	        onDescribeFollowUsers.Invoke(FollowUsers);
         }
+#if GS2_ENABLE_UNITASK
+	    public async UniTask DescribeFollowUsersAsync(
+		    Gs2Domain gs2,
+		    GameSession gameSession,
+		    string friendNamespaceName,
+		    DescribeFollowUsersEvent onDescribeFollowUsers,
+		    ErrorEvent onError
+	    )
+	    {
+		    var domain = gs2.Friend.Namespace(
+			    namespaceName: friendNamespaceName
+		    ).Me(
+			    gameSession: gameSession
+		    );
+		    try
+		    {
+			    FollowUsers = await domain.FollowsAsync().ToListAsync();
+
+			    onDescribeFollowUsers.Invoke(FollowUsers);
+		    }
+		    catch (Gs2Exception e)
+		    {
+			    onError.Invoke(e);
+		    }
+	    }
+#endif
+
     }
 }

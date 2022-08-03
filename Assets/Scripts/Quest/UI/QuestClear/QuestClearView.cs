@@ -7,16 +7,14 @@ namespace Gs2.Sample.Quest
 {
     public class QuestClearView : MonoBehaviour
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        public TextMeshProUGUI questName;
+        [SerializeField]
+        private TextMeshProUGUI questName;
 
         [SerializeField]
-        public Button successButton = null;
+        private Button successButton = null;
         
         [SerializeField]
-        public Button failedButton = null;
+        private Button failedButton = null;
 
         public void OnOpenEvent()
         {

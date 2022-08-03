@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Gs2.Unity.Gs2Version.Model;
-using Gs2.Unity.Gs2Version.Result;
 using Gs2.Unity.Util;
 using UnityEngine;
 using UnityEngine.Events;
@@ -9,7 +8,7 @@ using UnityEngine.Events;
 namespace Gs2.Sample.Version
 {
     [System.Serializable]
-    public class CheckVersionEvent : UnityEvent<List<EzTargetVersion>,EzCheckVersionResult>
+    public class CheckVersionEvent : UnityEvent<string, List<EzStatus>, List<EzStatus>>
     {
     }
     

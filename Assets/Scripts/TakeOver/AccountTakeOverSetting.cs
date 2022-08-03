@@ -24,18 +24,21 @@ namespace Gs2.Sample.AccountTakeOver
     {
         /// <summary>
         /// 引継ぎ設定を追加したとき
+        /// When the takeover setting is added
         /// </summary>
         [SerializeField]
         public SetTakeOverEvent onSetTakeOver = new SetTakeOverEvent();
         
         /// <summary>
         /// 引継ぎを実行したとき
+        /// When the handover is executed
         /// </summary>
         [SerializeField]
         public DoTakeOverEvent onDoTakeOver = new DoTakeOverEvent();
 
         /// <summary>
         /// エラー発生時に発行されるイベント
+        /// Event issued when an error occurs
         /// </summary>
         [SerializeField]
         public ErrorEvent onError = new ErrorEvent();

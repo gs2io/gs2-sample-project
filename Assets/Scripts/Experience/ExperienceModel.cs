@@ -1,17 +1,17 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Gs2.Core;
-using Gs2.Core.Model;
-using Gs2.Core.Net;
-using Gs2.Gs2Experience;
-using Gs2.Gs2Experience.Request;
-using Gs2.Unity;
+using Gs2.Core.Exception;
+using Gs2.Unity.Core;
+using Gs2.Unity.Gs2Exchange.Model;
 using Gs2.Unity.Gs2Experience.Model;
-using Gs2.Unity.Gs2Experience.Result;
 using Gs2.Unity.Gs2Inventory.Model;
 using Gs2.Unity.Util;
 using UnityEngine;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
+#endif
 
 namespace Gs2.Sample.Experience
 {
@@ -24,10 +24,16 @@ namespace Gs2.Sample.Experience
         public EzExperienceModel playerExperienceModel;
         
         /// <summary>
-        /// 現在のステータス
+        /// プレイヤーの現在のステータス
         /// Current Status
         /// </summary>
         public Dictionary<string, EzStatus> playerStatuses;
+        
+        /// <summary>
+        /// プレイヤーの現在のステータス
+        /// Current Status
+        /// </summary>
+        public EzStatus playerStatus;
         
         /// <summary>
         /// アイテム経験値モデル
@@ -36,7 +42,7 @@ namespace Gs2.Sample.Experience
         public EzExperienceModel itemExperienceModel;
         
         /// <summary>
-        /// 現在のステータス
+        /// アイテムの現在のステータス
         /// Current Status
         /// </summary>
         public Dictionary<string, EzStatus> itemStatuses;
@@ -51,221 +57,280 @@ namespace Gs2.Sample.Experience
         /// プレイヤー経験値モデルの取得
         /// Acquisition of player experience model
         /// </summary>
-        /// <param name="client"></param>
+        /// <param name="gs2"></param>
         /// <param name="experienceNamespaceName"></param>
         /// <param name="experienceModelName"></param>
         /// <param name="onGetExperienceModel"></param>
         /// <param name="onError"></param>
         /// <returns></returns>
         public IEnumerator GetPlayerExperienceModel(
-            Client client,
+            Gs2Domain gs2,
             string experienceNamespaceName,
             string experienceModelName,
             GetExperienceModelEvent onGetExperienceModel,
             ErrorEvent onError
         )
         {
-            AsyncResult<EzGetExperienceModelResult> result = null;
-            yield return client.Experience.GetExperienceModel(
-                r =>
-                {
-                    result = r;
-                },
-                experienceNamespaceName,
-                experienceModelName
-            );
-            
-            if (result.Error != null)
+            var future = gs2.Experience.Namespace(
+                namespaceName: experienceNamespaceName
+            ).ExperienceModel(
+                experienceName: experienceModelName
+            ).Model();
+            yield return future;
+            if (future.Error != null)
             {
-                onError.Invoke(
-                    result.Error
-                );
+                onError.Invoke(future.Error);
                 yield break;
             }
-
-            playerExperienceModel = result.Result.Item;
+            playerExperienceModel = future.Result;
 
             onGetExperienceModel.Invoke(experienceModelName, playerExperienceModel);
         }
+        
+#if GS2_ENABLE_UNITASK
+        public async UniTask GetPlayerExperienceModelAsync(
+            Gs2Domain gs2,
+            string experienceNamespaceName,
+            string experienceModelName,
+            GetExperienceModelEvent onGetExperienceModel,
+            ErrorEvent onError
+        )
+        {
+            var domain = gs2.Experience.Namespace(
+                namespaceName: experienceNamespaceName
+            ).ExperienceModel(
+                experienceName: experienceModelName
+            );
+            
+            try
+            {
+                playerExperienceModel = await domain.ModelAsync();
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+                return;
+            }
+
+            onGetExperienceModel.Invoke(experienceModelName, playerExperienceModel);
+        }
+#endif
         
         /// <summary>
         /// アイテム経験値モデルの取得
         /// Acquisition of item experience model
         /// </summary>
-        /// <param name="client"></param>
+        /// <param name="gs2"></param>
         /// <param name="experienceNamespaceName"></param>
         /// <param name="experienceModelName"></param>
         /// <param name="onGetExperienceModel"></param>
         /// <param name="onError"></param>
         /// <returns></returns>
         public IEnumerator GetItemExperienceModel(
-            Client client,
+            Gs2Domain gs2,
             string experienceNamespaceName,
             string experienceModelName,
             GetExperienceModelEvent onGetExperienceModel,
             ErrorEvent onError
         )
         {
-            AsyncResult<EzGetExperienceModelResult> result = null;
-            yield return client.Experience.GetExperienceModel(
-                r =>
-                {
-                    result = r;
-                },
-                experienceNamespaceName,
-                experienceModelName
-            );
-            
-            if (result.Error != null)
+            var future = gs2.Experience.Namespace(
+                namespaceName: experienceNamespaceName
+            ).ExperienceModel(
+                experienceName: experienceModelName
+            ).Model();
+            yield return future;
+            if (future.Error != null)
             {
-                onError.Invoke(
-                    result.Error
-                );
+                onError.Invoke(future.Error);
                 yield break;
             }
-
-            itemExperienceModel = result.Result.Item;
+            itemExperienceModel = future.Result;
 
             onGetExperienceModel.Invoke(experienceModelName, itemExperienceModel);
         }
+        
+#if GS2_ENABLE_UNITASK
+        public async UniTask GetItemExperienceModelAsync(
+            Gs2Domain gs2,
+            string experienceNamespaceName,
+            string experienceModelName,
+            GetExperienceModelEvent onGetExperienceModel,
+            ErrorEvent onError
+        )
+        {
+            var domain = gs2.Experience.Namespace(
+                namespaceName: experienceNamespaceName
+            ).ExperienceModel(
+                experienceName: experienceModelName
+            );
+            try
+            {
+                itemExperienceModel = await domain.ModelAsync();
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+                return;
+            }
+
+            onGetExperienceModel.Invoke(experienceModelName, itemExperienceModel);
+        }
+#endif
         
         /// <summary>
         /// プレイヤーのステータス情報の一覧を取得
         /// Get a list of player status information
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="session"></param>
+        /// <param name="gs2"></param>
+        /// <param name="gameSession"></param>
         /// <param name="experienceNamespaceName"></param>
         /// <param name="onGetStatuses"></param>
         /// <param name="onError"></param>
         /// <returns></returns>
         public IEnumerator GetPlayerStatuses(
-            Client client,
-            GameSession session,
+            Gs2Domain gs2,
+            GameSession gameSession,
             string experienceNamespaceName,
             GetStatusesEvent onGetStatuses,
             ErrorEvent onError
         )
         {
             var _statuses = new List<EzStatus>();
-            string pageToken = null;
-            while (true)
+            var it = gs2.Experience.Namespace(
+                namespaceName: experienceNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Statuses();
+            while (it.HasNext())
             {
-                AsyncResult<EzListStatusesResult> result = null;
-                yield return client.Experience.ListStatuses(
-                    r =>
-                    {
-                        result = r;
-                    },
-                    session,
-                    experienceNamespaceName,
-                    playerExperienceModel.Name,
-                    pageToken
-                );
-            
-                if (result.Error != null)
+                yield return it.Next();
+                if (it.Error != null)
                 {
-                    onError.Invoke(
-                        result.Error
-                    );
-                    yield break;
-                }
-
-                _statuses.AddRange(result.Result.Items);
-
-                if (result.Result.NextPageToken == null)
-                {
+                    onError.Invoke(it.Error);
                     break;
                 }
 
-                pageToken = result.Result.NextPageToken;
+                if (it.Current != null)
+                {
+                    _statuses.Add(it.Current);
+                }
             }
 
             playerStatuses = _statuses.ToDictionary(status => status.PropertyId);
             
             onGetStatuses.Invoke(playerExperienceModel, _statuses);
         }
-        
+#if GS2_ENABLE_UNITASK
+        public async UniTask GetPlayerStatusesAsync(
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string experienceNamespaceName,
+            GetStatusesEvent onGetStatuses,
+            ErrorEvent onError
+        )
+        {
+            try
+            {
+                var _statuses = await gs2.Experience.Namespace(
+                    namespaceName: experienceNamespaceName
+                ).Me(
+                    gameSession: gameSession
+                ).StatusesAsync().ToListAsync();
+
+                playerStatuses = _statuses.ToDictionary(status => status.PropertyId);
+
+                onGetStatuses.Invoke(playerExperienceModel, _statuses);
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+            }
+        }
+#endif
+
         /// <summary>
         /// アイテムのステータス情報の一覧を取得
         /// Get a list of item status information
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="session"></param>
+        /// <param name="gs2"></param>
+        /// <param name="gameSession"></param>
         /// <param name="experienceNamespaceName"></param>
         /// <param name="onGetStatuses"></param>
         /// <param name="onError"></param>
         /// <returns></returns>
         public IEnumerator GetItemStatuses(
-            Client client,
-            GameSession session,
+            Gs2Domain gs2,
+            GameSession gameSession,
             string experienceNamespaceName,
             GetStatusesEvent onGetStatuses,
             ErrorEvent onError
         )
         {
             var _statuses = new List<EzStatus>();
-            string pageToken = null;
-            while (true)
+            var it = gs2.Experience.Namespace(
+                namespaceName: experienceNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Statuses();
+            while (it.HasNext())
             {
-                AsyncResult<EzListStatusesResult> result = null;
-                yield return client.Experience.ListStatuses(
-                    r =>
-                    {
-                        result = r;
-                    },
-                    session,
-                    experienceNamespaceName,
-                    itemExperienceModel.Name,
-                    pageToken
-                );
-            
-                if (result.Error != null)
+                yield return it.Next();
+                if (it.Error != null)
                 {
-                    onError.Invoke(
-                        result.Error
-                    );
-                    yield break;
-                }
-
-                _statuses.AddRange(result.Result.Items);
-
-                if (result.Result.NextPageToken == null)
-                {
+                    onError.Invoke(it.Error);
                     break;
                 }
 
-                pageToken = result.Result.NextPageToken;
+                if (it.Current != null)
+                {
+                    _statuses.Add(it.Current);
+                }
             }
 
             itemStatuses = _statuses.ToDictionary(status => status.PropertyId);
             
             onGetStatuses.Invoke(itemExperienceModel, _statuses);
         }
+#if GS2_ENABLE_UNITASK
+        public async UniTask GetItemStatusesAsync(
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string experienceNamespaceName,
+            GetStatusesEvent onGetStatuses,
+            ErrorEvent onError
+        )
+        {
+            try
+            {
+                var _statuses = await gs2.Experience.Namespace(
+                    namespaceName: experienceNamespaceName
+                ).Me(
+                    gameSession: gameSession
+                ).StatusesAsync().ToListAsync();
+                
+                itemStatuses = _statuses.ToDictionary(status => status.PropertyId);
+                            
+                onGetStatuses.Invoke(itemExperienceModel, _statuses);
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+            }
+        }
+#endif
 
         /// <summary>
         /// 経験値の増加
         /// Increased experience
         /// </summary>
-        /// <param name="session"></param>
-        /// <param name="identifierIncreaseExperienceClientId"></param>
-        /// <param name="identifierIncreaseExperienceClientSecret"></param>
-        /// <param name="experienceNamespaceName"></param>
-        /// <param name="experienceModel"></param>
-        /// <param name="propertyId"></param>
-        /// <param name="value"></param>
-        /// <param name="onIncreaseExperience"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
         public IEnumerator IncreaseExperience(
-            GameSession session,
-            string identifierIncreaseExperienceClientId,
-            string identifierIncreaseExperienceClientSecret,
-            string experienceNamespaceName,
-            EzExperienceModel experienceModel,
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string exchangeNamespaceName,
+            string exchangeRateName,
             string propertyId,
             int value,
-            IncreaseExperienceEvent onIncreaseExperience,
             ErrorEvent onError
         )
         {
@@ -273,61 +338,77 @@ namespace Gs2.Sample.Experience
             // 実際にクライアントが直接経験値の増加を行う実装は非推奨となります。
             // *This process is only for sample confirmation.
             // The actual implementation of direct experience increase by the client is deprecated.
-            
-            var restSession = new Gs2RestSession(
-                new BasicGs2Credential(
-                    identifierIncreaseExperienceClientId,
-                    identifierIncreaseExperienceClientSecret
-                )
-            );
-            var error = false;
-            yield return restSession.Open(
-                r =>
+
+            var domain = gs2.Exchange.Namespace(
+                namespaceName: exchangeNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Exchange();
+            var future = domain.Exchange(
+                rateName: exchangeRateName,
+                count: value,
+                config: new[]
                 {
-                    if (r.Error != null)
+                    new EzConfig
                     {
-                        onError.Invoke(r.Error);
-                        error = true;
+                        Key = "propertyId",
+                        Value = propertyId
                     }
                 }
             );
-
-            if (error)
+            yield return future;
+            if (future.Error != null)
             {
-                yield return restSession.Close(() => { });
+                onError.Invoke(
+                    future.Error
+                );
                 yield break;
             }
 
-            var restClient = new Gs2ExperienceRestClient(
-                restSession
-            );
+            var item = future.Result;
 
-            yield return restClient.AddExperienceByUserId(
-                new AddExperienceByUserIdRequest()
-                    .WithNamespaceName(experienceNamespaceName)
-                    .WithUserId(session.AccessToken.UserId)
-                    .WithExperienceName(experienceModel.Name)
-                    .WithPropertyId(propertyId)
-                    .WithExperienceValue(value),
-                r =>
-                {
-                    if (r.Error != null)
-                    {
-                        onError.Invoke(r.Error);
-                        error = true;
-                    }
-                    else
-                    {
-                        onIncreaseExperience.Invoke(
-                            experienceModel,
-                            EzStatus.FromModel(r.Result.Item),
-                            value
-                        );
-                    }
-                }
-            );
-            
-            yield return restSession.Close(() => { });
         }
+#if GS2_ENABLE_UNITASK
+        public async UniTask IncreaseExperienceAsync(
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string exchangeNamespaceName,
+            string exchangeRateName,
+            string propertyId,
+            int value,
+            ErrorEvent onError
+        )
+        {
+            // ※この処理はサンプルの動作確認のためものです。
+            // 実際にクライアントが直接経験値の増加を行う実装は非推奨となります。
+            // *This process is only for sample confirmation.
+            // The actual implementation of direct experience increase by the client is deprecated.
+
+            var domain = gs2.Exchange.Namespace(
+                namespaceName: exchangeNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Exchange();
+            try
+            {
+                var result = await domain.ExchangeAsync(
+                    rateName: exchangeRateName,
+                    count: value,
+                    config: new[]
+                    {
+                        new EzConfig
+                        {
+                            Key = "propertyId",
+                            Value = propertyId
+                        }
+                    }
+                );
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+            }
+        }
+#endif
     }
 }

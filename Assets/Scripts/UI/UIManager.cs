@@ -139,6 +139,7 @@ namespace Gs2.Sample
                 {"QuestStart", new List<string>{"クエストを開始","Start Quest."}},
                 {"QuestComp", new List<string>{"クエスト完了","Quest Completed."}},
                 {"QuestFailed", new List<string>{"クエスト失敗","Quest Failure."}},
+                {"QuestNotFound", new List<string>{"進行しているクエストはありません。","There are no quests in progress."}},
                 {"StaminaPurchase", new List<string>{"スタミナ回復を購入しました。","Stamina recovery was purchased."}},
                 {"UnitObtain", new List<string>{"入手しました。", "obtained."}},
                 {"Fire", new List<string>{"炎", "Fire"}},

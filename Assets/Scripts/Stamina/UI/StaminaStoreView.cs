@@ -9,17 +9,19 @@ namespace Gs2.Sample.Stamina
 {
     public class StaminaStoreView : MonoBehaviour
     {
+        [SerializeField]
         public TextMeshProUGUI destText;
-
+        [SerializeField]
         public TextMeshProUGUI currentStaminaText;
-        
+        [SerializeField]
         public TextMeshProUGUI recoveredStaminaText;
-        
+        [SerializeField]
         public TextMeshProUGUI priceText;
-
+        
+        [SerializeField]
         public Button buyButton;
 
-        public void Initialize(EzStamina stamina, int recover, long price, UnityAction onClick)
+        public void Initialize(EzStamina stamina, int recover, long price, long balance)
         {
             destText.SetText(recover.ToString());
             
@@ -28,8 +30,15 @@ namespace Gs2.Sample.Stamina
             recoveredStaminaText.SetText(recoveredStamina.ToString());
             
             priceText.SetText(price.ToString());
-            
-            buyButton.onClick.AddListener(onClick);
+
+            if (balance < price)
+            {
+                buyButton.interactable = false;
+            }
+            else
+            {
+                buyButton.interactable = true;
+            }
         }
         
         public void OnOpenEvent()

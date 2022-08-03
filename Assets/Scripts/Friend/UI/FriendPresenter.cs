@@ -1,11 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using Gs2.Core.Model;
-using Gs2.Gs2Chat.Model;
 using Gs2.Unity.Gs2Friend.Model;
-using Gs2.Util.LitJson;
 using UnityEngine;
 using UnityEngine.Assertions;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
+#endif
 
 namespace Gs2.Sample.Friend
 {
@@ -48,19 +50,18 @@ namespace Gs2.Sample.Friend
         /// <returns></returns>
         public void Initialize()
         {
-            GameManager.Instance.Client.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
+            GameManager.Instance.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
         }
         
         public void Finish()
         {
-            GameManager.Instance.Client.Profile.Gs2Session.OnNotificationMessage -= PushNotificationHandler;
+            GameManager.Instance.Profile.Gs2Session.OnNotificationMessage -= PushNotificationHandler;
         }
 
         /// <summary>
         /// 任意のタイミングで届く通知
         /// ※メインスレッド外
         /// </summary>
-        /// <param name="message"></param>
         public void PushNotificationHandler(NotificationMessage message)
         {
             Debug.Log("PushNotificationHandler :" + message.issuer);
@@ -77,9 +78,13 @@ namespace Gs2.Sample.Friend
         
         public void OnClickProfile()
         {
+#if GS2_ENABLE_UNITASK
+            GetProfileAsync().Forget();
+#else
             StartCoroutine(
                 GetProfile()
             );
+#endif
         }
         
         /// <summary>
@@ -104,20 +109,50 @@ namespace Gs2.Sample.Friend
             _friendSetting.onGetProfile.AddListener(OnGetProfile);
             
             yield return _friendModel.GetProfile(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 _friendSetting.onGetProfile,
                 _friendSetting.onError
             );
         }
+#if GS2_ENABLE_UNITASK
+        public async UniTask GetProfileAsync()
+        {
+            void OnGetProfile(
+                EzProfile profile
+            )
+            {
+                _friendSetting.onGetProfile.RemoveListener(OnGetProfile);
+
+                _friendProfileEditView.SetPublicProfile(profile.PublicProfile);
+                _friendProfileEditView.SetFollowProfile(profile.FollowerProfile);
+                _friendProfileEditView.SetFriendProfile(profile.FriendProfile);
+                
+                _friendProfileEditView.OnOpenEvent();
+            }
+            
+            _friendSetting.onGetProfile.AddListener(OnGetProfile);
+            
+            await _friendModel.GetProfileAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _friendSetting.friendNamespaceName,
+                _friendSetting.onGetProfile,
+                _friendSetting.onError
+            );
+        }
+#endif
         
         public void OnClickUpdateProfile()
         {
+#if GS2_ENABLE_UNITASK
+            UpdateProfileAsync().Forget();
+#else
             StartCoroutine(
                 UpdateProfile()
             );
-            
+#endif
             _friendProfileEditView.OnCloseEvent();
         }
         
@@ -133,7 +168,7 @@ namespace Gs2.Sample.Friend
             _friendSetting.onGetProfile.AddListener(OnUpdateProfile);
             
             yield return _friendModel.UpdateProfile(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 _friendProfileEditView.publicProfile.text,
@@ -143,19 +178,45 @@ namespace Gs2.Sample.Friend
                 _friendSetting.onError
             );
         }
-
+#if GS2_ENABLE_UNITASK
+        public async UniTask UpdateProfileAsync()
+        {
+            void OnUpdateProfile(
+                EzProfile profile
+            )
+            {
+                _friendProfileView.OnCloseEvent();
+            }
+            
+            _friendSetting.onGetProfile.AddListener(OnUpdateProfile);
+            
+            await _friendModel.UpdateProfileAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _friendSetting.friendNamespaceName,
+                _friendProfileEditView.publicProfile.text,
+                _friendProfileEditView.followerProfile.text,
+                _friendProfileEditView.friendProfile.text,
+                _friendSetting.onUpdateProfile,
+                _friendSetting.onError
+            );
+        }
+#endif
+        
         public void OnClickSendRequest(string targetUserId)
         {
+#if GS2_ENABLE_UNITASK
+            SendRequestAsync(targetUserId).Forget();
+#else
             StartCoroutine(
                 SendRequest(targetUserId)
             );
+#endif
         }
         
         /// <summary>
         /// フレンドリクエストを送信
         /// </summary>
-        /// <param name="targetUserId"></param>
-        /// <returns></returns>
         public IEnumerator SendRequest(string targetUserId)
         {
             void OnSendRequest(
@@ -170,7 +231,7 @@ namespace Gs2.Sample.Friend
             _friendSetting.onSendRequest.AddListener(OnSendRequest);
             
             yield return _friendModel.SendRequest(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 targetUserId,
@@ -178,12 +239,40 @@ namespace Gs2.Sample.Friend
                 _friendSetting.onError
             );
         }
+#if GS2_ENABLE_UNITASK
+        public async UniTask SendRequestAsync(string targetUserId)
+        {
+            void OnSendRequest(
+                EzFriendRequest request
+            )
+            {
+                _friendSetting.onSendRequest.RemoveListener(OnSendRequest);
+                
+                UIManager.Instance.OpenDialog1("Notice", "FriendRequestSend");
+            }
+            
+            _friendSetting.onSendRequest.AddListener(OnSendRequest);
+            
+            await _friendModel.SendRequestAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _friendSetting.friendNamespaceName,
+                targetUserId,
+                _friendSetting.onSendRequest,
+                _friendSetting.onError
+            );
+        }
+#endif
         
         public void OnClickAccept(string targetUserId)
         {
+#if GS2_ENABLE_UNITASK
+            AcceptAsync(targetUserId).Forget();
+#else
             StartCoroutine(
                 Accept(targetUserId)
             );
+#endif
         }
         
         private IEnumerator Accept(string targetUserId)
@@ -202,7 +291,7 @@ namespace Gs2.Sample.Friend
             _friendSetting.onAccept.AddListener(OnAccept);
             
             yield return _friendModel.Accept(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 targetUserId,
@@ -210,12 +299,42 @@ namespace Gs2.Sample.Friend
                 _friendSetting.onError
             );
         }
+#if GS2_ENABLE_UNITASK
+        private async UniTask AcceptAsync(string targetUserId)
+        {
+            void OnAccept(
+                EzFriendRequest request
+            )
+            {
+                _friendSetting.onAccept.RemoveListener(OnAccept);
+                
+                UIManager.Instance.OpenDialog1("Notice", "FriendRequestAccept");
+
+                OnOpenReceiveRequests();
+            }
+            
+            _friendSetting.onAccept.AddListener(OnAccept);
+            
+            await _friendModel.AcceptAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _friendSetting.friendNamespaceName,
+                targetUserId,
+                _friendSetting.onAccept,
+                _friendSetting.onError
+            );
+        }
+#endif
         
         public void OnClickReject(string targetUserId)
         {
+#if GS2_ENABLE_UNITASK
+            RejectAsync(targetUserId).Forget();
+#else
             StartCoroutine(
                 Reject(targetUserId)
             );
+#endif
         }
         
         private IEnumerator Reject(string targetUserId)
@@ -234,7 +353,7 @@ namespace Gs2.Sample.Friend
             _friendSetting.onReject.AddListener(OnReject);
             
             yield return _friendModel.Reject(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 targetUserId,
@@ -242,24 +361,66 @@ namespace Gs2.Sample.Friend
                 _friendSetting.onError
             );
         }
+#if GS2_ENABLE_UNITASK
+        private async UniTask RejectAsync(string targetUserId)
+        {
+            void OnReject(
+                EzFriendRequest request
+            )
+            {
+                _friendSetting.onReject.RemoveListener(OnReject);
+                
+                UIManager.Instance.OpenDialog1("Notice", "FriendRequestReject");
+
+                OnOpenReceiveRequests();
+            }
+            
+            _friendSetting.onReject.AddListener(OnReject);
+            
+            await _friendModel.RejectAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _friendSetting.friendNamespaceName,
+                targetUserId,
+                _friendSetting.onReject,
+                _friendSetting.onError
+            );
+        }
+#endif
         
         public void OnOpenFriendList()
         {
+#if GS2_ENABLE_UNITASK
+            OpenFriendListAsync().Forget();
+#else
             StartCoroutine(
                 OpenFriendList()
             );
+#endif
         }
         
         private IEnumerator OpenFriendList()
         {
             yield return _friendModel.DescribeFriends(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 _friendSetting.onDescribeFriends,
                 _friendSetting.onError
             );
         }
+#if GS2_ENABLE_UNITASK
+        private async UniTask OpenFriendListAsync()
+        {
+            await _friendModel.DescribeFriendsAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _friendSetting.friendNamespaceName,
+                _friendSetting.onDescribeFriends,
+                _friendSetting.onError
+            );
+        }
+#endif
         
         public void OnUpdateFriendList(List<EzFriendUser> friends)
         {
@@ -296,21 +457,40 @@ namespace Gs2.Sample.Friend
 
         public void OnOpenSendRequests()
         {
+#if GS2_ENABLE_UNITASK
+            OpenSendRequestsAsync().Forget();
+#else
             StartCoroutine(
                 OpenSendRequests()
             );
+#endif
         }
         
+        /// <summary>
+        /// 
+        /// </summary>
         private IEnumerator OpenSendRequests()
         {
             yield return _friendModel.DescribeSendRequests(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 _friendSetting.onDescribeSendRequests,
                 _friendSetting.onError
             );
         }
+#if GS2_ENABLE_UNITASK
+        private async UniTask OpenSendRequestsAsync()
+        {
+            await _friendModel.DescribeSendRequestsAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _friendSetting.friendNamespaceName,
+                _friendSetting.onDescribeSendRequests,
+                _friendSetting.onError
+            );
+        }
+#endif
         
         public void OnUpdateSendRequests(List<EzFriendRequest> friends)
         {
@@ -347,21 +527,37 @@ namespace Gs2.Sample.Friend
         
         public void OnOpenReceiveRequests()
         {
+#if GS2_ENABLE_UNITASK
+            OpenReceiveRequestsAsync().Forget();
+#else
             StartCoroutine(
                 OpenReceiveRequests()
             );
+#endif
         }
         
         private IEnumerator OpenReceiveRequests()
         {
             yield return _friendModel.DescribeReceiveRequests(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 _friendSetting.onDescribeReceiveRequests,
                 _friendSetting.onError
             );
         }
+#if GS2_ENABLE_UNITASK
+        private async UniTask OpenReceiveRequestsAsync()
+        {
+            await _friendModel.DescribeReceiveRequestsAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _friendSetting.friendNamespaceName,
+                _friendSetting.onDescribeReceiveRequests,
+                _friendSetting.onError
+            );
+        }
+#endif
         
         public void OnUpdateReceiveRequests(List<EzFriendRequest> friends)
         {
@@ -399,20 +595,24 @@ namespace Gs2.Sample.Friend
             _friendReceiveRequestsView.OnOpenEvent();
         }
         
-        public void OnOpenFriendProfile(string userId)
+        public void OnOpenFriendProfile(string targetUserId)
         {
+#if GS2_ENABLE_UNITASK
+            OpenFriendProfileAsync(targetUserId).Forget();
+#else
             StartCoroutine(
-                OpenFriendProfile(userId)
+                OpenFriendProfile(targetUserId)
             );
+#endif
         }
         
-        private IEnumerator OpenFriendProfile(string userId)
+        private IEnumerator OpenFriendProfile(string targetUserId)
         {
-            void OnGetFriend(
+            void GetFriend(
                 EzFriendUser profile
             )
             {
-                _friendSetting.onGetFriend.RemoveListener(OnGetFriend);
+                _friendSetting.onGetFriend.RemoveListener(GetFriend);
 
                 _friendProfileView.SetUserId(profile.UserId);
                 _friendProfileView.SetPublicProfile(profile.PublicProfile);
@@ -421,26 +621,58 @@ namespace Gs2.Sample.Friend
                 _friendProfileView.OnOpenEvent();
             }
             
-            _friendSetting.onGetFriend.AddListener(OnGetFriend);
+            _friendSetting.onGetFriend.AddListener(GetFriend);
             
             yield return _friendModel.GetFriend(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
-                userId,
+                targetUserId,
                 _friendSetting.onGetFriend,
                 _friendSetting.onError
             );
         }
-        
-        public void OnClickDeleteFriend(string userId)
+#if GS2_ENABLE_UNITASK
+        private async UniTask OpenFriendProfileAsync(string targetUserId)
         {
-            StartCoroutine(
-                DeleteFriend(userId)
+            void GetFriend(
+                EzFriendUser profile
+            )
+            {
+                _friendSetting.onGetFriend.RemoveListener(GetFriend);
+
+                _friendProfileView.SetUserId(profile.UserId);
+                _friendProfileView.SetPublicProfile(profile.PublicProfile);
+                _friendProfileView.SetFriendProfile(profile.FriendProfile);
+                
+                _friendProfileView.OnOpenEvent();
+            }
+            
+            _friendSetting.onGetFriend.AddListener(GetFriend);
+            
+            await _friendModel.GetFriendAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _friendSetting.friendNamespaceName,
+                targetUserId,
+                _friendSetting.onGetFriend,
+                _friendSetting.onError
             );
         }
+#endif
         
-        private IEnumerator DeleteFriend(string userId)
+        public void OnClickDeleteFriend(string targetUserId)
+        {
+#if GS2_ENABLE_UNITASK
+            DeleteFriendAsync(targetUserId).Forget();
+#else
+            StartCoroutine(
+                DeleteFriend(targetUserId)
+            );
+#endif
+        }
+
+        private IEnumerator DeleteFriend(string targetUserId)
         {
             void OnDeleteFriend(
                 EzFriendUser profile
@@ -456,14 +688,40 @@ namespace Gs2.Sample.Friend
             _friendSetting.onDeleteFriend.AddListener(OnDeleteFriend);
             
             yield return _friendModel.DeleteFriend(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
-                userId,
+                targetUserId,
                 _friendSetting.onDeleteFriend,
                 _friendSetting.onError
             );
         }
+#if GS2_ENABLE_UNITASK
+        private async UniTask DeleteFriendAsync(string targetUserId)
+        {
+            void OnDeleteFriend(
+                EzFriendUser profile
+            )
+            {
+                _friendSetting.onDeleteFriend.RemoveListener(OnDeleteFriend);
+                
+                UIManager.Instance.OpenDialog1("Notice", "FriendRemove");
+
+                OnOpenFriendList();
+            }
+            
+            _friendSetting.onDeleteFriend.AddListener(OnDeleteFriend);
+            
+            await _friendModel.DeleteFriendAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _friendSetting.friendNamespaceName,
+                targetUserId,
+                _friendSetting.onDeleteFriend,
+                _friendSetting.onError
+            );
+        }
+#endif
         
         public void OnOpenPlayerInfo(string userId)
         {
@@ -489,11 +747,15 @@ namespace Gs2.Sample.Friend
             _playerInfoView.OnOpenEvent();
         }
         
-        public void OnOpenPublicProfile(string userId)
+        public void OnOpenPublicProfile(string targetUserId)
         {
+#if GS2_ENABLE_UNITASK
+            OpenPublicProfileAsync(targetUserId).Forget();
+#else
             StartCoroutine(
-                OpenPublicProfile(userId)
+                OpenPublicProfile(targetUserId)
             );
+#endif
         }
         
         private IEnumerator OpenPublicProfile(string userId)
@@ -513,19 +775,49 @@ namespace Gs2.Sample.Friend
             _friendSetting.onGetPublicProfile.AddListener(OnGetPublicProfile);
             
             yield return _friendModel.GetPublicProfile(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 _friendSetting.friendNamespaceName,
                 userId,
                 _friendSetting.onGetPublicProfile,
                 _friendSetting.onError
             );
         }
-        
-        public void OnClickDeleteRequest(string userId)
+#if GS2_ENABLE_UNITASK
+        private async UniTask OpenPublicProfileAsync(string userId)
         {
-            StartCoroutine(
-                DeleteRequest(userId)
+            void OnGetPublicProfile(
+                EzPublicProfile profile
+            )
+            {
+                _friendSetting.onGetPublicProfile.RemoveListener(OnGetPublicProfile);
+
+                _publicProfileView.SetUserId(profile.UserId);
+                _publicProfileView.SetPublicProfile(profile.PublicProfile);
+                
+                _publicProfileView.OnOpenEvent();
+            }
+            
+            _friendSetting.onGetPublicProfile.AddListener(OnGetPublicProfile);
+            
+            await _friendModel.GetPublicProfile(
+                GameManager.Instance.Domain,
+                _friendSetting.friendNamespaceName,
+                userId,
+                _friendSetting.onGetPublicProfile,
+                _friendSetting.onError
             );
+        }
+#endif
+        
+        public void OnClickDeleteRequest(string targetUserId)
+        {
+#if GS2_ENABLE_UNITASK
+            DeleteRequestAsync(targetUserId).Forget();
+#else
+            StartCoroutine(
+                DeleteRequest(targetUserId)
+            );
+#endif
         }
         
         private IEnumerator DeleteRequest(string userId)
@@ -544,7 +836,7 @@ namespace Gs2.Sample.Friend
             _friendSetting.onDeleteRequest.AddListener(OnDeleteRequest);
             
             yield return _friendModel.DeleteRequest(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 userId,
@@ -552,24 +844,66 @@ namespace Gs2.Sample.Friend
                 _friendSetting.onError
             );
         }
+#if GS2_ENABLE_UNITASK
+        private async UniTask DeleteRequestAsync(string userId)
+        {
+            void OnDeleteRequest(
+                EzFriendRequest request
+            )
+            {
+                _friendSetting.onDeleteRequest.RemoveListener(OnDeleteRequest);
+                
+                UIManager.Instance.OpenDialog1("Notice", "FriendRequestDelete");
+
+                OnOpenSendRequests();
+            }
+            
+            _friendSetting.onDeleteRequest.AddListener(OnDeleteRequest);
+            
+            await _friendModel.DeleteRequestAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _friendSetting.friendNamespaceName,
+                userId,
+                _friendSetting.onDeleteRequest,
+                _friendSetting.onError
+            );
+        }
+#endif
         
         public void OnOpenBlackList()
         {
+#if GS2_ENABLE_UNITASK
+            OpenBlackListAsync().Forget();
+#else
             StartCoroutine(
                 OpenBlackList()
             );
+#endif
         }
         
         private IEnumerator OpenBlackList()
         {
             yield return _friendModel.GetBlackList(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 _friendSetting.onGetBlackList,
                 _friendSetting.onError
             );
         }
+#if GS2_ENABLE_UNITASK
+        private async UniTask OpenBlackListAsync()
+        {
+            await _friendModel.GetBlackListAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _friendSetting.friendNamespaceName,
+                _friendSetting.onGetBlackList,
+                _friendSetting.onError
+            );
+        }
+#endif
         
         public void OnUpdateBlackList(List<string> blackList)
         {
@@ -604,14 +938,18 @@ namespace Gs2.Sample.Friend
             _friendBlackListView.OnOpenEvent();
         }
         
-        public void OnClickUnregisterBlackList(string userId)
+        public void OnClickUnregisterBlackList(string targetUserId)
         {
+#if GS2_ENABLE_UNITASK
+            UnregisterBlackListAsync(targetUserId).Forget();
+#else
             StartCoroutine(
-                UnregisterBlackList(userId)
+                UnregisterBlackList(targetUserId)
             );
+#endif
         }
         
-        private IEnumerator UnregisterBlackList(string userId)
+        private IEnumerator UnregisterBlackList(string targetUserId)
         {
             void OnUnregisterBlackList(
                 EzBlackList request
@@ -627,23 +965,53 @@ namespace Gs2.Sample.Friend
             _friendSetting.onUnregisterBlackList.AddListener(OnUnregisterBlackList);
             
             yield return _friendModel.UnregisterBlackList(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
-                userId,
+                targetUserId,
                 _friendSetting.onUnregisterBlackList,
                 _friendSetting.onError
             );
         }
-        
-        public void OnClickRegisterBlackList(string userId)
+#if GS2_ENABLE_UNITASK
+        private async UniTask UnregisterBlackListAsync(string targetUserId)
         {
-            StartCoroutine(
-                RegisterBlackList(userId)
+            void OnUnregisterBlackList(
+                EzBlackList request
+            )
+            {
+                _friendSetting.onUnregisterBlackList.RemoveListener(OnUnregisterBlackList);
+                
+                UIManager.Instance.OpenDialog1("Notice", "FriendRemoveBlacklist");
+
+                OnOpenBlackList();
+            }
+            
+            _friendSetting.onUnregisterBlackList.AddListener(OnUnregisterBlackList);
+            
+            await _friendModel.UnregisterBlackListAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _friendSetting.friendNamespaceName,
+                targetUserId,
+                _friendSetting.onUnregisterBlackList,
+                _friendSetting.onError
             );
         }
+#endif
         
-        private IEnumerator RegisterBlackList(string userId)
+        public void OnClickRegisterBlackList(string targetUserId)
+        {
+#if GS2_ENABLE_UNITASK
+            RegisterBlackListAsync(targetUserId).Forget();
+#else
+            StartCoroutine(
+                RegisterBlackList(targetUserId)
+            );
+#endif
+        }
+        
+        private IEnumerator RegisterBlackList(string targetUserId)
         {
             void OnRegisterBlackList(
                 EzBlackList request
@@ -657,20 +1025,48 @@ namespace Gs2.Sample.Friend
             _friendSetting.onUnregisterBlackList.AddListener(OnRegisterBlackList);
             
             yield return _friendModel.RegisterBlackList(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
-                userId,
+                targetUserId,
                 _friendSetting.onRegisterBlackList,
                 _friendSetting.onError
             );
         }
+#if GS2_ENABLE_UNITASK
+        private async UniTask RegisterBlackListAsync(string targetUserId)
+        {
+            void OnRegisterBlackList(
+                EzBlackList request
+            )
+            {
+                _friendSetting.onUnregisterBlackList.RemoveListener(OnRegisterBlackList);
+                
+                UIManager.Instance.OpenDialog1("Notice", "FriendAddBlacklist");
+            }
+            
+            _friendSetting.onUnregisterBlackList.AddListener(OnRegisterBlackList);
+            
+            await _friendModel.RegisterBlackListAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _friendSetting.friendNamespaceName,
+                targetUserId,
+                _friendSetting.onRegisterBlackList,
+                _friendSetting.onError
+            );
+        }
+#endif
         
         public void OnClickFollow(string targetUserId)
         {
+#if GS2_ENABLE_UNITASK
+            FollowAsync(targetUserId).Forget();
+#else
             StartCoroutine(
                 Follow(targetUserId)
             );
+#endif
         }
         
         public IEnumerator Follow(string targetUserId)
@@ -687,7 +1083,7 @@ namespace Gs2.Sample.Friend
             _friendSetting.onFollow.AddListener(OnFollow);
             
             yield return _friendModel.Follow(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 targetUserId,
@@ -695,18 +1091,46 @@ namespace Gs2.Sample.Friend
                 _friendSetting.onError
             );
         }
+#if GS2_ENABLE_UNITASK
+        public async UniTask FollowAsync(string targetUserId)
+        {
+            void OnFollow(
+                EzFollowUser user
+            )
+            {
+                _friendSetting.onFollow.RemoveListener(OnFollow);
+                
+                UIManager.Instance.OpenDialog1("Notice", "Follow");
+            }
+            
+            _friendSetting.onFollow.AddListener(OnFollow);
+            
+            await _friendModel.FollowAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _friendSetting.friendNamespaceName,
+                targetUserId,
+                _friendSetting.onFollow,
+                _friendSetting.onError
+            );
+        }
+#endif
         
         public void OnClickUnfollow(string targetUserId)
         {
+#if GS2_ENABLE_UNITASK
+            UnfollowAsync(targetUserId).Forget();
+#else
             StartCoroutine(
                 Unfollow(targetUserId)
             );
+#endif
         }
         
         public IEnumerator Unfollow(string targetUserId)
         {
             void OnUnfollow(
-                EzFollowUser u
+                EzFollowUser user
             )
             {
                 _friendSetting.onUnfollow.RemoveListener(OnUnfollow);
@@ -719,7 +1143,7 @@ namespace Gs2.Sample.Friend
             _friendSetting.onUnfollow.AddListener(OnUnfollow);
             
             yield return _friendModel.Unfollow(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 targetUserId,
@@ -727,24 +1151,66 @@ namespace Gs2.Sample.Friend
                 _friendSetting.onError
             );
         }
+#if GS2_ENABLE_UNITASK
+        public async UniTask UnfollowAsync(string targetUserId)
+        {
+            void OnUnfollow(
+                EzFollowUser user
+            )
+            {
+                _friendSetting.onUnfollow.RemoveListener(OnUnfollow);
+                
+                UIManager.Instance.OpenDialog1("Notice", "Unfollow");
+                
+                OnOpenFollowList();
+            }
+            
+            _friendSetting.onUnfollow.AddListener(OnUnfollow);
+            
+            await _friendModel.UnfollowAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _friendSetting.friendNamespaceName,
+                targetUserId,
+                _friendSetting.onUnfollow,
+                _friendSetting.onError
+            );
+        }
+#endif
         
         public void OnOpenFollowList()
         {
+#if GS2_ENABLE_UNITASK
+            OpenFollowListAsync().Forget();
+#else
             StartCoroutine(
                 OpenFollowList()
             );
+#endif
         }
         
         private IEnumerator OpenFollowList()
         {
             yield return _friendModel.DescribeFollowUsers(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _friendSetting.friendNamespaceName,
                 _friendSetting.onDescribeFollowUsers,
                 _friendSetting.onError
             );
         }
+#if GS2_ENABLE_UNITASK
+        private async UniTask OpenFollowListAsync()
+        {
+            await _friendModel.DescribeFollowUsersAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _friendSetting.friendNamespaceName,
+                _friendSetting.onDescribeFollowUsers,
+                _friendSetting.onError
+            );
+        }
+#endif
         
         public void OnUpdateFollowList(List<EzFollowUser> followList)
         {

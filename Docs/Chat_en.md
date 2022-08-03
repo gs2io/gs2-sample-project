@@ -29,18 +29,64 @@ This is a sample of using [GS2-Chat](https://app.gs2.io/docs/en/index.html#gs2-c
 | OnError(Gs2Exception error) | Called when an error occurs. | OnError(Gs2Exception error)
 
 ## Send message
+
+When UniTask is enabled
 ```c#
-AsyncResult<EzPostResult> result = null;
-yield return client.Chat.Post(
-    r => { result = r; }
-    session,
-    chatNamespaceName,
-    roomName,
-    message,
-    null,
-    null
+var domain = gs2.Chat.Namespace(
+    namespaceName: chatNamespaceName
+).Me(
+    gameSession: gameSession
+).Room(
+    roomName: roomName,
+    password: null
 );
-````
+try
+{
+    var result = await domain.PostAsync(
+        metadata: message,
+        category: null
+    );
+    var item = await result.ModelAsync();
+    onPost.Invoke(item);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+When coroutine is used
+```c#
+var domain = gs2.Chat.Namespace(
+    namespaceName: chatNamespaceName
+).Me(
+    gameSession: gameSession
+).Room(
+    roomName: roomName,
+    password: null
+);
+var future = domain.Post(
+    metadata: message,
+    category: null
+);
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    yield break;
+}
+
+var result = future.Result;
+var future2 = result.Model();
+yield return future2;
+if (future2.Error != null)
+{
+    onError.Invoke(future2.Error);
+    yield break;
+}
+
+var item = future2.Result; 
+onPost.Invoke(item);
+```
 
 ## Receive messages
 
@@ -52,18 +98,60 @@ Gs2WebSocketSession
 
 Retrieve the message.
 
+When UniTask is enabled
 ```c#
-AsyncResult<EzListMessagesResult> result = null;
-yield return client.Chat.ListMessages(
-    r => { result = r; }
-    session,
-    chatNamespaceName,
-    roomName,
-    null,
-    null,
-    null
+var domain = gs2.Chat.Namespace(
+    namespaceName: chatNamespaceName
+).Me(
+    gameSession: gameSession
+).Room(
+    roomName: roomName,
+    password: null
 );
-````
+try
+{
+    List<EzMessage> massages = await domain.MessagesAsync().ToListAsync();
+    
+    onListMessages.Invoke(massages);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+When coroutine is used
+```c#
+var domain = gs2.Chat.Namespace(
+    namespaceName: chatNamespaceName
+).Me(
+    gameSession: gameSession
+).Room(
+    roomName: roomName,
+    password: null
+);
+var it = domain.Messages();
+List<EzMessage> massages = new List<EzMessage>();
+while (it.HasNext())
+{
+    yield return it.Next();
+    if (it.Error != null)
+    {
+        onError.Invoke(it.Error);
+        break;
+    }
+
+    if (it.Current != null)
+    {
+        massages.Add(it.Current);
+    }
+    else
+    {
+        break;
+    }
+}
+
+onListMessages.Invoke(massages);
+```
 
 Tapping the balloon of a message received from another player allows you to follow, friend request, or blacklist the player.
 This function is for the friend function using GS2-Friend.

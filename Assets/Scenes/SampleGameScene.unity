@@ -1673,7 +1673,6 @@ GameObject:
   - component: {fileID: 262177624}
   - component: {fileID: 262177609}
   - component: {fileID: 262177610}
-  - component: {fileID: 262177611}
   - component: {fileID: 262177614}
   - component: {fileID: 262177613}
   - component: {fileID: 262177619}
@@ -1749,7 +1748,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45a4d9b2495588442bf7eb11823170fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  InventoryNamespaceName: 
   Model:
     Name: 
     Metadata: 
@@ -1886,21 +1884,6 @@ MonoBehaviour:
     CurrentInventoryCapacityUsage: 0
     CurrentInventoryMaxCapacity: 0
   ItemSets: []
---- !u!114 &262177611
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 262177601}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b1efd3c5c86d60045a7904feedbf0da0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  onExecJob:
-    m_PersistentCalls:
-      m_Calls: []
 --- !u!114 &262177612
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1922,6 +1905,12 @@ MonoBehaviour:
     RankThreshold:
       Metadata: 
       Values: 
+  playerStatus:
+    ExperienceName: 
+    PropertyId: 
+    ExperienceValue: 0
+    RankValue: 0
+    RankCapValue: 0
   itemExperienceModel:
     Name: 
     Metadata: 
@@ -1972,10 +1961,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9604c074aaea4684683c2a57d92f1a80, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  room:
+  Room:
     Name: 
     Metadata: 
-  rooms: []
+  Rooms: []
 --- !u!114 &262177615
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2018,6 +2007,7 @@ MonoBehaviour:
     CreatedAt: 0
     UpdatedAt: 0
   JoinedPlayerIds: []
+  ResultGatherings: []
 --- !u!114 &262177620
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2030,7 +2020,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f10f4f695d2dacc4bb94df29399b5076, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  staminaModel:
+  model:
     Name: 
     Metadata: 
     RecoverIntervalMinutes: 0
@@ -2078,12 +2068,12 @@ MonoBehaviour:
     Metadata: 
     InitialCapacity: 0
     MaxCapacity: 0
+  ItemModels: []
   Inventory:
     InventoryId: 
     InventoryName: 
     CurrentInventoryCapacityUsage: 0
     CurrentInventoryMaxCapacity: 0
-  ItemModels: []
   ItemSets: []
 --- !u!114 &262177623
 MonoBehaviour:
@@ -2114,30 +2104,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a2622d140b642ba93d7b57f4e06d8c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  QuestGroups: []
-  CompletedQuests: []
-  SelectedQuestGroup:
+  questGroups: []
+  completedQuests: []
+  selectedQuestGroup:
     Name: 
     Metadata: 
     Quests: []
     ChallengePeriodEventId: 
-  Quests: []
-  SelectedQuest:
+  quests: []
+  selectedQuest:
     QuestModelId: 
     Name: 
     Metadata: 
     Contents: []
     ChallengePeriodEventId: 
+    FirstCompleteAcquireActions: []
     ConsumeActions: []
     FailedAcquireActions: []
     PremiseQuestNames: []
-  Progress:
+  progress:
     ProgressId: 
     TransactionId: 
     QuestModelId: 
     RandomSeed: 0
     Rewards: []
-  CurrentCompletedQuestList:
+  currentCompletedQuestList:
     QuestGroupName: 
     CompleteQuestNames: []
 --- !u!114 &262177626
@@ -4691,18 +4682,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 687136887}
   m_CullTransparentMesh: 0
---- !u!114 &743558899 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1593262524687613454, guid: dc1fb435ffb83544ba2c14858591211e,
-    type: 3}
-  m_PrefabInstance: {fileID: 2580864014067856577}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b1efd3c5c86d60045a7904feedbf0da0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &744681938 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5135713077824975125, guid: a18bf2e533495fe40babeb0b3d97f92b,
@@ -8467,7 +8446,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2e20947e3c24fb48a6780c2c749b316, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  matchmakingNamespaceName: matchmaking-0002
+  matchmakingNamespaceName: matchmaking-0001
   onJoinPlayer:
     m_PersistentCalls:
       m_Calls: []
@@ -8521,9 +8500,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   questNamespaceName: quest-0001
-  questKeyId: 
-  distributorNamespaceName: quest-distributor
-  jobQueueNamespaceName: quest-queue
   onListCompletedQuestsModel:
     m_PersistentCalls:
       m_Calls: []
@@ -8568,11 +8544,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf0a9251e85aac24abbae8f87aa0b73a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inventoryNamespaceName: gold
+  inventoryNamespaceName: gold-0001
   inventoryModelName: gold
   itemModelName: gold
-  identifierAcquireGoldClientId: 
-  identifierAcquireGoldClientSecret: 
+  exchangeNamespaceName: gold-exchange
+  exchangeRateName: gold
   onGetInventoryModel:
     m_PersistentCalls:
       m_Calls: []
@@ -8636,9 +8612,6 @@ MonoBehaviour:
   moneyNamespaceName: money-0001
   showcaseNamespaceName: money-showcase
   showcaseName: money-showcase
-  showcaseKeyId: 
-  limitNamespaceName: money-showcase-limit
-  distributorNamespaceName: money-distributor
   onGetWallet:
     m_PersistentCalls:
       m_Calls: []
@@ -8675,16 +8648,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   staminaNamespaceName: stamina-0001
-  staminaModelName: main
   staminaName: main
   exchangeNamespaceName: stamina-exchange
   exchangeRateName: money-stamima
-  exchangeKeyId: 
-  distributorNamespaceName: stamina-distributor
   onGetStaminaModel:
-    m_PersistentCalls:
-      m_Calls: []
-  onRecoverStamina:
     m_PersistentCalls:
       m_Calls: []
   onConsumeStamina:
@@ -8765,7 +8732,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 73f5f67adcef4ce3b0fe6dcdfaca7aa6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  accountNamespaceName: game-0001
+  accountNamespaceName: account-0001
   accountEncryptionKeyId: 
   gatewayNamespaceName: gateway-0001
   onCreateAccount:
@@ -8808,6 +8775,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   applicationClientId: 
   applicationClientSecret: 
+  distributorNamespaceName: distributor-0001
   onInitializeGs2:
     m_PersistentCalls:
       m_Calls:
@@ -8822,9 +8790,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  onFinalizeGs2:
-    m_PersistentCalls:
-      m_Calls: []
   onError:
     m_PersistentCalls:
       m_Calls:
@@ -8876,10 +8841,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcad8ba6d76882f419cd9b0e94776f07, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inventoryNamespaceName: inventory
+  inventoryNamespaceName: inventory-0001
   inventoryModelName: inventory
-  identifierAcquireItemClientId: 
-  identifierAcquireItemClientSecret: 
+  exchangeNamespaceName: inventory-exchange
+  exchangeRateNameFire: fire_element
+  exchangeRateNameWater: water_element
   onGetInventoryModel:
     m_PersistentCalls:
       m_Calls: []
@@ -8918,7 +8884,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d9558314eeb8324a8cc3c2c938dc649, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  versionNamespaceName: eula
+  versionNamespaceName: eula-0001
   versionName: eula
   onCheckVersion:
     m_PersistentCalls:
@@ -8974,7 +8940,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0459b532368f369468c2dd8d27738981, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  versionNamespaceName: application
+  versionNamespaceName: application-0001
   versionName: application
   currentVersionMajor: 1
   currentVersionMinor: 0
@@ -9019,16 +8985,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5d415fbc2cb8d549b518409a0cc6368, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lotteryNamespaceName: lottery-store
-  jobQueueNamespaceName: job-queue
-  showcaseNamespaceName: lottery-store
-  showcaseName: lottery
-  showcaseKeyId: 
-  lotteryKeyId: 
+  lotteryName: lottery
+  showcaseNamespaceName: lottery-showcase
   onGetShowcase:
-    m_PersistentCalls:
-      m_Calls: []
-  onIssueBuyStampSheet:
     m_PersistentCalls:
       m_Calls: []
   onAcquireInventoryItem:
@@ -9071,20 +9030,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2218f1c54a5c8941ae5f307fff91397, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inventoryNamespaceName: unit
+  inventoryNamespaceName: unit-0001
   inventoryModelName: unit
-  identifierAcquireUnitClientId: 
-  identifierAcquireUnitClientSecret: 
   onGetInventoryModel:
     m_PersistentCalls:
       m_Calls: []
   onGetInventory:
-    m_PersistentCalls:
-      m_Calls: []
-  onGetItemSetWithSignature:
-    m_PersistentCalls:
-      m_Calls: []
-  onAcquire:
     m_PersistentCalls:
       m_Calls: []
   onConsume:
@@ -9116,18 +9067,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc40c4b0cd7b8c34ca290b9337b6de9c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  experienceNamespaceName: experience
+  experienceNamespaceName: experience-0001
   playerExperienceModelName: player
   itemExperienceModelName: unit
-  identifierIncreaseExperienceClientId: 
-  identifierIncreaseExperienceClientSecret: 
+  exchangeNamespaceName: experience-exchange
+  playerEexchangeRateName: experience-player
+  itemExchangeRateName: experience-unit
   onGetExperienceModel:
     m_PersistentCalls:
       m_Calls: []
   onGetStatuses:
-    m_PersistentCalls:
-      m_Calls: []
-  onIncreaseExperience:
     m_PersistentCalls:
       m_Calls: []
   onError:
@@ -9156,7 +9105,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4853cbe124157dc4791fcdc415d60b12, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  friendNamespaceName: friend
+  friendNamespaceName: friend-0001
   onGetProfile:
     m_PersistentCalls:
       m_Calls: []
@@ -9292,7 +9241,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88e60175fead4b644bca65383ded3152, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chatNamespaceName: chat
+  chatNamespaceName: chat-0001
   roomName: chat
   onGetRoom:
     m_PersistentCalls:
@@ -9341,7 +9290,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a71e1b54d970434d86e5acdd7c09b0e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  newsNamespaceName: news
+  newsNamespaceName: news-0001
   onGetContentsUrl:
     m_PersistentCalls:
       m_Calls: []
@@ -15495,7 +15444,7 @@ PrefabInstance:
         type: 3}
       propertyPath: _jobQueueModel
       value: 
-      objectReference: {fileID: 743558899}
+      objectReference: {fileID: 0}
     - target: {fileID: 4320372128248017031, guid: dc1fb435ffb83544ba2c14858591211e,
         type: 3}
       propertyPath: _moneyPresenter
@@ -15741,7 +15690,8 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 1
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 1593262524687613454, guid: dc1fb435ffb83544ba2c14858591211e, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: dc1fb435ffb83544ba2c14858591211e, type: 3}
 --- !u!1001 &2616080886779708633
 PrefabInstance:
@@ -16363,7 +16313,8 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 1
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 6987046111963303067, guid: f54fd839ce1a10e4aae9ea8851930fcf, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: f54fd839ce1a10e4aae9ea8851930fcf, type: 3}
 --- !u!224 &3159637907967873513 stripped
 RectTransform:

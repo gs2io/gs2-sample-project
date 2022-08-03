@@ -1,15 +1,14 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
-using Gs2.Core;
 using Gs2.Core.Exception;
-using Gs2.Core.Util;
-using Gs2.Unity;
-using Gs2.Unity.Gs2Exchange.Result;
+using Gs2.Unity.Core;
 using Gs2.Unity.Gs2Stamina.Model;
-using Gs2.Unity.Gs2Stamina.Result;
 using Gs2.Unity.Util;
 using UnityEngine;
 using UnityEngine.Events;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
+#endif
 
 namespace Gs2.Sample.Stamina
 {
@@ -19,211 +18,325 @@ namespace Gs2.Sample.Stamina
         /// スタミナモデル
         /// stamina model
         /// </summary>
-        public EzStaminaModel staminaModel;
+        public EzStaminaModel model;
         
         /// <summary>
         /// 現在のスタミナ値
         /// Current Stamina Value
         /// </summary>
         public EzStamina stamina;
-        
+
+        /// <summary>
+        /// スタミナモデルを取得
+        /// Get Stamina Model
+        /// </summary>
+        public IEnumerator GetStaminaModel(
+            Gs2Domain gs2,
+            string staminaNamespaceName,
+            string staminaModelName,
+            GetStaminaModelEvent onGetStaminaModel,
+            ErrorEvent onError
+        )
+        {
+            var domain = gs2.Stamina.Namespace(
+                namespaceName: staminaNamespaceName
+            ).StaminaModel(
+                staminaName: staminaModelName
+            );
+            var future = domain.Model();
+            yield return future;
+            if (future.Error != null)
+            {
+                onError.Invoke(future.Error);
+                yield break;
+            }
+
+            model = future.Result;
+
+            onGetStaminaModel.Invoke(staminaModelName, model);
+        }
+#if GS2_ENABLE_UNITASK
+        /// <summary>
+        /// スタミナモデルを取得
+        /// Get Stamina Model
+        /// </summary>
+        public async UniTask GetStaminaModelAsync(
+            Gs2Domain gs2,
+            string staminaNamespaceName,
+            string staminaModelName,
+            GetStaminaModelEvent onGetStaminaModel,
+            ErrorEvent onError
+        )
+        {
+            var domain = gs2.Stamina.Namespace(
+                namespaceName: staminaNamespaceName
+            ).StaminaModel(
+                staminaName: staminaModelName
+            );
+            try
+            {
+                model = await domain.ModelAsync();
+                onGetStaminaModel.Invoke(staminaModelName, model);
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+            }
+        }
+#endif
+
         /// <summary>
         /// スタミナ値を取得
         /// Get Stamina Value
         /// </summary>
-        /// <param name="callback"></param>
-        /// <param name="client"></param>
-        /// <param name="session"></param>
-        /// <param name="staminaNamespaceName"></param>
-        /// <param name="staminaName"></param>
-        /// <param name="onGetStamina"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
         public IEnumerator GetStamina(
-            UnityAction<AsyncResult<EzGetStaminaResult>> callback,
-            Client client,
-            GameSession session,
+            UnityAction<EzStamina> callback,
+            Gs2Domain gs2,
+            GameSession gameSession,
             string staminaNamespaceName,
             string staminaName,
             GetStaminaEvent onGetStamina,
             ErrorEvent onError
         )
         {
-            AsyncResult<EzGetStaminaResult> result = null;
-            yield return client.Stamina.GetStamina(
-                r =>
-                {
-                    result = r;
-                },
-                session,
-                staminaNamespaceName,
-                staminaName
-            );
-            
-            if (result.Error != null)
+            var future = gs2.Stamina.Namespace(
+                namespaceName: staminaNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Stamina(
+                staminaName: staminaName
+            ).Model();
+            yield return future;
+            if (future.Error != null)
             {
-                onError.Invoke(
-                    result.Error
-                );
-                callback.Invoke(result);
+                onError.Invoke(future.Error);
                 yield break;
             }
+            stamina = future.Result;
             
-            stamina = result.Result.Item;
+            onGetStamina.Invoke(stamina);
             
-            onGetStamina.Invoke(staminaModel, result.Result.Item);
-            
-            callback.Invoke(result);
+            callback.Invoke(stamina);
         }
+#if GS2_ENABLE_UNITASK
+        /// <summary>
+        /// スタミナ値を取得
+        /// Get Stamina Value
+        /// </summary>
+        public async UniTask<EzStamina> GetStaminaAsync(
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string staminaNamespaceName,
+            string staminaName,
+            GetStaminaEvent onGetStamina,
+            ErrorEvent onError
+        )
+        {
+            var domain = gs2.Stamina.Namespace(
+                namespaceName: staminaNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Stamina(
+                staminaName: staminaName
+            );
+            try
+            {
+                stamina = await domain.ModelAsync();
+                
+                onGetStamina.Invoke(stamina);
+                
+                return stamina;
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+            }
+
+            return null;
+        }
+#endif
 
         /// <summary>
         /// スタミナを消費する
         /// Consume Stamina
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="session"></param>
-        /// <param name="staminaNamespaceName"></param>
-        /// <param name="consumeValue"></param>
-        /// <param name="onConsumeStamina"></param>
-        /// <param name="onGetStamina"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
         public IEnumerator ConsumeStamina(
-            Client client,
-            GameSession session,
+            Gs2Domain gs2,
+            GameSession gameSession,
             string staminaNamespaceName,
+            string staminaName,
             int consumeValue,
             ConsumeStaminaEvent onConsumeStamina,
             GetStaminaEvent onGetStamina,
             ErrorEvent onError
         )
         {
-            AsyncResult<EzConsumeResult> result = null;
-            yield return client.Stamina.Consume(
-                r =>
-                {
-                    result = r;
-                },
-                session,
-                staminaNamespaceName,
-                staminaModel.Name,
-                consumeValue
+            var domain = gs2.Stamina.Namespace(
+                namespaceName: staminaNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Stamina(
+                staminaName: staminaName
             );
-            
-            if (result.Error != null)
+            var future = domain.Consume(
+                consumeValue: consumeValue
+            );
+            yield return future;
+            if (future.Error != null)
             {
-                onError.Invoke(
-                    result.Error
-                );
+                onError.Invoke(future.Error);
                 yield break;
             }
 
-            stamina = result.Result.Item;
+            var future2 = future.Result.Model();
+            yield return future2;
+            if (future2.Error != null)
+            {
+                onError.Invoke(future2.Error);
+                yield break;
+            }
 
-            onConsumeStamina.Invoke(staminaModel, stamina, consumeValue);
-            onGetStamina.Invoke(staminaModel, stamina);
+            stamina = future2.Result;
+
+            onConsumeStamina.Invoke(model, stamina, consumeValue);
+            onGetStamina.Invoke(stamina);
         }
-        
+#if GS2_ENABLE_UNITASK
+        public async UniTask ConsumeStaminaAsync(
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string staminaNamespaceName,
+            string staminaName,
+            int consumeValue,
+            ConsumeStaminaEvent onConsumeStamina,
+            GetStaminaEvent onGetStamina,
+            ErrorEvent onError
+        )
+        {
+            var domain = gs2.Stamina.Namespace(
+                namespaceName: staminaNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Stamina(
+                staminaName: staminaName
+            );
+            try
+            {
+                var result = await domain.ConsumeAsync(
+                    consumeValue
+                );
+
+                stamina = await result.ModelAsync();
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+                return;
+            }
+            
+            onConsumeStamina.Invoke(model, stamina, consumeValue);
+            onGetStamina.Invoke(stamina);
+        }
+#endif
+
         /// <summary>
         /// スタミナを購入する
         /// Buy Stamina
         /// </summary>
-        /// <param name="callback"></param>
-        /// <param name="client"></param>
-        /// <param name="session"></param>
-        /// <param name="exchangeNamespaceName"></param>
-        /// <param name="exchangeRateName"></param>
-        /// <param name="slot"></param>
-        /// <param name="distributorNamespaceName"></param>
-        /// <param name="exchangeKeyId"></param>
-        /// <param name="onBuy"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
         public IEnumerator Buy(
-            UnityAction<AsyncResult<object>> callback,
-            Client client,
-            GameSession session,
+            UnityAction<Gs2Exception> callback,
+            Gs2Domain gs2,
+            GameSession gameSession,
             string exchangeNamespaceName,
             string exchangeRateName,
             int slot,
-            string distributorNamespaceName,
-            string exchangeKeyId,
             StaminaBuyEvent onBuy,
             ErrorEvent onError
         )
         {
-            string stampSheet = null;
-            {
-                AsyncResult<EzExchangeResult> result = null;
-                yield return client.Exchange.Exchange(
-                    r => { result = r; },
-                    session,
-                    exchangeNamespaceName,
-                    exchangeRateName,
-                    1,
-                    new List<Gs2.Unity.Gs2Exchange.Model.EzConfig>
+            var domain = gs2.Exchange.Namespace(
+                namespaceName: exchangeNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Exchange();
+            var future = domain.Exchange(
+                rateName: exchangeRateName,
+                count: 1,
+                config: new[]
+                {
+                    new Gs2.Unity.Gs2Exchange.Model.EzConfig
                     {
-                        new Gs2.Unity.Gs2Exchange.Model.EzConfig
-                        {
-                            Key = "slot",
-                            Value = slot.ToString(),
-                        }
+                        Key = "slot",
+                        Value = slot.ToString(),
                     }
-                );
-
-                if (result.Error != null)
-                {
-                    onError.Invoke(
-                        result.Error
-                    );
-                    callback.Invoke(new AsyncResult<object>(null, result.Error));
-                    yield break;
                 }
-
-                // スタンプシートを取得
-                // Get Stamp Sheet
-                stampSheet = result.Result.StampSheet;
-            }
+            );
+            yield return future;
+            if (future.Error != null)
             {
-                var machine = new StampSheetStateMachine(
-                    stampSheet,
-                    client,
-                    distributorNamespaceName,
-                    exchangeKeyId
+                onError.Invoke(
+                    future.Error
                 );
-
-                Gs2Exception exception = null;
-
-                void OnError(Gs2Exception e)
-                {
-                    exception = e;
-                }
-
-                onError.AddListener(OnError);
-                
-                // スタンプシートの実行
-                // Stamp sheet execution
-                yield return machine.Execute(onError);
-                
-                onError.RemoveListener(OnError);
-
-                if (exception != null)
-                {
-                    // スタンプシート実行エラー
-                    // Stamp sheet execution error
-                    onError.Invoke(
-                        exception
-                    );
-                    callback.Invoke(new AsyncResult<object>(null, exception));
-                    yield break;
-                }
+                callback.Invoke(future.Error);
+                yield break;
             }
+
             // スタミナ購入に成功
             // Successfully purchased stamina
-            
+
             onBuy.Invoke();
 
-            callback.Invoke(new AsyncResult<object>(null, null));
+            callback.Invoke(null);
         }
+
+#if GS2_ENABLE_UNITASK
+        /// <summary>
+        /// スタミナを購入する
+        /// Buy Stamina
+        /// </summary>
+        public async UniTask<Gs2Exception> BuyAsync(
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string exchangeNamespaceName,
+            string exchangeRateName,
+            int slot,
+            StaminaBuyEvent onBuy,
+            ErrorEvent onError
+        )
+        {
+            var domain = gs2.Exchange.Namespace(
+                namespaceName: exchangeNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Exchange();
+            Gs2.Unity.Gs2Exchange.Model.EzConfig[] config =
+            {
+                new Gs2.Unity.Gs2Exchange.Model.EzConfig
+                {
+                    Key = "slot",
+                    Value = slot.ToString(),
+                }
+            };
+            try
+            {
+                await domain.ExchangeAsync(
+                    exchangeRateName,
+                    1,
+                    config
+                );
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+                return e;
+            }
+
+            // スタミナ購入に成功
+            // Successfully purchased stamina
+
+            onBuy.Invoke();
+            return null;
+        }
+#endif
     }
 }

@@ -3,15 +3,14 @@
 # GS2 Sample Project for Unity
 
 This is a sample project for Game Server Services (https://gs2.io) for Unity.  
-This is a sample project for Unity that assumes a rough flow in a game.  
-This is a sample implementation using various GS2 functions.
+This is a sample implementation using various GS2 functions for a rough flow in a game.
 
 ## Operating Environment
 
 Unity 2019.4.40f1
 
-GS2 SDK for Unity 2022.7.3  
-GS2 C# SDK 2022.7.3
+GS2 SDK for Unity 2022.7.5  
+GS2 C# SDK 2022.7.5
 
 ## Notes
 
@@ -44,7 +43,7 @@ How to operate each function independently and details of each function are expl
 - [Chat (GS2-Chat)](Docs/Chat_en.md)
 - [Friend (GS2-Friend)](Docs/Friend_en.md)
 - [Matchmaking (GS2-Matchmaking)](Docs/Matchmaking_en.md)
-- [Realtime (GS2-Realtime)](Docs/Realtime_en.md)
+- [Real-Time Game (GS2-Realtime)](Docs/Realtime_en.md)
 
 ## Prepare to start
 
@@ -75,6 +74,7 @@ Create a stack with the following files in the Templates folder
 ---|---
 [initialize_credential_template.yaml](Templates/initialize_credential_template.yaml) | initialize credential GS2
 [initialize_account_template.yaml](Templates/initialize_account_template.yaml) |login/account linkage and transfer
+[initialize_distributor_template.yaml](Templates/initialize_distributor_template.yaml) |GS2-Distributor　GS2-JobQueue setting
 
 #### Template required for each function to work
 
@@ -91,7 +91,6 @@ Create a stack with the following files in the Templates folder
 [initialize_quest_template.yaml](Templates/initialize_quest_template.yaml) | Quest
 [initialize_lottery_template.yaml](Templates/initialize_lottery_template.yaml) | Lottery
 [initialize_unit_template.yaml](Templates/initialize_unit_template.yaml) | Inventory for lottery items *Necessary for the operation of the lottery function
-[initialize_jobqueue_template.yaml](Templates/initialize_jobqueue_template.yaml) | JobQueue function setting *Needed for lottery function operation
 
 | Template file | Function to be set |
 ---|---
@@ -102,18 +101,13 @@ Create a stack with the following files in the Templates folder
 ---|---
 [initialize_realtime_template.yaml](Templates/initialize_realtime_template.yaml) | matchmaking/realtime competition
 
-Created when using the GS2-News notification function.
+| Template file | Function to be set | |
+---|---|---
+[initialize_news_template.yaml](Templates/initialize_news_template.yaml) | News | Created when using the GS2-News notification function.
 
-| Template file | Function to be set up |
----|---
-[initialize_news_template.yaml](Templates/initialize_news_template.yaml) | News
-
-Created when using the GS2-Version version check function.
-
-| Template file | Function to be set up |
----|---
-[initialize_version_template.yaml](Templates/initialize_version_template.yaml) | Application version check
-[initialize_term_template.yaml](Templates/initialize_term_template.yaml) | Terms of Use check
+| Template file | Function to be set up | |
+---|---|---
+[initialize_version_template.yaml](Templates/initialize_version_template.yaml) | Check app version and terms of use | Created when using the GS2-Version version check function
 
 If you wait a while and all stacks are in `CREATE_COMPLETE`, the server side configuration is complete.
 
@@ -138,81 +132,22 @@ Copy and paste the necessary information from the "output" of each stack.
 -----------------|------|------
 | __CredentialSetting__ | __Application Client Id__ | __Credential to access GS2 (Client ID)__ |
 | __CredentialSetting__ | __Application Client Secret__ | __Credential to access GS2 (Client Secret)__ |
-| LoginSetting | accountNamespaceName | GS2-Account namespace name |
-| __LoginSetting__ | __accountEncryptionKeyId__ | __GRN of the encryption key of the GS2-Key used to encrypt account information in the GS2-Account__ |
-| LoginSetting | gatewayNamespaceName | namespace name of GS2-Gateway |
+| CredentialSetting | distributorNamespaceName | Namespace name of the GS2-Distributor that will process the stamp sheet |
+
+*From the Output List tab of the stack created by the initialize_credential_template.yaml template,  
+Paste the value printed on the right side of the Output Name __ApplicationClientId__ field to __Application Client Id__.  
+Paste the value printed on the right side of the Output Name __ApplicationClientSecret__ field to __Application Client Secret__.  
+
+![LoginSetting](Docs/LoginSetting.png)
 
 | Script file | Configuration name | Description |
 -----------------|------|------
-| StaminaSetting | staminaNamespaceName | namespace name of GS2-Stamina |
-| StaminaSetting | staminaModelName | model name of the GS2-Stamina stamina |
-| StaminaSetting | staminaName | Stamina name of GS2-Stamina |
-| StaminaSetting | exchangeNamespaceName | Namespace name of GS2-Exchange used to recover stamina |
-| StaminaSetting | exchangeRateName | GS2-Exchange exchange rate name used to recover stamina |
-| __StaminaSetting__ | __exchangeKeyId__ | cryptographic key used for signature calculation of stamp sheets issued for exchange processing by __GS2-Exchange__ |
-| StaminaSetting | distributorNamespaceName | namespace name of the GS2-Distributor delivering the exchanged stamina recovery process |
-| MoneySetting | moneyNamespaceName | Namespace Name of GS2-Money |
-| MoneySetting | showcaseNamespaceName | GS2-Showcase Namespace Name |
-| MoneySetting | showcaseName | GS2-Showcase display shelf name |
-| __MoneySetting__ | __showcaseKeyId__ | __encryption key used for signature calculation of stamp sheets issued by GS2-Showcase for merchandise purchases__ |
-| MoneySetting | limitNamespaceName | Namespace name of GS2-Limit that realizes the purchase count limit |
-| MoneySetting | distributorNamespaceName | Namespace name of the GS2-Distributor who delivers the purchased goods |
-| GoldSetting | inventoryNamespaceName | Namespace Name of Gold in GS2-Inventory |
-| GoldSetting | inventoryModelName | GS2-Inventory's gold model namespace name |
-| GoldSetting | itemModelName | Item Model Name |
-| __GoldSetting__ | __identifierAcquireGoldClientId__ | __Client ID of the authority that can increase gold__ |
-| __GoldSetting__ | __identifierAcquireGoldClientSecret__ | __Client Secret of the authority that can increase gold__ |
+| LoginSetting | Account Namespace Name        | Namespace name of GS2-Account |
+| __LoginSetting__ | __Account Encryption Key Id__ | __The encryption key GRN of the GS2-Key used to encrypt account information in GS2-Account__ |
+| LoginSetting | Gateway Namespace Name        | Namespace name of GS2-Gateway |
 
-| script file | setting name | description |
------------------|------|------
-| InventorySetting | inventoryNamespaceName | inventory namespace name for GS2-Inventory |
-| InventorySetting | inventoryModelName | GS2-Inventory's inventory model namespace name |
-| __InventorySetting__ | __identifierAcquireItemClientId__ | __Client ID of the authority that can increase the item__ |
-| __InventorySetting__ | __identifierAcquireItemClientSecret__ | __Client Secret of the authority that can increase the item__ |
-| ExperienceSetting | experienceNamespaceName | GS2-Experience namespace name |
-| ExperienceSetting | playerExperienceModelName | model name of player experience table in GS2-Experience |
-| ExperienceSetting | itemExperienceModelName | Model name of the item experience table in GS2-Experience |
-| __ExperienceSetting__ | __identifierIncreaseExperienceClientId__ | __Client ID of the authority that can increase experience__ |
-| __ExperienceSetting__ | __identifierIncreaseExperienceClientSecret__ | __Client Secret of the authority that can increase experience__ |
-
-| Script File | Setting Name | Description |
------------------|------|------
-| QuestSetting | questNamespaceName | Namespace name of GS2-Quest
-| __QuestSetting__ | __questKeyId__ | __Cryptographic key used for signature calculation of stamp sheets issued for reward granting process in GS2-Quest__ |
-| QuestSetting | distributorNamespaceName | namespace name of GS2-Distributor who delivers the reward |
-| QuestSetting | queueNamespaceName | Namespace name of GS2-JobQueue used for granting the reward |
-| LotterySetting | lotteryNamespaceName | Namespace Name of GS2-Lottery |
-| LotterySetting | jobqueueNamespaceName | namespace name of GS2-JobQueue |
-| LotterySetting | showcaseNamespaceName | GS2-Showcase namespace name |
-| LotterySetting | showcaseName | GS2-Showcase display shelf name |
-| __LotterySetting__ | __showcaseKeyId__ | __Cryptographic key used for signature calculation of stamp sheets issued by GS2-Showcase for merchandise purchases__ |
-| __LotterySetting__ | __lotteryKeyId__ | __GS2-Lottery cryptographic key used for signature calculation of stamp sheets issued at the time of purchase of goods__ |
-| UnitSetting | inventoryNamespaceName | Namespace name of inventory dedicated to lottery items in GS2-Inventory |
-| UnitSetting | inventoryModelName | namespace name of the model of the inventory dedicated to the lottery item in GS2-Inventory |
-| __UnitSetting__ | __identifierAcquireUnitClientId__ | __Client ID of the authority that can increase the item__ |
-| __UnitSetting__ | __identifierAcquireUnitClientSecret__ | __Client secret of authorization to increase items__ |
-
-| Script file | Setting name | Description |
------------------|------|------
-| ChatSetting | chatNamespaceName | GS2-Chat's namespace name |
-| ChatSetting | roomName | GS2-Chat room name |
-| FriendSetting | friendNamespaceName | GS2-Friend's namespace name |
-
-| script file | setting name | description |
------------------|------|------
-| MatchmakingSetting | matchmakingNamespaceName | namespace name of GS2-Matchmaking |
-| RealtimeSetting | realtimeNamespaceName | GS2-Realtime namespace name |
-
-| Script file | Setting name | Description |
------------------|------|------
-| VersionSetting | versionNamespaceName | Namespace name of GS2-Version app version check |
-| VersionSetting | versionName | version name of application version check for GS2-Version |
-| VersionSetting | currentVersionMajor | current version number of the app Major part |
-| VersionSetting | currentVersionMinor | current version number of the app Minor part |
-| VersionSetting | currentVersionMicro | current version number of the app Micro part |
-| TermSetting | versionNamespaceName | Namespace name for GS2-Version Terms of Use check |
-| TermSetting | versionName | version name of GS2-Version's Terms of Use check |
-| NewsSetting | newsNamespaceName | namespace name of GS2-News |
+*From the Output List tab of the stack created by the __initialize_account_template.yaml__ template,  
+Paste the value printed on the right side of the Output Name __AccountEncryptionKeyId__ field into the __Account Encryption Key Id__.
 
 ### Enable version check functionality
 

@@ -1,77 +1,45 @@
 GS2TemplateFormatVersion: "2019-05-01"
-Description: GS2-Quest initialize template Version 2021-12-03
+Description: GS2-Quest initialize template Version 2022-07-25
 
 Globals:
   Alias:
-    QuestNamespaceName: quest-0001                # GS2-Quest ネームスペース名
-    QuestKeyNamespaceName: quest-key              # 報酬処理のスタンプシートの署名計算に使用する暗号鍵のネームスペース名 Namespace name of the cryptographic key used to calculate signatures on the stamp sheet of the reward process.
-    QuestKeyName: stamp-sheet-key                 # 報酬処理のスタンプシートの署名計算に使用する暗号鍵名 Name of the cryptographic key used to calculate signatures on the stamp sheet for the reward process.
-    StaminaNamespaceName: stamina-0001            # クエストの対価に設定するスタミナのネームスペース名 Stamina namespace name to be set for the consideration of the quest
-    StaminaName: main                             # クエストの対価に設定するスタミナ名 Stamina name to be set for the price of the quest
-    MoneyNamespaceName: money-0001                # クエストの報酬に設定する課金通貨のネームスペース名 Namespace name of the charged currency to be set as the reward for the quest
-    QueueNamespaceName: quest-queue               # クエストの報酬の反映に使用するジョブキュー Job queue used to reflect quest rewards
-    DistributorNamespaceName: quest-distributor   # リソースの入手処理を GS2-Distributor を経由することで、所持数量制限で溢れた場合の GS2-Inbox への転送処理が自動的に行われる By processing resource acquisition through GS2-Distributor, the transfer process to GS2-Inbox in case of overflow due to possession quantity limit is automatically performed.
-    DeliveryUserName: quest-distribute-user       # リソースの入手処理を実行する権限を持つ GS2-Identifier ユーザ－ GS2-Identifier user authorized to perform the resource acquisition process
-    GatewayNamespaceName: gateway-0001            # 通知を行う GS2-Gateway ネームスペース名 GS2-Gateway namespace name for notification
+    QuestNamespaceName: quest-0001      # GS2-Quest ネームスペース名 / Namespace name
+    KeyNamespaceName: quest-key         # GS2-Key ネームスペース名 / Namespace name
+    KeyName: quest-key                  # GS2-Key 報酬処理のスタンプシートの署名計算に使用する暗号鍵 / Cryptographic key used to calculate signatures on stamp sheets for reward processing
+    StaminaNamespaceName: stamina-0001  # GS2-Stamina ネームスペース名 / Namespace name
+    StaminaName: main                   # GS2-Stamina クエストの対価に設定するスタミナモデル名 / Stamina model name to be set as compensation for the quest
+    MoneyNamespaceName: money-0001      # GS2-Money クエストの報酬に設定するネームスペース名 / Namespace name to be set for quest rewards
+    JobQueueNamespaceName: job-queue    # GS2-Jobqueue ネームスペース名 / Namespace name
 
 Resources:
   QuestKeyNamespace:
     Type: GS2::Key::Namespace
     Properties:
-      Name: ${QuestKeyNamespaceName}
+      Name: ${KeyNamespaceName}
 
   QuestKey:
     Type: GS2::Key::Key
     Properties:
-      NamespaceName: ${QuestKeyNamespaceName}
-      Name: ${QuestKeyName}
+      NamespaceName: ${KeyNamespaceName}
+      Name: ${KeyName}
     DependsOn:
       - QuestKeyNamespace
-
-  IdentifierDeliveryUser:
-    Type: GS2::Identifier::User
-    Properties:
-      Name: ${DeliveryUserName}
-
-  IdentifierDeliveryUserAttachPolicy:
-    Type: GS2::Identifier::AttachSecurityPolicy
-    Properties:
-      UserName: ${DeliveryUserName}
-      SecurityPolicyId: grn:gs2::system:identifier:securityPolicy:DeliveryAccess
-    DependsOn:
-      - IdentifierDeliveryUser
-
-  DistributorNamespace:
-    Type: GS2::Distributor::Namespace
-    Properties:
-      Name: ${DistributorNamespaceName}
-      AssumeUserId: !GetAttr IdentifierDeliveryUser.Item.UserId
-    DependsOn:
-      - IdentifierDeliveryUser
-
-  QueueNamespace:
-    Type: GS2::JobQueue::Namespace
-    Properties:
-      Name: ${QueueNamespaceName}
-      PushNotification:
-        GatewayNamespaceId: !Join
-          - ':'
-          - - 'grn'
-            - 'gs2'
-            - !GetAttr Gs2::Region
-            - !GetAttr Gs2::OwnerId
-            - 'gateway'
-            - ${GatewayNamespaceName}
 
   QuestNamespace:
     Type: GS2::Quest::Namespace
     Properties:
       Name: ${QuestNamespaceName}
       KeyId: !GetAttr QuestKey.Item.KeyId
-      QueueNamespaceId: !GetAttr QueueNamespace.Item.NamespaceId
+      QueueNamespaceId: !Join
+        - ':'
+        - - 'grn'
+          - 'gs2'
+          - !GetAttr Gs2::Region
+          - !GetAttr Gs2::OwnerId
+          - 'queue'
+          - ${JobQueueNamespaceName}
     DependsOn:
       - QuestKey
-      - QueueNamespace
 
   QuestSettings:
     Type: GS2::Quest::CurrentQuestMaster
@@ -208,7 +176,3 @@ Resources:
 
 Outputs:
   QuestNamespaceName: !GetAttr QuestNamespace.Item.Name
-  QuestKeyId: !GetAttr QuestKey.Item.KeyId
-  DistributorNamespaceName: !GetAttr DistributorNamespace.Item.Name
-  QueueNamespaceName: !GetAttr QueueNamespace.Item.Name
-  GatewayNamespaceName: ${GatewayNamespaceName}

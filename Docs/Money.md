@@ -28,9 +28,6 @@ IAP パッケージのインポートを行います。
 | moneyNamespaceName | GS2-Money のネームスペース名 |
 | showcaseNamespaceName | GS2-Showcase のネームスペース名 |
 | showcaseName | GS2-Showcase の陳列棚名 |
-| showcaseKeyId | GS2-Showcase で商品購入時に発行するスタンプシートの署名計算に使用する暗号鍵 |
-| limitNamespaceName | 購入回数制限を実現する GS2-Limit のネームスペース名 |
-| distributorNamespaceName | 購入した商品を配送する GS2-Distributor のネームスペース名 |
 
 | イベント | 説明 |
 |---|---|
@@ -45,17 +42,46 @@ IAP パッケージのインポートを行います。
 
 ログイン後、以下で最新のウォレットの状態を取得します。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzGetResult> result = null;
-yield return client.Money.Get(
-    r =>
-    {
-        result = r;
-    },
-    session,
-    moneyNamespaceName,
-    Slot
+var domain = gs2.Money.Namespace(
+    namespaceName: moneyNamespaceName
+).Me(
+    gameSession: gameSession
+).Wallet(
+    slot: Slot
 );
+try
+{
+    Wallet = await domain.ModelAsync();
+
+    onGetWallet.Invoke(Wallet);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+・コルーチン使用時
+```c#
+var domain = gs2.Money.Namespace(
+    namespaceName: moneyNamespaceName
+).Me(
+    gameSession: gameSession
+).Wallet(
+    slot: Slot
+);
+var future = domain.Model();
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    yield break;
+}
+
+Wallet = future.Result;
+
+onGetWallet.Invoke(Wallet);
 ```
 
 ## 課金通貨ストアの商品取得
@@ -64,17 +90,46 @@ yield return client.Money.Get(
 
 商品リストを取得し、ストアを表示します。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzGetShowcaseResult> result = null;
-yield return client.Showcase.GetShowcase(
-    r =>
-    {
-        result = r;
-    },
-    session,
-    showcaseNamespaceName,
-    showcaseName
+var domain = gs2.Showcase.Namespace(
+    namespaceName: showcaseNamespaceName
+).Me(
+    gameSession: gameSession
+).Showcase(
+    showcaseName: showcaseName
 );
+try
+{
+    var showcase = await domain.ModelAsync();
+
+    onGetProducts.Invoke(Products);
+
+    return Products;
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+・コルーチン使用時
+```c#
+var domain = gs2.Showcase.Namespace(
+    namespaceName: showcaseNamespaceName
+).Me(
+    gameSession: gameSession
+).Showcase(
+    showcaseName: showcaseName
+);
+var future = domain.Model();
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(
+        future.Error
+    );
+    yield break;
+}
 ```
 
 取得した商品情報をパースし、販売価格や入手できる課金通貨の数量を取得します。  
@@ -134,38 +189,117 @@ foreach (var displayItem in result.Result.Item.DisplayItems)
 
 モバイル環境であれば、Unity IAP を使用して AppStore や GooglePlay でのコンテンツの購入を行います   
 （商品の登録、設定が必要になります）。  
-エディター環境ではFake Storeのレシートが発行されます。  
+エディター環境ではFake Storeのレシート（デバッグ用の模擬レシート）が発行されます。  
 得られたレシートを後続の処理で参照できるよう保持しておきます。
 
+・UniTask有効時
 ```c#
-AsyncResult<PurchaseParameters> result = null;
-yield return new IAPUtil().Buy(
-    r => { result = r; },
-    selectedProduct.ContentsId
-);
-if (result.Error != null)
+string receipt;
 {
-    onError.Invoke(
-        result.Error
+#if GS2_ENABLE_PURCHASING
+    try
+    {
+        PurchaseParameters result = await new IAPUtil().BuyAsync(
+            selectedProduct.ContentsId
+        );
+        
+        // 課金通貨商品購入 レシート情報
+        // Billed Currency Product Purchase Receipt Information
+        receipt = result.receipt;
+    }
+    catch (Gs2Exception e)
+    {
+        onError.Invoke(e);
+        return e;
+    }
+#endif
+}
+```
+・コルーチン使用時
+```c#
+string receipt;
+{
+#if GS2_ENABLE_PURCHASING
+    AsyncResult<PurchaseParameters> result = null;
+    yield return new IAPUtil().Buy(
+        r => { result = r; },
+        selectedProduct.ContentsId
     );
-    callback.Invoke(new AsyncResult<object>(null, result.Error));
-    yield break;
+    if (result.Error != null)
+    {
+        onError.Invoke(
+            result.Error
+        );
+        callback.Invoke(
+            result.Error
+        );
+        yield break;
+    }
+
+    // 課金通貨商品購入 レシート情報
+    // Billed Currency Product Purchase Receipt Information
+    receipt = result.Result.receipt;
+#endif
 }
 ```
 
 購入したレシートを使って、[GS2-Showcase](https://app.gs2.io/docs/index.html#gs2-showcase) の商品を購入する処理を実行します。  
-Config には [GS2-Money](https://app.gs2.io/docs/index.html#gs2-money)  のウォレットスロットと、レシートの内容を渡します。
 
+・UniTask有効時
 ```c#
 // Showcase 商品の購入をリクエスト
-AsyncResult<EzBuyResult> result = null;
-yield return client.Showcase.Buy(
-    r => { result = r; },
-    session,
-    showcaseNamespaceName,
-    showcaseName,
-    selectedProduct.Id,
-    new List<EzConfig>
+// Request to purchase an item
+var domain = gs2.Showcase.Namespace(
+    namespaceName: showcaseNamespaceName
+).Me(
+    gameSession: gameSession
+).Showcase(
+    showcaseName: showcaseName
+);
+try
+{
+    var result = await domain.BuyAsync(
+        displayItemId: selectedProduct.Id,
+        config: new[]
+        {
+            new EzConfig
+            {
+                Key = "slot",
+                Value = Slot.ToString(),
+            },
+            new EzConfig
+            {
+                Key = "receipt",
+                Value = receipt,
+            },
+        }
+    );
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+    return e;
+}
+
+// 商品購入に成功
+// Successful product purchase
+onBuy.Invoke(selectedProduct);
+return null;
+```
+・コルーチン使用時
+```c#
+// Showcase 商品の購入をリクエスト
+// Request to purchase an item
+var domain = gs2.Showcase.Namespace(
+    namespaceName: showcaseNamespaceName
+).Me(
+    gameSession: gameSession
+).Showcase(
+    showcaseName: showcaseName
+);
+var future = domain.Buy(
+    displayItemId: selectedProduct.Id,
+    config: new []
     {
         new EzConfig
         {
@@ -179,56 +313,60 @@ yield return client.Showcase.Buy(
         },
     }
 );
-
-if (result.Error != null)
+yield return future;
+if (future.Error != null)
 {
     onError.Invoke(
-        result.Error
+        future.Error
     );
-    callback.Invoke(new AsyncResult<object>(null, result.Error));
+    callback.Invoke(
+        future.Error
+    );
     yield break;
 }
 
-// スタンプシートを取得
-stampSheet = result.Result.StampSheet;
-```
-
-取得したスタンプシートを実行します。  
-GS2 SDK for Unity ではスタンプシート実行用のステートマシンが用意されていますので、そちらを利用します。  
-ステートマシンの実行には [GS2-Distributor](https://app.gs2.io/docs/index.html#gs2-distributor) と スタンプシートの署名計算に使用した暗号鍵が必要となります。
-
-```c#
-{
-    // スタンプシート ステートマシンを生成
-    var machine = new StampSheetStateMachine(
-        stampSheet,
-        client,
-        distributorNamespaceName,
-        showcaseKeyId
-     );
-
-    Gs2Exception exception = null;
-    void OnError(Gs2Exception e)
-    {
-        exception = e;
-    }
-    
-    onError.AddListener(OnError);
-    
-    // スタンプシートの実行
-    yield return machine.Execute(onError);
-    
-    onError.RemoveListener(OnError);
-    
-    if (exception != null)
-    {
-        // スタンプシート実行エラー
-        callback.Invoke(new AsyncResult<object>(null, exception));
-        yield break;
-    }
-}
 // 商品購入に成功
+// Successful product purchase
+
+onBuy.Invoke(selectedProduct);
+
+callback.Invoke(null);
 ```
+Config には [GS2-Money](https://app.gs2.io/docs/index.html#gs2-money)  のウォレットスロット番号 __slot__ と、
+レシートの内容 __receipt__ を渡します。
+ウォレットスロット番号はこのサンプルで参考のためにプラットフォーム別に割り振った課金通貨の種別で、以下のように定義しています。
+
+| プラットフォーム      | 番号 |
+|---------------|---|
+| スタンドアローン(その他) | 0 |
+| iOS           | 1 |
+| Android       | 2 |
+
+Config はスタンプシートに動的なパラメータを渡すための仕組みです。  
+[⇒スタンプシートの変数](https://app.gs2.io/docs/index.html#d7e97677c7)  
+Config(EzConfig) はキー・バリュー形式で、渡したパラメータで #{Config で指定したキー値} のプレースホルダー文字列を置換することができます。
+以下のスタンプシートの定義中の　#{slot}　はウォレットスロット番号、#{receipt}はレシートに置換されます。
+
+```yaml
+consumeActions:
+  - action: Gs2Money:RecordReceipt
+    request:
+      namespaceName: ${MoneyNamespaceName}
+      contentsId: io.gs2.sample.currency120
+      userId: "#{userId}"
+      receipt: "#{receipt}"
+acquireActions:
+  - action: Gs2Money:DepositByUserId
+    request:
+      namespaceName: ${MoneyNamespaceName}
+      userId: "#{userId}"
+      slot: "#{slot}"
+      price: 120
+      count: 50
+```
+
+購入処理により、GS2-Showcaseで課金通貨商品購入スタンプシートが発行されます。  
+GS2Domainクラス（ソース内で”gs2”）を使用した実装ではクライアント側でのスタンプシートの処理は __自動実行__ されます。  
 
 通常の課金通貨商品の購入スタンプシートの流れは以下になります。
 

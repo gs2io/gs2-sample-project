@@ -5,6 +5,10 @@ using Gs2.Unity.Gs2Realtime;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
+#endif
 
 namespace Gs2.Sample.Realtime
 {
@@ -44,7 +48,11 @@ namespace Gs2.Sample.Realtime
             handType = (RPSType) type;
             state = RPSState.Decide;
             
+#if GS2_ENABLE_UNITASK
+            SendAsync().Forget();
+#else
             StartCoroutine(Send());
+#endif
         }
 
         public void OnTapReset()
@@ -54,8 +62,12 @@ namespace Gs2.Sample.Realtime
             paper.interactable = true;
 
             state = RPSState.Select;
-
+            
+#if GS2_ENABLE_UNITASK
+            SendAsync().Forget();
+#else
             StartCoroutine(Send());
+#endif
         }
 
         public IEnumerator UpdateProfile()
@@ -95,9 +107,57 @@ namespace Gs2.Sample.Realtime
                         if (lockWasTaken) System.Threading.Monitor.Exit(this);
                     }
                 }
+                else
+                {
+                    break;
+                }
             }
         }
+#if GS2_ENABLE_UNITASK
+        public async UniTask UpdateProfileAsync()
+        {
+            while (true)
+            {
+                await UniTask.Delay(300);
 
+                ByteString binary = null;
+                try
+                {
+                    binary = ByteString.CopyFrom(ProfileSerialize());
+                }
+                catch (Exception e)
+                {
+                    Debug.Log(e);
+                    continue;
+                }
+
+                if (Session != null && Session.Connected)
+                {
+                    bool lockWasTaken = false;
+                    try
+                    {
+                        System.Threading.Monitor.TryEnter(this, ref lockWasTaken);
+
+                        if (lockWasTaken)
+                        {
+                            await Session.UpdateProfileAsync(
+                                binary
+                            );
+                        }
+                    }
+                    finally
+                    {
+                        if (lockWasTaken) System.Threading.Monitor.Exit(this);
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+#endif
+        
         public IEnumerator Send()
         {
             ByteString binary = null;
@@ -115,6 +175,24 @@ namespace Gs2.Sample.Realtime
                 binary
             );
         }
+#if GS2_ENABLE_UNITASK
+        public async UniTask SendAsync()
+        {
+            ByteString binary = null;
+            try
+            {
+                binary = ByteString.CopyFrom(StateSerialize());
+            }
+            catch (Exception e)
+            {
+                Debug.Log(e);
+            }
+
+            await Session.SendAsync(
+                binary
+            );
+        }
+#endif
         
         public byte[] ProfileSerialize()
         {

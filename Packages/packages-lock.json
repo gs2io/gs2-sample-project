@@ -5,7 +5,7 @@
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "9e2163616b9c527fa9461544e2bcc5f93fd12d83"
+      "hash": "78db78c7bd5c1c75902dabb1496c85bd2316fca5"
     },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
@@ -53,7 +53,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.mobile.notifications": {
-      "version": "2.0.2",
+      "version": "2.0.1",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -62,7 +62,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.purchasing": {
-      "version": "4.1.5",
+      "version": "4.1.4",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -114,7 +114,7 @@
       }
     },
     "io.gs2.csharp.sdk": {
-      "version": "2022.7.3",
+      "version": "2022.7.6",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -123,7 +123,7 @@
       "url": "https://upm.gs2.io/npm"
     },
     "io.gs2.unity.sdk": {
-      "version": "2022.7.3",
+      "version": "2022.7.6",
       "depth": 0,
       "source": "registry",
       "dependencies": {

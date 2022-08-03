@@ -1,51 +1,18 @@
 GS2TemplateFormatVersion: "2019-05-01"
-Description: GS2-Inventory initialize template Version 2021-12-03
+Description: GS2-Inventory initialize template Version 2022-07-25
 
 Globals:
   Alias:
-    InventoryNamespaceName: gold
-    InventoryModelName: gold
-    ItemModelName: gold
-    LimitOfCount: 99999999
-    EnableDebugAcquireGoldAction: 'True'
-    IdentifierAcquireGoldPolicyName: inventory-acquire-gold
-    IdentifierAcquireGoldUserName: inventory-acquire-gold
+    InventoryNamespaceName: gold-0001    # GS2-Inventory ネームスペース名 / Namespace name
+    InventoryModelName: gold             # GS2-Inventory インベントリモデル名 / Inventory model name
+    ItemModelName: gold                  # GS2-Inventory アイテムモデル名 / Item model name
+    LimitOfCount: 99999999               # スタック可能な最大数量 / Maximum stackable quantity
+    KeyNamespaceName: gold-key           # GS2-Key ネームスペース名 / Namespace name
+    ExchangeNamespaceName: gold-exchange # GS2-Exchange ネームスペース名 / Namespace name
+    ExchangeRateName: gold               # GS2-Exchange 交換レート名 / Exchange rate name
+    ExchangeKeyName: gold-exchange-key   # 交換処理のスタンプシートの署名計算に使用する暗号鍵 / Cryptographic key used to calculate signatures on stamp sheets for the exchange process
 
 Resources:
-  IdentifierAcquireGoldPolicy:
-    Type: GS2::Identifier::SecurityPolicy
-    Properties:
-      Name: ${IdentifierAcquireGoldPolicyName}
-      Policy:
-        Version: "2016-04-01"
-        Statements:
-        - Effect: Allow
-          Actions:
-          - Gs2Inventory:AcquireItemSetByUserId
-          Resources:
-          - '*'
-
-  IdentifierAcquireGoldUser:
-    Type: GS2::Identifier::User
-    Properties:
-      Name: ${IdentifierAcquireGoldUserName}
-      
-  IdentifierAcquireGoldUserAttachPolicy:
-    Type: GS2::Identifier::AttachSecurityPolicy
-    Properties:
-      UserName: ${IdentifierAcquireGoldUserName}
-      SecurityPolicyId: !GetAttr IdentifierAcquireGoldPolicy.Item.SecurityPolicyId
-    DependsOn:
-      - IdentifierAcquireGoldPolicy
-      - IdentifierAcquireGoldUser
-
-  IdentifierAcquireGoldIdentifier:
-    Type: GS2::Identifier::Identifier
-    Properties:
-      UserName: ${IdentifierAcquireGoldUserName}
-    DependsOn:
-      - IdentifierAcquireGoldUser
-
   InventoryNamespace:
     Type: GS2::Inventory::Namespace
     Properties:
@@ -54,28 +21,66 @@ Resources:
   InventorySettings:
     Type: GS2::Inventory::CurrentItemModelMaster
     Properties:
-      Settings:
-        version: "2019-02-05"
-        inventoryModels:
-        - itemModels:
-          - allowMultipleStacks: false
-            name: ${ItemModelName}
-            stackingLimit: ${LimitOfCount}
-            sortValue: 0
-          name: ${InventoryModelName}
-          initialCapacity: 1
-          maxCapacity: 1
       NamespaceName: ${InventoryNamespaceName}
+      Settings:
+        version: 2019-02-05
+        inventoryModels:
+          - name: ${InventoryModelName}
+            initialCapacity: 1
+            maxCapacity: 1
+            itemModels:
+            - name: ${ItemModelName}
+              stackingLimit: ${LimitOfCount}
+              allowMultipleStacks: false
+              sortValue: 0
     DependsOn:
       - InventoryNamespace
 
+  GoldKeyNamespace:
+    Type: GS2::Key::Namespace
+    Properties:
+      Name: ${KeyNamespaceName}
+
+  ExchangeKey:
+    Type: GS2::Key::Key
+    Properties:
+      NamespaceName: ${KeyNamespaceName}
+      Name: ${ExchangeKeyName}
+    DependsOn:
+      - GoldKeyNamespace
+
+  ExchangeNamespace:
+    Type: GS2::Exchange::Namespace
+    Properties:
+      Name: ${ExchangeNamespaceName}
+      KeyId: !GetAttr ExchangeKey.Item.KeyId
+    DependsOn:
+      - ExchangeKey
+
+  ExchangeSettings:
+    Type: GS2::Exchange::CurrentRateMaster
+    Properties:
+      NamespaceName: ${ExchangeNamespaceName}
+      Settings:
+        version: 2019-08-19
+        rateModels:
+          - name: ${ExchangeRateName}
+            consumeActions: []
+            acquireActions:
+              - action: Gs2Inventory:AcquireItemSetByUserId
+                request:
+                  namespaceName: ${InventoryNamespaceName}
+                  inventoryName: ${InventoryModelName}
+                  itemName: ${ItemModelName}
+                  userId: "#{userId}"
+                  acquireCount: 1
+    DependsOn:
+      - ExchangeNamespace
+
 Outputs:
-  IdentifierAcquireGoldUserName: ${IdentifierAcquireGoldUserName}
-  ItemModelName: ${ItemModelName}
-  IdentifierAcquireGoldPolicyName: ${IdentifierAcquireGoldPolicyName}
-  IdentifierAcquireGoldClientSecret: !GetAttr IdentifierAcquireGoldIdentifier.ClientSecret
-  IdentifierAcquireGoldClientId: !GetAttr IdentifierAcquireGoldIdentifier.Item.ClientId
-  LimitOfCount: ${LimitOfCount}
+  InventoryNamespaceName: !GetAttr InventoryNamespace.Item.Name
   InventoryModelName: ${InventoryModelName}
-  EnableDebugAcquireGoldAction: ${EnableDebugAcquireGoldAction}
-  InventoryNamespaceName: ${InventoryNamespaceName}
+  ItemModelName: ${ItemModelName}
+  ExchangeNamespaceName: !GetAttr ExchangeNamespace.Item.Name
+  ExchangeRateName: ${ExchangeRateName}
+  ExchangeKeyName: !GetAttr ExchangeKey.Item.Name

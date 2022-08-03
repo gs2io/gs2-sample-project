@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Google.Protobuf;
@@ -10,6 +11,11 @@ using Gs2.Util.LitJson;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Events;
+using Gs2.Core.Exception;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
+#endif
 
 namespace Gs2.Sample.Realtime
 {
@@ -151,17 +157,16 @@ namespace Gs2.Sample.Realtime
         /// <summary>
         /// 初期化処理
         /// </summary>
-        /// <returns></returns>
         public void Initialize()
         {
             UIManager.Instance.AddLog("Initialize");
             
-            GameManager.Instance.Client.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
+            GameManager.Instance.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
         }
         
         public void Finish()
         {
-            GameManager.Instance.Client.Profile.Gs2Session.OnNotificationMessage -= PushNotificationHandler;
+            GameManager.Instance.Profile.Gs2Session.OnNotificationMessage -= PushNotificationHandler;
         }
         
         /// <summary>
@@ -170,7 +175,6 @@ namespace Gs2.Sample.Realtime
         /// Notification delivered at any given time
         /// *Outside the main thread
         /// </summary>
-        /// <param name="message"></param>
         public void PushNotificationHandler(NotificationMessage message)
         {
             Debug.Log("PushNotificationHandler :" + message.issuer);
@@ -181,6 +185,7 @@ namespace Gs2.Sample.Realtime
             if (message.issuer.EndsWith(":Create"))
             {
                 var notification = CreateNotification.FromJson(JsonMapper.ToObject(message.payload));
+                Debug.Log("RoomName :" + notification.RoomName);
             }
         }
 
@@ -215,10 +220,8 @@ namespace Gs2.Sample.Realtime
                 return;
             }
 
-            // 勝敗判定
             if (players.Count > 1)
             {
-                // draw判定
                 _handType[0]=false; _handType[1]=false; _handType[2]=false;
                 
                 foreach (var player in players)
@@ -284,29 +287,33 @@ namespace Gs2.Sample.Realtime
                     
                     case State.GetRoom:
                         UIManager.Instance.OpenProcessing();
-                        
+#if GS2_ENABLE_UNITASK
+                        GetRoomAsync().Forget();
+#else
                         StartCoroutine(
                             GetRoom()
                         );
+#endif
                         break;
                         
                     case State.ConnectRoom:
                         UIManager.Instance.OpenProcessing();
-                        
+#if GS2_ENABLE_UNITASK
+                        ConnectRoomAsync().Forget();
+#else
                         StartCoroutine(
                             ConnectRoom()
                         );
-                        
+#endif
                         break;
                     
                     case State.SyncPlayerProfiles:
                         UIManager.Instance.OpenProcessing();
                         
-                        StartCoroutine(
-                            SyncPlayerProfiles()
-                        );
+                        SetState(State.Main);
                         
                         break;
+                    
                     case State.GetRoomFailed:
                     case State.ConnectRoomFailed:
                     case State.SyncPlayerProfilesFailed:
@@ -317,9 +324,13 @@ namespace Gs2.Sample.Realtime
                     case State.Main:
                         UIManager.Instance.CloseProcessing();
                         _realtimeView.OnEnableEvent();
-                        
-                        StartCoroutine(myCharacter.UpdateProfile());
-                        
+#if GS2_ENABLE_UNITASK
+                        myCharacter.UpdateProfileAsync().Forget();
+#else
+                        StartCoroutine(
+                            myCharacter.UpdateProfile()
+                        );
+#endif
                         break;
                     
                     case State.Error:
@@ -369,7 +380,6 @@ namespace Gs2.Sample.Realtime
         /// GS2-Realtime のルーム情報を取得
         /// Get GS2-Realtime room information
         /// </summary>
-        /// <returns></returns>
         private IEnumerator GetRoom()
         {
             UIManager.Instance.AddLog("RealtimePresenter::GetRoom");
@@ -377,23 +387,23 @@ namespace Gs2.Sample.Realtime
             while (true)
             {
                 yield return new WaitForSeconds(0.5f);
-                
-                AsyncResult<EzGetRoomResult> result = null;
+
+                Gs2.Unity.Gs2Realtime.Model.EzRoom result = null;
                 yield return _realtimeModel.GetRoom(
                     r => { result = r; },
-                    GameManager.Instance.Client,
+                    GameManager.Instance.Domain,
                     _realtimeSetting.realtimeNamespaceName,
                     _realtimeSetting.onGetRoom,
                     _realtimeSetting.onError
                 );
             
-                if (result.Error != null)
+                if (result == null)
                 {
                     SetState(State.GetRoomFailed);
                     yield break;
                 }
 
-                if (!string.IsNullOrEmpty(result.Result.Item.IpAddress))
+                if (!string.IsNullOrEmpty(result.IpAddress))
                 {
                     break;
                 }
@@ -401,12 +411,50 @@ namespace Gs2.Sample.Realtime
             
             SetState(State.ConnectRoom);
         }
+#if GS2_ENABLE_UNITASK
+        /// <summary>
+        /// GS2-Realtime のルーム情報を取得
+        /// Get GS2-Realtime room information
+        /// </summary>
+        /// <returns></returns>
+        private async UniTask GetRoomAsync()
+        {
+            UIManager.Instance.AddLog("RealtimePresenter::GetRoomAsync");
+            
+            while (true)
+            {
+                await UniTask.Delay(500);
+
+                Gs2.Unity.Gs2Realtime.Model.EzRoom result = null;
+                try
+                {
+                    result = await _realtimeModel.GetRoomAsync(
+                        GameManager.Instance.Domain,
+                        _realtimeSetting.realtimeNamespaceName,
+                        _realtimeSetting.onGetRoom,
+                        _realtimeSetting.onError
+                    );
+                }
+                catch (Exception e)
+                {
+                    SetState(State.GetRoomFailed);
+                    return;
+                }
+
+                if (!string.IsNullOrEmpty(result.IpAddress))
+                {
+                    break;
+                }
+            }
+            
+            SetState(State.ConnectRoom);
+        }
+#endif
         
         /// <summary>
         /// GS2-Realtime のルームに接続
         /// Connect to GS2-Realtime room
         /// </summary>
-        /// <returns></returns>
         private IEnumerator ConnectRoom()
         {
             yield return ConnectRoom(
@@ -425,16 +473,31 @@ namespace Gs2.Sample.Realtime
                 _realtimeModel.room.EncryptionKey
             );
         }
+#if GS2_ENABLE_UNITASK
+        private async UniTask ConnectRoomAsync()
+        {
+            var session = await ConnectRoomAsync(
+                _realtimeModel.room.IpAddress,
+                _realtimeModel.room.Port,
+                _realtimeModel.room.EncryptionKey
+            );
+            if (session == null)
+            {
+                SetState(State.ConnectRoomFailed);
+                myCharacter.Session = _realtimeModel.realtimeSession = null;
+            }
+            else
+            {
+                SetState(State.SyncPlayerProfiles);
+                myCharacter.Session = _realtimeModel.realtimeSession = session;
+            }
+        }
+#endif
         
         /// <summary>
         /// GS2-Realtime のルームに接続
         /// Connect to GS2-Realtime room
         /// </summary>
-        /// <param name="callback"></param>
-        /// <param name="ipAddress"></param>
-        /// <param name="port"></param>
-        /// <param name="encryptionKey"></param>
-        /// <returns></returns>
         public IEnumerator ConnectRoom(
             UnityAction<AsyncResult<RelayRealtimeSession>> callback,
             string ipAddress,
@@ -509,38 +572,70 @@ namespace Gs2.Sample.Realtime
                 }
             }
         }
-                
-        /// <summary>
-        /// 他プレイヤーと情報を同期
-        /// Synchronize information with other players
-        /// </summary>
-        /// <returns></returns>
-        private IEnumerator SyncPlayerProfiles()
-        {
-            UIManager.Instance.AddLog("RealtimePresenter::SyncPlayerProfiles");
-            
-            yield return SyncPlayerProfiles(
-                r =>
-                {
-                    SetState(State.Main);
-                }
-            );
-        }
-        
-        /// <summary>
-        /// 他プレイヤーと情報を同期
-        /// Synchronize information with other players
-        /// </summary>
-        /// <param name="callback"></param>
-        /// <returns></returns>
-        public IEnumerator SyncPlayerProfiles(
-            UnityAction<AsyncResult<object>> callback
+#if GS2_ENABLE_UNITASK
+        private async UniTask<RelayRealtimeSession> ConnectRoomAsync(
+            string ipAddress,
+            int port,
+            string encryptionKey
         )
         {
-            callback.Invoke(null);
-            yield break;
-        }
+            UIManager.Instance.AddLog("RealtimePresenter::ConnectRoomAsync");
+            
+            var realtimeSession = new RelayRealtimeSession(
+                GameManager.Instance.Session.AccessToken.Token,
+                ipAddress,
+                port,
+                encryptionKey,
+                ByteString.CopyFrom()
+            );
+            
+            realtimeSession.OnRelayMessage += message =>
+            {
+                _realtimeSetting.onRelayMessage.Invoke(message);
+            }; 
+            realtimeSession.OnJoinPlayer += player =>
+            {
+                _realtimeSetting.onJoinPlayer.Invoke(player);
+            };
+            realtimeSession.OnLeavePlayer += player =>
+            {
+                _realtimeSetting.onLeavePlayer.Invoke(player);
+            };
+            realtimeSession.OnGeneralError += args => 
+            {
+                _realtimeSetting.onGeneralError.Invoke(args);
+            };
+            realtimeSession.OnError += error =>
+            {
+                _realtimeSetting.onRelayError.Invoke(error);
+            };
+            realtimeSession.OnUpdateProfile += player =>
+            {
+                _realtimeSetting.onUpdateProfile.Invoke(player);
+            };
+            realtimeSession.OnClose += args =>
+            {
+                _realtimeSetting.onClose.Invoke(args);
+            };
 
+            try
+            {
+                await realtimeSession.ConnectAsync(
+                    this
+                );
+            }
+            catch (Gs2Exception e)
+            {
+                _realtimeSetting.onError.Invoke(
+                    e
+                );
+                return null;
+            }
+            
+            return realtimeSession;
+        }
+#endif
+        
         /// <summary>
         /// 退室
         /// exit from a room
@@ -552,10 +647,14 @@ namespace Gs2.Sample.Realtime
             ClearPlayers();
             players.Clear();
             
+#if GS2_ENABLE_UNITASK
+            _realtimeModel.realtimeSession.CloseAsync().Forget();
+#else
             StartCoroutine(
                 _realtimeModel.realtimeSession.Close()
             );
-
+#endif
+            
             _realtimeModel.Clear();
             
             SetState(State.Initialize);

@@ -29,17 +29,63 @@
 | OnError(Gs2Exception error) | エラーが発生したときに呼び出されます。 |
 
 ## メッセージの送信
+
+・UniTask有効時
 ```c#
-AsyncResult<EzPostResult> result = null;
-yield return client.Chat.Post(
-    r => { result = r; },
-    session,
-    chatNamespaceName,
-    roomName,
-    message,
-    null,
-    null
+var domain = gs2.Chat.Namespace(
+    namespaceName: chatNamespaceName
+).Me(
+    gameSession: gameSession
+).Room(
+    roomName: roomName,
+    password: null
 );
+try
+{
+    var result = await domain.PostAsync(
+        metadata: message,
+        category: null
+    );
+    var item = await result.ModelAsync();
+    onPost.Invoke(item);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+・コルーチン使用時
+```c#
+var domain = gs2.Chat.Namespace(
+    namespaceName: chatNamespaceName
+).Me(
+    gameSession: gameSession
+).Room(
+    roomName: roomName,
+    password: null
+);
+var future = domain.Post(
+    metadata: message,
+    category: null
+);
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(future.Error);
+    yield break;
+}
+
+var result = future.Result;
+var future2 = result.Model();
+yield return future2;
+if (future2.Error != null)
+{
+    onError.Invoke(future2.Error);
+    yield break;
+}
+
+var item = future2.Result; 
+onPost.Invoke(item);
 ```
 
 ## メッセージの受信
@@ -52,17 +98,59 @@ Gs2WebSocketSession
 
 メッセージを取得します。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzListMessagesResult> result = null;
-yield return client.Chat.ListMessages(
-    r => { result = r; },
-    session,
-    chatNamespaceName,
-    roomName,
-    null,
-    null,
-    null
+var domain = gs2.Chat.Namespace(
+    namespaceName: chatNamespaceName
+).Me(
+    gameSession: gameSession
+).Room(
+    roomName: roomName,
+    password: null
 );
+try
+{
+    List<EzMessage> massages = await domain.MessagesAsync().ToListAsync();
+    
+    onListMessages.Invoke(massages);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+・コルーチン使用時
+```c#
+var domain = gs2.Chat.Namespace(
+    namespaceName: chatNamespaceName
+).Me(
+    gameSession: gameSession
+).Room(
+    roomName: roomName,
+    password: null
+);
+var it = domain.Messages();
+List<EzMessage> massages = new List<EzMessage>();
+while (it.HasNext())
+{
+    yield return it.Next();
+    if (it.Error != null)
+    {
+        onError.Invoke(it.Error);
+        break;
+    }
+
+    if (it.Current != null)
+    {
+        massages.Add(it.Current);
+    }
+    else
+    {
+        break;
+    }
+}
+
+onListMessages.Invoke(massages);
 ```
 
 ※　受信した他プレイヤーのメッセージの吹き出しをタップすると、対象となる他プレイヤーへのフォロー、フレンドリクエスト、ブラックリストへの追加が行えます。

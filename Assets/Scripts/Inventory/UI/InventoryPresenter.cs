@@ -6,6 +6,10 @@ using Gs2.Unity.Gs2Inventory.Model;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Events;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
+#endif
 
 namespace Gs2.Sample.Inventory
 {
@@ -47,7 +51,7 @@ namespace Gs2.Sample.Inventory
             GetInventoryFailed,
             
             /// <summary>
-            /// インベントリ
+            /// インベントリ表示
             /// </summary>
             InventoryMenu,
         }
@@ -98,39 +102,41 @@ namespace Gs2.Sample.Inventory
         {
             UIManager.Instance.AddLog("InventoryPresenter::Initialize");
 
-            void OnGetInventoryModel(
-                string inventoryName, 
-                EzInventoryModel ezinventoryModel, 
-                List<EzItemModel> itemModels
-            )
-            {
-                UIManager.Instance.AddLog("InventoryPresenter::OnGetInventoryModel");
-                
-                _inventorySetting.onGetInventoryModel.RemoveListener(OnGetInventoryModel);
-                
-                _inventoryModel.Model = ezinventoryModel;
-                _inventoryModel.ItemModels = itemModels;
-            }
-            
-            _inventorySetting.onGetInventoryModel.AddListener(OnGetInventoryModel);
-
             yield return _inventoryModel.GetInventoryModel(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 _inventorySetting.inventoryNamespaceName,
                 _inventorySetting.inventoryModelName,
                 _inventorySetting.onGetInventoryModel,
                 _inventorySetting.onError
             );
         }
+#if GS2_ENABLE_UNITASK
+        public async UniTask InitializeAsync()
+        {
+            UIManager.Instance.AddLog("InventoryPresenter::InitializeAsync");
 
+            await _inventoryModel.GetInventoryModelAsync(
+                GameManager.Instance.Domain,
+                _inventorySetting.inventoryNamespaceName,
+                _inventorySetting.inventoryModelName,
+                _inventorySetting.onGetInventoryModel,
+                _inventorySetting.onError
+            );
+        }
+#endif
+        
         public void Open()
         {
+#if GS2_ENABLE_UNITASK
+            OpenInventoryAsync().Forget();
+#else
             StartCoroutine(
                 OpenInventory()
             );
+#endif
         }
 
-        public IEnumerator OpenInventory()
+        private IEnumerator OpenInventory()
         {
             SetState(State.GetInventoryProcessing);
             
@@ -142,7 +148,7 @@ namespace Gs2.Sample.Inventory
             SetState(State.InventoryMenu);
         }
         
-        public IEnumerator Refresh()
+        private IEnumerator Refresh()
         {
             void RefreshInventoryAction(
                 EzInventory inventory, 
@@ -154,8 +160,6 @@ namespace Gs2.Sample.Inventory
                     return;
                 }
                 
-                _inventoryModel.Inventory = inventory;
-                _inventoryModel.ItemSets = itemSets;
                 _inventoryModel.ItemSets.Sort((o1, o2) => o1.SortValue != o2.SortValue ? o1.SortValue - o2.SortValue : (int)(o2.Count - o1.Count));
                 
                 _inventorySetting.onGetInventory.RemoveListener(RefreshInventoryAction);
@@ -164,8 +168,9 @@ namespace Gs2.Sample.Inventory
             }
 
             _inventorySetting.onGetInventory.AddListener(RefreshInventoryAction);
+            
             yield return _inventoryModel.GetInventory(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _inventorySetting.inventoryNamespaceName,
                 _inventorySetting.inventoryModelName,
@@ -173,7 +178,52 @@ namespace Gs2.Sample.Inventory
                 _inventorySetting.onError
             );
         }
+        
+#if GS2_ENABLE_UNITASK
+        private async UniTask OpenInventoryAsync()
+        {
+            SetState(State.GetInventoryProcessing);
+            
+            _inventorySetting.onAcquire.AddListener(AcquireAction);
+            _inventorySetting.onConsume.AddListener(ConsumeAction);
+            
+            await RefreshAsync();
 
+            SetState(State.InventoryMenu);
+        }
+        
+        private async UniTask RefreshAsync()
+        {
+            void RefreshInventoryAction(
+                EzInventory inventory, 
+                List<EzItemSet> itemSets
+            )
+            {
+                _inventorySetting.onGetInventory.RemoveListener(RefreshInventoryAction);
+                
+                if (inventory.InventoryName != _inventoryModel.Model.Name)
+                {
+                    return;
+                }
+                
+                _inventoryModel.ItemSets.Sort((o1, o2) => o1.SortValue != o2.SortValue ? o1.SortValue - o2.SortValue : (int)(o2.Count - o1.Count));
+                
+                OnChangeInventory(_inventoryModel.Inventory, _inventoryModel.ItemSets);
+            }
+
+            _inventorySetting.onGetInventory.AddListener(RefreshInventoryAction);
+            
+            await _inventoryModel.GetInventoryAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _inventorySetting.inventoryNamespaceName,
+                _inventorySetting.inventoryModelName,
+                _inventorySetting.onGetInventory,
+                _inventorySetting.onError
+            );
+        }
+#endif
+        
         public void OnChangeInventory(
             EzInventory inventory,
             List<EzItemSet> itemSets
@@ -191,6 +241,8 @@ namespace Gs2.Sample.Inventory
 
             foreach (var itemSet in itemSets)
             {
+                if (itemSet.Name == "null") continue;
+                
                 var item = Instantiate(_inventoryView.inventoryItemPrefab, _inventoryView.contentTransform);
                 item.Initialize(
                     itemSet
@@ -223,7 +275,7 @@ namespace Gs2.Sample.Inventory
             UIManager.Instance.AddLog("InventoryPresenter::OnClickFireElementButton");
             
             OnClickAcquireButton(
-                "fire_element"
+                _inventorySetting.exchangeRateNameFire
             );
         }
 
@@ -232,7 +284,7 @@ namespace Gs2.Sample.Inventory
             UIManager.Instance.AddLog("InventoryPresenter::OnClickWaterElementButton");
             
             OnClickAcquireButton(
-                "water_element"
+                _inventorySetting.exchangeRateNameWater
             );
         }
 
@@ -256,44 +308,35 @@ namespace Gs2.Sample.Inventory
             int count
         )
         {
+#if GS2_ENABLE_UNITASK
+            _inventoryModel.AcquireAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _inventorySetting.exchangeNamespaceName,
+                itemModelName,
+                count,
+                _inventorySetting.inventoryNamespaceName,
+                _inventorySetting.inventoryModelName,
+                _inventorySetting.onAcquire,
+                _inventorySetting.onError
+            ).Forget();
+#else
             StartCoroutine(
                 _inventoryModel.Acquire(
+                    GameManager.Instance.Domain,
                     GameManager.Instance.Session,
-                    _inventorySetting.identifierAcquireItemClientId,
-                    _inventorySetting.identifierAcquireItemClientSecret,
-                    _inventorySetting.inventoryNamespaceName,
-                    _inventorySetting.inventoryModelName,
+                    _inventorySetting.exchangeNamespaceName,
                     itemModelName,
                     count,
+                    _inventorySetting.inventoryNamespaceName,
+                    _inventorySetting.inventoryModelName,
                     _inventorySetting.onAcquire,
                     _inventorySetting.onError
                 )
             );
+#endif
         }
-        
-        /// <summary>
-        /// アイテムを消費する リクエスト
-        /// </summary>
-        /// <param name="itemSet"></param>
-        public void OnUseItem(
-            EzItemSet itemSet
-        )
-        {
-            StartCoroutine(
-                _inventoryModel.Consume(
-                    GameManager.Instance.Client,
-                    GameManager.Instance.Session,
-                    _inventorySetting.inventoryNamespaceName,
-                    _inventorySetting.inventoryModelName,
-                    itemSet.ItemName,
-                    1,
-                    _inventorySetting.onConsume,
-                    _inventorySetting.onError,
-                    itemSet.Name
-                )
-            );
-        }
-        
+
         private void AcquireAction(
             EzInventory inventory, 
             List<EzItemSet> itemSets, 
@@ -305,17 +348,46 @@ namespace Gs2.Sample.Inventory
                 return;
             }
             
-            _inventoryModel.Inventory = inventory;
-            foreach (var itemSet in itemSets)
-            {
-                _inventoryModel.ItemSets = _inventoryModel.ItemSets.Where(item => item.Name != itemSet.Name).ToList();
-                _inventoryModel.ItemSets.Add(itemSet);
-            }
             _inventoryModel.ItemSets.Sort((o1, o2) => o1.SortValue != o2.SortValue ? o1.SortValue - o2.SortValue : (int)(o2.Count - o1.Count));
-            
+
             OnChangeInventory(inventory, _inventoryModel.ItemSets);
         }
-
+        
+        /// <summary>
+        /// アイテムを消費する リクエスト
+        /// </summary>
+        /// <param name="itemSet"></param>
+        public void OnUseItem(
+            EzItemSet itemSet
+        )
+        {
+#if GS2_ENABLE_UNITASK
+            _inventoryModel.ConsumeAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _inventorySetting.inventoryNamespaceName,
+                _inventorySetting.inventoryModelName,
+                itemSet.ItemName,
+                1,
+                _inventorySetting.onConsume,
+                _inventorySetting.onError
+            ).Forget();
+#else
+            StartCoroutine(
+                _inventoryModel.Consume(
+                    GameManager.Instance.Domain,
+                    GameManager.Instance.Session,
+                    _inventorySetting.inventoryNamespaceName,
+                    _inventorySetting.inventoryModelName,
+                    itemSet.ItemName,
+                    1,
+                    _inventorySetting.onConsume,
+                    _inventorySetting.onError
+                )
+            );
+#endif
+        }
+        
         private void ConsumeAction(
             EzInventory inventory, 
             List<EzItemSet> itemSets, 
@@ -326,16 +398,16 @@ namespace Gs2.Sample.Inventory
             {
                 return;
             }
-            
-            _inventoryModel.Inventory = inventory;
+
             foreach (var itemSet in itemSets)
             {
                 _inventoryModel.ItemSets = _inventoryModel.ItemSets.Where(item => item.Name != itemSet.Name).ToList();
-                if (itemSet.Count != 0)
+                if (itemSet.Count != 0 && itemSet.ItemName != String.Empty)
                 {
                     _inventoryModel.ItemSets.Add(itemSet);
                 }
             }
+
             _inventoryModel.ItemSets.Sort((o1, o2) => o1.SortValue != o2.SortValue ? o1.SortValue - o2.SortValue : (int)(o2.Count - o1.Count));
             
             OnChangeInventory(inventory, _inventoryModel.ItemSets);

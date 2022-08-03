@@ -37,6 +37,7 @@ gs2-news-sample
      |- events
      |- maintenance
  |- layouts
+ |- config.toml
 ```
 
 ## WebViewについて
@@ -51,24 +52,56 @@ gs2-news-sample
 
 GS2-Newsから、展開された配信コンテンツへの接続URLと、アクセス権限の検証のために使用するクッキーのキーと値を取得します。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzGetContentsUrlResult> result = null;
-yield return client.News.GetContentsUrl(
-    r => {
-        if (r.Error != null)
-        {
-            // エラーが発生した場合に到達
-            // r.Error は発生した例外オブジェクトが格納されている
-            Debug.Log(r.Error);
-        }
-        else
-        {
-            result = r;
-        }
-    },
-    session,    // GameSession ログイン状態を表すセッションオブジェクト
-    newsNamespaceName   //  ネームスペース名
+var domain = gs2.News.Namespace(
+    namespaceName: newsNamespaceName
+).Me(
+    gameSession: gameSession
+).News();
+var result = await domain.GetContentsUrlAsync();
+
+var items = result.ToList();
+foreach (var item in items)
+{
+    var entry = await item.ModelAsync();
+    cookies.Add(entry);
+}
+browserUrl = domain.BrowserUrl;
+zipUrl = domain.ZipUrl;
+
+onGetContentsUrl.Invoke(cookies, browserUrl, zipUrl);
+```
+・コルーチン使用時
+```c#
+ var domain = gs2.News.Namespace(
+    namespaceName: newsNamespaceName
+).Me(
+    gameSession: gameSession
+).News(
 );
+var future = domain.GetContentsUrl();
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(
+        future.Error
+    );
+    yield break;
+}
+
+var items = future.Result.ToList();
+foreach (var item in items)
+{
+    var future2 = item.Model();
+    yield return future2;
+    var entry = future2.Result;
+    cookies.Add(entry);
+}
+browserUrl = domain.BrowserUrl;
+zipUrl = domain.ZipUrl;
+
+onGetContentsUrl.Invoke(cookies, browserUrl, zipUrl);
 ```
 
 ### WebViewでコンテンツを開く

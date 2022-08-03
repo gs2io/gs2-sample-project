@@ -7,15 +7,22 @@ using Gs2.Unity.Util;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Events;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
+#endif
 
 namespace Gs2.Sample.Gold
 {
     public class GoldPresenter : MonoBehaviour
     {
-        [SerializeField] private GoldSetting _goldSetting;
+        [SerializeField]
+        private GoldSetting _goldSetting;
         
-        [SerializeField] private GoldModel _goldModel;
-        [SerializeField] private GoldView _goldView;
+        [SerializeField]
+        private GoldModel _goldModel;
+        [SerializeField]
+        private GoldView _goldView;
 
         // Start is called before the first frame update
         void Start()
@@ -32,7 +39,7 @@ namespace Gs2.Sample.Gold
             UIManager.Instance.AddLog("GoldPresenter::Initialize");
         
             yield return _goldModel.GetInventoryModel(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 _goldSetting.inventoryNamespaceName,
                 _goldSetting.inventoryModelName,
                 _goldSetting.onGetInventoryModel,
@@ -41,6 +48,23 @@ namespace Gs2.Sample.Gold
             
             yield return Refresh();
         }
+
+#if GS2_ENABLE_UNITASK
+        public async UniTask InitializeAsync()
+        {
+            UIManager.Instance.AddLog("GoldPresenter::InitializeAsync");
+        
+            await _goldModel.GetInventoryModelAsync(
+                GameManager.Instance.Domain,
+                _goldSetting.inventoryNamespaceName,
+                _goldSetting.inventoryModelName,
+                _goldSetting.onGetInventoryModel,
+                _goldSetting.onError
+            );
+            
+            await RefreshAsync();
+        }
+#endif
 
         private IEnumerator Refresh()
         {
@@ -66,7 +90,7 @@ namespace Gs2.Sample.Gold
             _goldSetting.onGetInventory.AddListener(RefreshInventoryAction);
             
             yield return _goldModel.GetInventory(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _goldSetting.inventoryNamespaceName,
                 _goldModel.InventoryModel.Name,
@@ -74,6 +98,40 @@ namespace Gs2.Sample.Gold
                 _goldSetting.onError
             );
         }
+#if GS2_ENABLE_UNITASK
+        private async UniTask RefreshAsync()
+        {
+            void RefreshInventoryAction(
+                EzInventory inventory, 
+                List<EzItemSet> itemSets
+            )
+            {
+                if (inventory.InventoryName != _goldModel.InventoryModel.Name)
+                {
+                    return;
+                }
+                
+                _goldModel.Inventory = inventory;
+                _goldModel.ItemSets = itemSets;
+                _goldModel.ItemSets.Sort((o1, o2) => o1.SortValue != o2.SortValue ? o1.SortValue - o2.SortValue : (int)(o2.Count - o1.Count));
+                
+                _goldSetting.onGetInventory.RemoveListener(RefreshInventoryAction);
+
+                OnUpdateGold();
+            }
+
+            _goldSetting.onGetInventory.AddListener(RefreshInventoryAction);
+            
+            await _goldModel.GetInventoryAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _goldSetting.inventoryNamespaceName,
+                _goldModel.InventoryModel.Name,
+                _goldSetting.onGetInventory,
+                _goldSetting.onError
+            );
+        }
+#endif
         
         public void OnUpdateGold()
         {
@@ -93,19 +151,33 @@ namespace Gs2.Sample.Gold
         /// <param name="acquireValue"></param>
         public void OnClickGold_AcquireButton(int acquireValue)
         {
+#if GS2_ENABLE_UNITASK
+            _goldModel.AcquireAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _goldSetting.exchangeNamespaceName,
+                _goldSetting.exchangeRateName,
+                acquireValue,
+                _goldSetting.inventoryNamespaceName,
+                _goldSetting.inventoryModelName,
+                _goldSetting.onAcquire,
+                _goldSetting.onError
+            ).Forget();
+#else
             StartCoroutine(
                 _goldModel.Acquire(
+                    GameManager.Instance.Domain,
                     GameManager.Instance.Session,
-                    _goldSetting.identifierAcquireGoldClientId,
-                    _goldSetting.identifierAcquireGoldClientSecret,
+                    _goldSetting.exchangeNamespaceName,
+                    _goldSetting.exchangeRateName,
+                    acquireValue,
                     _goldSetting.inventoryNamespaceName,
                     _goldSetting.inventoryModelName,
-                    _goldSetting.itemModelName,
-                    acquireValue,
                     _goldSetting.onAcquire,
                     _goldSetting.onError
                 )
             );
+#endif
         } 
         
         /// <summary>
@@ -149,9 +221,21 @@ namespace Gs2.Sample.Gold
         /// <param name="consumeValue"></param>
         public void OnClickGold_ConsumeButton(int consumeValue)
         {
+#if GS2_ENABLE_UNITASK
+            _goldModel.ConsumeAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _goldSetting.inventoryNamespaceName,
+                _goldSetting.inventoryModelName,
+                _goldSetting.itemModelName,
+                consumeValue,
+                _goldSetting.onConsume,
+                _goldSetting.onError
+            ).Forget();
+#else
             StartCoroutine(
                 _goldModel.Consume(
-                    GameManager.Instance.Client,
+                    GameManager.Instance.Domain,
                     GameManager.Instance.Session,
                     _goldSetting.inventoryNamespaceName,
                     _goldSetting.inventoryModelName,
@@ -161,6 +245,7 @@ namespace Gs2.Sample.Gold
                     _goldSetting.onError
                 )
             );
+#endif
         }
 
         /// <summary>
@@ -198,36 +283,6 @@ namespace Gs2.Sample.Gold
             _goldModel.ItemSets.Sort((o1, o2) => o1.SortValue != o2.SortValue ? o1.SortValue - o2.SortValue : (int)(o2.Count - o1.Count));
             
             OnUpdateGold();
-        }
-        
-        public UnityAction<EzStampTask, EzRunStampTaskResult> Gold_GetTaskCompleteAction()
-        {
-            return (task, taskResult) =>
-            {
-                UIManager.Instance.AddLog("GoldPresenter::GetTaskCompleteAction");
-
-                if (task.Action == "Gs2Inventory:ConsumeItemSetByUserId")
-                {
-                    StartCoroutine(
-                        Refresh()
-                    );
-                }
-            };
-        }
-
-        public UnityAction<EzStampSheet, EzRunStampSheetResult> Gold_GetSheetCompleteAction()
-        {
-            return (sheet, sheetResult) =>
-            {
-                UIManager.Instance.AddLog("GoldPresenter::GetSheetCompleteAction");
-
-                if (sheet.Action == "Gs2Inventory:AcquireItemSetByUserId")
-                {
-                    StartCoroutine(
-                        Refresh()
-                    );
-                }
-            };
         }
     }
 }

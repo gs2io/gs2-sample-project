@@ -18,21 +18,16 @@ IAP パッケージのインポートを行います。
 
 ![Lottery](Lottery.png)
 
-| 設定名 | 説明 |
-|---|---|
-| lotteryNamespaceName | GS2-Lottery のネームスペース名 |
-| jobQueueNamespaceName | GS2-JobQueue のネームスペース名 |
-| showcaseNamespaceName | GS2-Showcase のネームスペース名 |
-| showcaseName | GS2-Showcase の陳列棚名 |
-| showcaseKeyId | GS2-Showcase で商品購入時に発行するスタンプシートの署名計算に使用する暗号鍵 |
-| lotteryKeyId | GS2-Lottery で抽選実行時に発行するスタンプシートの署名計算に使用する暗号鍵 |
+| 設定名 | 説明                                                     |
+|---|--------------------------------------------------------|
+| lotteryName | GS2-Lotteryの抽選マスターデータの種類名, GS2-Showcaseの商品棚マスターデータの商品名 |
+| ShowcaseNamespaceName | GS2-Showcaseのネームスペース名                                 |
 
-| イベント | 説明 |
-|---|---|
-| OnGetShowcase(EzShowcase) | 商品棚情報を取得したときに呼び出されます。 |
-| OnIssueBuyStampSheet(string) | 商品購入のスタンプシートが発行されたときに呼び出されます。 |
-| onAcquireInventoryItem(List<AcquireItemSetByUserIdRequest>) | 抽選でアイテムを入手したときに呼び出されます。 |
-| OnError(Gs2Exception error) | エラーが発生したときに呼び出されます。 |
+| イベント                                                        | 説明 |
+|-------------------------------------------------------------|---|
+| OnGetShowcase(EzShowcase)                                   | 商品棚情報を取得したときに呼び出されます。 |
+| OnAcquireInventoryItem(List<AcquireItemSetByUserIdRequest>) | 抽選でアイテムを入手したときに呼び出されます。 |
+| OnError(Gs2Exception error)                                 | エラーが発生したときに呼び出されます。 |
 
 ## 抽選商品購入処理の流れ
 
@@ -42,143 +37,185 @@ IAP パッケージのインポートを行います。
 
 商品リストを取得し、ストアを表示します。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzGetShowcaseResult> result = null;
-yield return client.Showcase.GetShowcase(
-    r =>
-    {
-        result = r;
-    },
-    session,
-    showcaseNamespaceName,
-    showcaseName
+var domain = gs2.Showcase.Namespace(
+    namespaceName: showcaseNamespaceName
+).Me(
+    gameSession: gameSession
+).Showcase(
+    showcaseName: showcaseName
 );
+try
+{
+    Showcase = await domain.ModelAsync();
+    
+    onGetShowcase.Invoke(Showcase);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+    return e;
+}
+return null;
+```
+・コルーチン使用時
+```c#
+var domain = gs2.Showcase.Namespace(
+    namespaceName: showcaseNamespaceName
+).Me(
+    gameSession: gameSession
+).Showcase(
+    showcaseName: showcaseName
+);
+var future = domain.Model();
+yield return future;
+if (future.Error != null)
+{
+    onError.Invoke(
+        future.Error
+    );
+    callback.Invoke(future.Error);
+    yield break;
+}
+
+Showcase = future.Result;
+
+onGetShowcase.Invoke(Showcase);
+
+callback.Invoke(null);
 ```
 
 ### 購入処理
 
-モバイル環境であれば、Unity IAP を使用して AppStore や GooglePlay でのコンテンツの購入を行います  
-（商品の登録、設定が必要になります）。  
-エディター環境ではFake Storeのレシートが発行されます。  
-得られたレシートを後続の処理で参照できるよう保持しておきます。
+GS2-Showcaseに商品の購入をリクエストします。  
+displayItemId　に購入する商品の陳列商品IDを指定します。  
+quantity　に購入する数量を指定します。  
 
+・UniTask有効時
 ```c#
-IStoreController controller = null;
-UnityEngine.Purchasing.Product product = null;
-string receipt = null;
-if (contentsId != null)
-{
-    AsyncResult<Gs2.Unity.Util.PurchaseParameters> result = null;
-    yield return new IAPUtil().Buy(
-        r => { result = r; },
-        contentsId
-    );
-
-    if (result.Error != null)
-    {
-        onError.Invoke(
-            result.Error
-        );
-        yield break;
-    }
-
-    receipt = result.Result.receipt;
-    controller = result.Result.controller;
-    product = result.Result.product;
-}
-```
-
-購入したレシートを使って、__GS2-Showcase__ の商品を購入する処理を実行します。  
-Config には __GS2-Money__ のウォレットスロットと、レシートの内容を渡します。
-```c#
-// 商品購入 レシート情報
-if (receipt != null)
-{
-    tempConfig.Add(
-        new EzConfig
-        {
-            Key = "receipt", 
-            Value = receipt
-        }
-    );
-
-    UIManager.Instance.AddLog("receipt:" + receipt);
-}
-```
-
-```c#
-// Showcase 商品の購入をリクエスト
-AsyncResult<EzBuyResult> result = null;
-yield return client.Showcase.Buy(
-    r => { result = r; },
-    session,
-    showcaseNamespaceName,
-    showcaseName,
-    displayItemId,
-    tempConfig
+// 商品の購入をリクエスト
+// Request to purchase an item
+var domain = gs2.Showcase.Namespace(
+    namespaceName: showcaseNamespaceName
+).Me(
+    gameSession: gameSession
+).Showcase(
+    showcaseName: showcaseName
 );
-
-if (result.Error != null)
+try
+{
+    var result = await domain.BuyAsync(
+        displayItemId: displayItemId,
+        quantity: null,
+        config: tempConfig.ToArray()
+    );
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+    return;
+}
+```
+・コルーチン使用時
+```c#
+// 商品の購入をリクエスト
+// Request to purchase an item
+var domain = gs2.Showcase.Namespace(
+    namespaceName: showcaseNamespaceName
+).Me(
+    gameSession: gameSession
+).Showcase(
+    showcaseName: showcaseName
+);
+var future = domain.Buy(
+    displayItemId: displayItemId,
+    config: tempConfig.ToArray()
+);
+yield return future;
+if (future.Error != null)
 {
     onError.Invoke(
-        result.Error
+        future.Error
     );
-    yield break;
 }
-                
-// スタンプシートを取得
-stampSheet = result.Result.StampSheet;
 ```
 
-取得したスタンプシートを実行します。  
-GS2 SDK for Unity ではスタンプシート実行用のステートマシンが用意されていますので、そちらを利用します。  
-ステートマシンの実行には [GS2-Distributor](https://app.gs2.io/docs/index.html#gs2-distributor) と スタンプシートの署名計算に使用した暗号鍵が必要となります。
+GS2-Showcaseで抽選商品購入スタンプシートが発行されます。  
+GS2Domainクラス（ソース内で "gs2" ）を使用した実装ではクライアント側でのスタンプシートの処理は __自動実行__ されます。  
+
+抽選結果の商品リストは以下のコールバックで取得できます。
 
 ```c#
-StartCoroutine(
-    _stampSheetRunner.Run(
-    stampSheet,
-    _lotterySetting.showcaseKeyId,
-    _lotterySetting.onError
-    )
-);
-```
-
-通常の課金通貨商品の購入スタンプシートの流れは以下になります。
-
-![LotteryStore](GachaStore.png)
-
-発行されたスタンプシートに含まれている抽選結果をつかい、必要であればクライアントは抽選演出等を再生したのち、  
-取得したアイテムの一覧表示が可能です。  
-スタンプシートの実行後、サーバ側で [GS2-JobQueue](https://app.gs2.io/docs/index.html#gs2-jobqueue) を使用して、順にインベントリーへのアイテム入手処理が実行されます。
-
-```c#
-// Lottery 抽選処理の結果を取得
-if (sheet.Action == "Gs2Lottery:DrawByUserId")
+// 抽選処理の結果を取得
+// Obtain the results of the lottery process
+void LotteryResult(
+    string _namespace,
+    string lotteryName,
+    DrawnPrize[] prizes
+)
 {
-    // 抽選によって取得したアイテムがインベントリに追加される
-    var json = JsonMapper.ToObject(sheetResult.Result);
-    var result = DrawByUserIdResult.FromJson(json);
-    var mergedAcquireRequests = new List<AcquireItemSetByUserIdRequest>();
-    foreach (var acquireRequests in result.Items.Select(item => (
-        from acquireAction in item.AcquireActions 
-        where acquireAction.Action == "Gs2Inventory:AcquireItemSetByUserId" 
-        select JsonMapper.ToObject(acquireAction.Request) into acquireJson 
-        select AcquireItemSetByUserIdRequest.FromJson(acquireJson)
-    ).ToList()))
+    // 抽選で獲得したアイテム
+    // Items won in the lottery
+    var DrawnPrizes = new List<EzDrawnPrize>();
+    foreach (var prize in prizes)
     {
-        mergedAcquireRequests.AddRange(acquireRequests);
+        var item = EzDrawnPrize.FromModel(prize);
+        DrawnPrizes.Add(item);
     }
-    _lotterySetting.onAcquireInventoryItem.Invoke(
-        mergedAcquireRequests
-    );
-    // スタンプシートを実行
-    StartCoroutine(
-        _stampSheetRunner.Run(
-            result.StampSheet,
-            _lotterySetting.lotteryKeyId,
-            _lotterySetting.onError
-        )
+
+    onAcquireInventoryItem.Invoke(
+        DrawnPrizes
     );
 }
+
+// 抽選結果取得コールバックを登録
+// Register lottery result acquisition callback
+Gs2Lottery.Domain.Gs2Lottery.DrawnResult = LotteryResult;
 ```
+
+抽選結果が取得できたタイミングで、実際のゲーム内では必要であればクライアントは抽選演出、取得したアイテムの一覧表示等を行います。  
+スタンプシートの実行後、[GS2-JobQueue](https://app.gs2.io/docs/index.html#gs2-jobqueue) が順にインベントリーへのアイテム入手処理を実行します。
+クライアントがジョブキューを実行することで、実際に報酬を受け取る処理が実行されます。
+
+ジョブキューを進行させる処理、Gs2Domain.Dispatch を実行しておくことで、ジョブキューを自動で継続進行できます。
+
+・UniTask有効時
+```c#
+async UniTask Impl()
+{
+    while (true)
+    {
+        await _domain.DispatchAsync(_session);
+
+        await UniTask.Yield();
+    }
+}
+
+_stampSheetDispatchCoroutine = StartCoroutine(Impl().ToCoroutine());
+```
+・コルーチン使用時
+```c#
+IEnumerator Impl()
+{
+    while (true)
+    {
+        var future = _domain.Dispatch(_session);
+        yield return future;
+        if (future != null)
+        {
+            yield break;
+        }
+        if (future.Result)
+        {
+            break;
+        }
+        yield return null;
+    }
+}
+_stampSheetDispatchCoroutine = StartCoroutine(Impl());
+```
+
+抽選商品の購入スタンプシートの流れは以下のようになります。
+
+![LotteryStore](LotteryStore.png)

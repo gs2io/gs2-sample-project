@@ -1,54 +1,20 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Gs2.Core;
-using Gs2.Core.Model;
-using Gs2.Core.Net;
-using Gs2.Gs2Inventory;
-using Gs2.Gs2Inventory.Request;
-using Gs2.Unity;
+using Gs2.Core.Exception;
+using Gs2.Unity.Core;
 using Gs2.Unity.Gs2Inventory.Model;
-using Gs2.Unity.Gs2Inventory.Result;
 using Gs2.Unity.Util;
 using UnityEngine;
-using UnityEngine.Events;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
+#endif
 
 namespace Gs2.Sample.Inventory
 {
-    [Serializable]
-    public class GetInventoryModelEvent : UnityEvent<string, EzInventoryModel, List<EzItemModel>>
-    {
-    }
-
-    [Serializable]
-    public class GetInventoryEvent : UnityEvent<EzInventory, List<EzItemSet>>
-    {
-    }
-
-    [Serializable]
-    public class GetItemSetWithSignatureEvent : UnityEvent<string, string, string, string>
-    {
-    }
-
-    [Serializable]
-    public class AcquireEvent : UnityEvent<EzInventory, List<EzItemSet>, int>
-    {
-    }
-
-    [Serializable]
-    public class ConsumeEvent : UnityEvent<EzInventory, List<EzItemSet>, int>
-    {
-    }
-    
     public class InventoryModel : MonoBehaviour
     {
-        /// <summary>
-        /// インベントリのネームスペース名
-        /// Inventory namespace name
-        /// </summary>
-        public string InventoryNamespaceName;
-        
         /// <summary>
         /// インベントリモデル
         /// inventory model
@@ -77,153 +43,214 @@ namespace Gs2.Sample.Inventory
         /// インベントリモデルを取得
         /// Get Inventory Model
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="inventoryNamespaceName"></param>
-        /// <param name="inventoryModelName"></param>
-        /// <param name="onGetInventoryModel"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
         public IEnumerator GetInventoryModel(
-            Client client,
+            Gs2Domain gs2,
             string inventoryNamespaceName,
             string inventoryModelName,
             GetInventoryModelEvent onGetInventoryModel,
             ErrorEvent onError
         )
         {
-            EzInventoryModel inventoryModel;
             {
-                AsyncResult<EzGetInventoryModelResult> result = null;
-                yield return client.Inventory.GetInventoryModel(
-                    r => { result = r; },
-                    inventoryNamespaceName,
-                    inventoryModelName
+                var domain = gs2.Inventory.Namespace(
+                    namespaceName: inventoryNamespaceName
+                ).InventoryModel(
+                    inventoryName: inventoryModelName
                 );
-
-                if (result.Error != null)
+                var future = domain.Model();
+                yield return future;
+                if (future.Error != null)
                 {
-                    onError.Invoke(
-                        result.Error
-                    );
+                    onError.Invoke(future.Error);
                     yield break;
                 }
 
-                inventoryModel = result.Result.Item;
+                Model = future.Result;
             }
-            List<EzItemModel> itemModels;
             {
-                AsyncResult<EzListItemModelsResult> result = null;
-                yield return client.Inventory.ListItemModels(
-                    r => { result = r; },
-                    inventoryNamespaceName,
-                    inventoryModelName
-                );
-
-                if (result.Error != null)
+                ItemModels.Clear();
+                var it = gs2.Inventory.Namespace(
+                    namespaceName: inventoryNamespaceName
+                ).InventoryModel(
+                    inventoryName: inventoryModelName
+                ).ItemModels();
+                while (it.HasNext())
                 {
-                    onError.Invoke(
-                        result.Error
-                    );
-                    yield break;
-                }
+                    yield return it.Next();
+                    if (it.Error != null)
+                    {
+                        onError.Invoke(it.Error);
+                        break;
+                    }
 
-                itemModels = result.Result.Items;
+                    if (it.Current != null)
+                    {
+                        ItemModels.Add(it.Current);
+                    }
+                }
             }
 
-            onGetInventoryModel.Invoke(inventoryModelName, inventoryModel, itemModels);
+            onGetInventoryModel.Invoke(inventoryModelName, Model, ItemModels);
         }
+#if GS2_ENABLE_UNITASK
+        /// <summary>
+        /// インベントリモデル/アイテムモデルを取得
+        /// Get Inventory Model
+        /// </summary>
+        public async UniTask GetInventoryModelAsync(
+            Gs2Domain gs2,
+            string inventoryNamespaceName,
+            string inventoryModelName,
+            GetInventoryModelEvent onGetInventoryModel,
+            ErrorEvent onError
+        )
+        {
+            {
+                var domain = gs2.Inventory.Namespace(
+                    namespaceName: inventoryNamespaceName
+                ).InventoryModel(
+                    inventoryName: inventoryModelName
+                );
+                try
+                {
+                    Model = await domain.ModelAsync();
+                }
+                catch (Gs2Exception e)
+                {
+                    onError.Invoke(e);
+                    return;
+                }
+            }
+            {
+                ItemModels.Clear();
+                var domain = gs2.Inventory.Namespace(
+                    namespaceName: inventoryNamespaceName
+                ).InventoryModel(
+                    inventoryName: inventoryModelName
+                );
+                ItemModels = await domain.ItemModelsAsync().ToListAsync();
+            }
+
+            onGetInventoryModel.Invoke(inventoryModelName, Model, ItemModels);
+        }
+#endif
         
         /// <summary>
         /// インベントリの情報を取得
         /// Retrieve inventory information
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="session"></param>
-        /// <param name="inventoryNamespaceName"></param>
-        /// <param name="inventoryName"></param>
-        /// <param name="onGetInventory"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
         public IEnumerator GetInventory(
-            Client client,
-            GameSession session,
+            Gs2Domain gs2,
+            GameSession gameSession,
             string inventoryNamespaceName,
             string inventoryName,
             GetInventoryEvent onGetInventory,
             ErrorEvent onError
         )
         {
-            EzInventory inventory;
             {
-                AsyncResult<EzGetInventoryResult> result = null;
-                yield return client.Inventory.GetInventory(
-                    r => { result = r; },
-                    session,
-                    inventoryNamespaceName,
-                    inventoryName
+                var domain = gs2.Inventory.Namespace(
+                    namespaceName: inventoryNamespaceName
+                ).Me(
+                    gameSession: gameSession
+                ).Inventory(
+                    inventoryName: inventoryName
                 );
-
-                if (result.Error != null)
+                var future = domain.Model();
+                yield return future;
+                if (future.Error != null)
                 {
-                    onError.Invoke(
-                        result.Error
-                    );
+                    onError.Invoke(future.Error);
                     yield break;
                 }
-
-                inventory = result.Result.Item;
+ 
+                Inventory = future.Result;
             }
-            var itemSets = new List<EzItemSet>();
-            string nextPageToken;
-            do
             {
-                AsyncResult<EzListItemsResult> result = null;
-                yield return client.Inventory.ListItems(
-                    r => { result = r; },
-                    session,
-                    inventoryNamespaceName,
-                    inventoryName,
-                    null,
-                    30
-                );
-
-                if (result.Error != null)
+                ItemSets.Clear();
+                var it = gs2.Inventory.Namespace(
+                    namespaceName: inventoryNamespaceName
+                ).Me(
+                    gameSession: gameSession
+                ).Inventory(
+                    inventoryName: inventoryName
+                ).ItemSets();
+                while (it.HasNext())
                 {
-                    onError.Invoke(
-                        result.Error
-                    );
-                    yield break;
+                    yield return it.Next();
+                    if (it.Error != null)
+                    {
+                        onError.Invoke(it.Error);
+                        break;
+                    }
+
+                    if (it.Current != null)
+                    {
+                        ItemSets.Add(it.Current);
+                    }
                 }
-
-                itemSets.AddRange(result.Result.Items);
-                nextPageToken = result.Result.NextPageToken;
-            } while (nextPageToken != null);
-
-            onGetInventory.Invoke(inventory, itemSets);
+            }
+            
+            onGetInventory.Invoke(Inventory, ItemSets);
         }
+#if GS2_ENABLE_UNITASK
+        /// <summary>
+        /// インベントリの情報を取得
+        /// Retrieve inventory information
+        /// </summary>
+        public async UniTask GetInventoryAsync(
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string inventoryNamespaceName,
+            string inventoryName,
+            GetInventoryEvent onGetInventory,
+            ErrorEvent onError
+        )
+        {
+            {
+                var domain = gs2.Inventory.Namespace(
+                    namespaceName: inventoryNamespaceName
+                ).Me(
+                    gameSession: gameSession
+                ).Inventory(
+                    inventoryName: inventoryName
+                );
+                try
+                {
+                    Inventory = await domain.ModelAsync();
+                }
+                catch (Gs2Exception e)
+                {
+                    onError.Invoke(e);
+                }
+            }
+            {
+                var domain = gs2.Inventory.Namespace(
+                    namespaceName: inventoryNamespaceName
+                ).Me(
+                    gameSession: gameSession
+                ).Inventory(
+                    inventoryName: inventoryName
+                );
+                ItemSets = await domain.ItemSetsAsync().ToListAsync();
+            }
+            
+            onGetInventory.Invoke(Inventory, ItemSets);
+        }
+#endif
         
         /// <summary>
         /// アイテムの入手
         /// Obtaining Items
         /// </summary>
-        /// <param name="session"></param>
-        /// <param name="identifierAcquireItemClientId"></param>
-        /// <param name="identifierAcquireItemClientSecret"></param>
-        /// <param name="inventoryNamespaceName"></param>
-        /// <param name="inventoryModelName"></param>
-        /// <param name="itemModelName"></param>
-        /// <param name="value"></param>
-        /// <param name="onAcquire"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
         public IEnumerator Acquire(
-            GameSession session,
-            string identifierAcquireItemClientId,
-            string identifierAcquireItemClientSecret,
-            string inventoryNamespaceName,
-            string inventoryModelName,
-            string itemModelName,
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string exchangeNamespaceName,
+            string exchangeRateName,
             int value,
+            string inventoryNamespaceName,
+            string inventoryName,
             AcquireEvent onAcquire,
             ErrorEvent onError
         )
@@ -232,112 +259,267 @@ namespace Gs2.Sample.Inventory
             // 実際にクライアントが直接アイテムの増加を行う実装は非推奨となります。
             // *This process is only for sample confirmation.
             // The actual implementation in which the client directly increases the number of items is deprecated.
-            
-            var restSession = new Gs2RestSession(
-                new BasicGs2Credential(
-                    identifierAcquireItemClientId,
-                    identifierAcquireItemClientSecret
-                )
-            );
-            var error = false;
-            yield return restSession.Open(
-                r =>
-                {
-                    if (r.Error != null)
-                    {
-                        onError.Invoke(r.Error);
-                        error = true;
-                    }
-                }
-            );
 
-            if (error)
             {
-                yield return restSession.Close(() => { });
-                yield break;
-            }
+                var domain = gs2.Exchange.Namespace(
+                    namespaceName: exchangeNamespaceName
+                ).Me(
+                    gameSession: gameSession
+                ).Exchange();
+                var future = domain.Exchange(
+                    rateName: exchangeRateName,
+                    count: value,
+                    config: null
+                );
 
-            var restClient = new Gs2InventoryRestClient(
-                restSession
-            );
-
-            yield return restClient.AcquireItemSetByUserId(
-                new AcquireItemSetByUserIdRequest()
-                    .WithNamespaceName(inventoryNamespaceName)
-                    .WithUserId(session.AccessToken.UserId)
-                    .WithInventoryName(inventoryModelName)
-                    .WithItemName(itemModelName)
-                    .WithAcquireCount(value),
-                r =>
+                yield return future;
+                if (future.Error != null)
                 {
-                    if (r.Error != null)
+                    onError.Invoke(
+                        future.Error
+                    );
+                    yield break;
+                }
+            }
+            {
+                var domain = gs2.Inventory.Namespace(
+                    namespaceName: inventoryNamespaceName
+                ).Me(
+                    gameSession: gameSession
+                ).Inventory(
+                    inventoryName: inventoryName
+                );
+                var future = domain.Model();
+                yield return future;
+                if (future.Error != null)
+                {
+                    onError.Invoke(future.Error);
+                    yield break;
+                }
+ 
+                Inventory = future.Result;
+            }
+            {
+                ItemSets.Clear();
+                var it = gs2.Inventory.Namespace(
+                    namespaceName: inventoryNamespaceName
+                ).Me(
+                    gameSession: gameSession
+                ).Inventory(
+                    inventoryName: inventoryName
+                ).ItemSets();
+                while (it.HasNext())
+                {
+                    yield return it.Next();
+                    if (it.Error != null)
                     {
-                        onError.Invoke(r.Error);
-                        error = true;
+                        onError.Invoke(it.Error);
+                        break;
                     }
-                    else
+
+                    if (it.Current != null)
                     {
-                        onAcquire.Invoke(
-                            EzInventory.FromModel(r.Result.Inventory),
-                            r.Result.Items.Select(item => EzItemSet.FromModel(item)).ToList(),
-                            value
-                        );
+                        ItemSets.Add(it.Current);
                     }
                 }
-            );
-
-            yield return restSession.Close(() => { });
+            }
+            
+            onAcquire.Invoke(Inventory, ItemSets.ToList(), value);
         }
+#if GS2_ENABLE_UNITASK
+        /// <summary>
+        /// アイテムの入手
+        /// Obtaining Items
+        /// </summary>
+        public async UniTask AcquireAsync(
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string exchangeNamespaceName,
+            string exchangeRateName,
+            int value,
+            string inventoryNamespaceName,
+            string inventoryName,
+            AcquireEvent onAcquire,
+            ErrorEvent onError
+        )
+        {
+            // ※この処理はサンプルの動作確認のためものです。
+            // 実際にクライアントが直接アイテムの増加を行う実装は非推奨となります。
+            // *This process is only for sample confirmation.
+            // The actual implementation in which the client directly increases the number of items is deprecated.
 
+            {
+                var domain = gs2.Exchange.Namespace(
+                    namespaceName: exchangeNamespaceName
+                ).Me(
+                    gameSession: gameSession
+                ).Exchange();
+                try
+                {
+                    await domain.ExchangeAsync(
+                        rateName: exchangeRateName,
+                        count: value,
+                        config: null
+                    );
+                }
+                catch (Gs2Exception e)
+                {
+                    onError.Invoke(e);
+                    return;
+                }
+            }
+            {
+                var domain = gs2.Inventory.Namespace(
+                    namespaceName: inventoryNamespaceName
+                ).Me(
+                    gameSession: gameSession
+                ).Inventory(
+                    inventoryName: inventoryName
+                );
+                try
+                {
+                    Inventory = await domain.ModelAsync();
+                }
+                catch (Gs2Exception e)
+                {
+                    onError.Invoke(e);
+                    return;
+                }
+            }
+            {
+                var domain = gs2.Inventory.Namespace(
+                    namespaceName: inventoryNamespaceName
+                ).Me(
+                    gameSession: gameSession
+                ).Inventory(
+                    inventoryName: inventoryName
+                );
+                try
+                {
+                    ItemSets = await domain.ItemSetsAsync().ToListAsync();
+                }
+                catch (Gs2Exception e)
+                {
+                    onError.Invoke(e);
+                    return;
+                }
+            }
+            
+            onAcquire.Invoke(Inventory, ItemSets.ToList(), value);
+        }
+#endif
+        
         /// <summary>
         /// アイテムの消費
         /// Item Consumption
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="session"></param>
-        /// <param name="inventoryNamespaceName"></param>
-        /// <param name="inventoryModelName"></param>
-        /// <param name="itemModelName"></param>
-        /// <param name="consumeValue"></param>
-        /// <param name="onConsume"></param>
-        /// <param name="onError"></param>
-        /// <param name="itemSetName"></param>
-        /// <returns></returns>
         public IEnumerator Consume(
-            Client client,
-            GameSession session,
+            Gs2Domain gs2,
+            GameSession gameSession,
             string inventoryNamespaceName,
-            string inventoryModelName,
-            string itemModelName,
+            string inventoryName,
+            string itemName,
             int consumeValue,
             ConsumeEvent onConsume,
-            ErrorEvent onError,
-            string itemSetName = null
+            ErrorEvent onError
         )
         {
-            AsyncResult<EzConsumeResult> result = null;
-            yield return client.Inventory.Consume(
-                r => { result = r; },
-                session,
-                inventoryNamespaceName,
-                inventoryModelName,
-                itemModelName,
-                consumeValue,
-                itemSetName
+            var domain = gs2.Inventory.Namespace(
+                namespaceName: inventoryNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Inventory(
+                inventoryName: inventoryName
             );
-            
-            if (result.Error != null)
+            var future = domain.ItemSet(
+                itemName: itemName,
+                itemSetName: null
+            ).Consume(
+                consumeCount: consumeValue
+            );
+            yield return future;
+            if (future.Error != null)
             {
-                onError.Invoke(
-                    result.Error
-                );
+                onError.Invoke(future.Error);
                 yield break;
             }
 
-            var inventory = result.Result.Inventory;
-            var itemSets = result.Result.Items;
+            var result = future.Result;
+            var future2 = result.Model();
+            yield return future2;
+            if (future2.Error != null)
+            {
+                onError.Invoke(future2.Error);
+                yield break;
+            }
 
-            onConsume.Invoke(inventory, itemSets, consumeValue);
+            var itemSets = future2.Result;
+            
+            var future3 = domain.Model();
+            yield return future3;
+            if (future3.Error != null)
+            {
+                onError.Invoke(future3.Error);
+                yield break;
+            }
+ 
+            Inventory = future3.Result;
+
+            onConsume.Invoke(Inventory, itemSets.ToList(), consumeValue);
         }
+#if GS2_ENABLE_UNITASK
+        /// <summary>
+        /// アイテムの消費
+        /// Item Consumption
+        /// </summary>
+        public async UniTask ConsumeAsync(
+            Gs2Domain gs2,
+            GameSession gameSession,
+            string inventoryNamespaceName,
+            string inventoryName,
+            string itemName,
+            int consumeValue,
+            ConsumeEvent onConsume,
+            ErrorEvent onError
+        )
+        {
+            EzItemSet[] itemSets;
+            var domain = gs2.Inventory.Namespace(
+                namespaceName: inventoryNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Inventory(
+                inventoryName: inventoryName
+            );
+            var domain2 = domain.ItemSet(
+                itemName: itemName,
+                itemSetName: null
+            );
+            try
+            {
+                var result = await domain2.ConsumeAsync(
+                    consumeCount: consumeValue
+                );
+                
+                itemSets  = await result.ModelAsync();
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+                return;
+            }
+            try
+            {
+                Inventory = await domain.ModelAsync();
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+                return;
+            }
+
+            onConsume.Invoke(Inventory, itemSets.ToList(), consumeValue);
+        }
+#endif
     }
 }

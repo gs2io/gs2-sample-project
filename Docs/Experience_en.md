@@ -16,98 +16,101 @@ This sample uses [GS2-Experience](https://app.gs2.io/docs/en/index.html#gs2-expe
 | experienceNamespaceName | Namespace name of GS2-Experience
 | playerExperienceModelName | model name of player experience table in GS2-Experience
 | itemExperienceModelName | Model name of the item experience table of GS2-Experience
-| identifierIncreaseExperienceClientId | Client ID of the authority that can increase the experience level
-| identifierIncreaseExperienceClientSecret | client secret of the authority that allows experience increase |
+| exchangeNamespaceName | GS2-Exchange namespace name |
+| playerEexchangeRateName | GS2-Exchange Player Experience Acquisition Exchange Rate Name    |
+| itemExchangeRateName | GS2-Exchange Item Experience Acquisition Exchange Rate Name     |
 
 | Event | Description |
 |---|---|
-| onGetExperienceModel(string, EzExperienceModel) | Called when an experience model is retrieved. | onGetExperienceModel(string, EzExperienceModel)
-| onGetStatuses(EzExperienceModel, List<EzStatus>) | Called when a list of status information is obtained. | onGetStatuses(EzExperienceModel, List<EzStatus>)
-| onIncreaseExperience(EzExperienceModel, EzStatus, int) | Called when an experience increase is performed. | onIncreaseExperience(EzExperienceModel, int)
-| OnError(Gs2Exception error) | Called when an error occurs. | OnError(Gs2Exception error)
+| onGetExperienceModel(string, EzExperienceModel) | Called when an experience model is retrieved. |
+| onGetStatuses(EzExperienceModel, List<EzStatus>) | Called when a list of status information is obtained. |
+| onIncreaseExperience(EzExperienceModel, EzStatus, int) | Called when an experience increase is performed. |
+| OnError(Gs2Exception error) | Called when an error occurs. |
 
 ## Get player experience
 
 Gets the experience value of the player.
 
+When UniTask is enabled
 ```c#
-AsyncResult<EzListStatusesResult> result = null;
-yield return client.Experience.ListStatuses(
-    r =>
-    {
-        result = r;
-    },
-    session,
-    experienceNamespaceName,
-    PlayerExperienceModel.Name,
-    pageToken
-);
-````
-
-## Increase player experience
-
-Performs an increase in the player's experience. Ranks are increased when the threshold for each rank is exceeded.  
-Increases can be made up to a set rank cap, and the increase stops when the rank reaches the rank value.
-
-```c#
+try
 {
-    // *This process is for sample operation.
-    // Implementations that actually increase experience directly by the client are deprecated.
-    
-    var restSession = new Gs2RestSession(
-        new BasicGs2Credential(
-            identifierIncreaseExperienceClientId,
-            identifierIncreaseExperienceClientSecret
-        )
-    );
-    var error = false;
-    yield return restSession.Open(
-        r =>
-        {
-            if (r.Error ! = null)
-            {
-                Invoke(r.Error);
-                Invoke(r.Error); error = true;
-            }
-        }
-    );
+    var _statuses = await gs2.Experience.Namespace(
+        namespaceName: experienceNamespaceName
+    ).Me(
+        gameSession: gameSession
+    ).StatusesAsync().ToListAsync();
 
-    if (error)
+    playerStatuses = _statuses.ToDictionary(status => status.PropertyId);
+
+    onGetStatuses.Invoke(playerExperienceModel, _statuses);
+}
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
+When coroutine is used
+```c#
+var _statuses = new List<EzStatus>();
+var it = gs2.Experience.Namespace(
+    namespaceName: experienceNamespaceName
+).Me(
+    gameSession: gameSession
+).Statuses();
+while (it.HasNext())
+{
+    yield return it.Next();
+    if (it.Error != null)
     {
-        yield return restSession.Close(() => { });
-        yield break;
+        onError.Invoke(it.Error);
+        break;
     }
 
-    var restClient = new Gs2ExperienceRestClient(
-        restSession
-    );
+    if (it.Current != null)
+    {
+        _statuses.Add(it.Current);
+    }
+}
 
-    yield return restClient.AddExperienceByUserId(
-        new AddExperienceByUserIdRequest()
-            .WithNamespaceName(experienceNamespaceName)
-            WithUserId(session.AccessToken.UserId)
-            WithExperienceName(experienceModel.Name)
-            .WithPropertyId(propertyId)
-            .WithExperienceValue(value),
-        r =>
+playerStatuses = _statuses.ToDictionary(status => status.PropertyId);
+
+onGetStatuses.Invoke(playerExperienceModel, _statuses);
+```
+
+## Increased player experience
+
+Performs an increase in the player's experience with Gs2-Exchange.  
+Ranks are increased when the threshold for each rank is exceeded.    
+It can be increased up to the set rank cap, and the increase stops when the rank reaches the rank value.
+
+```c#
+// *This process is only for sample confirmation.
+// The actual implementation of direct experience increase by the client is deprecated.
+
+var domain = gs2.Exchange.Namespace(
+    namespaceName: exchangeNamespaceName
+).Me(
+    gameSession: gameSession
+).Exchange();
+try
+{
+    var result = await domain.ExchangeAsync(
+        rateName: exchangeRateName,
+        count: value,
+        config: new[]
         {
-            if (r.Error ! = null)
+            new EzConfig
             {
-                Invoke(r.Error);
-                Invoke(r.Error); error = true;
-            }
-            else
-            {
-                onIncreaseExperience.Invoke(
-                    experienceModel,
-                    EzStatus.FromModel(r.Result.Item),
-                    value
-                );
+                Key = "propertyId",
+                Value = propertyId
             }
         }
     );
-    
-    yield return restSession.Close(() => { });
 }
-````
+catch (Gs2Exception e)
+{
+    onError.Invoke(e);
+}
+```
 

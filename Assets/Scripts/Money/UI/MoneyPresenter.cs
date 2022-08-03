@@ -6,6 +6,10 @@ using Gs2.Unity.Util;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Events;
+#if GS2_ENABLE_UNITASK
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
+#endif
 
 namespace Gs2.Sample.Money
 {
@@ -24,7 +28,7 @@ namespace Gs2.Sample.Money
         }
         
         /// <summary>
-        /// 有償財貨の初期化
+        /// 課金通貨の初期化
         /// </summary>
         public IEnumerator Initialize()
         {
@@ -33,11 +37,24 @@ namespace Gs2.Sample.Money
             yield return Refresh();
         }
         
+#if GS2_ENABLE_UNITASK
+        public async UniTask InitializeAsync()
+        {
+            UIManager.Instance.AddLog("MoneyPresenter::InitializeAsync");
+            
+            await RefreshAsync();
+        }
+#endif
+        
         public void OnUpdateWallet()
         {
+#if GS2_ENABLE_UNITASK
+            RefreshAsync().Forget();
+#else
             StartCoroutine(
                 Refresh()
             );
+#endif
         }
         
         public IEnumerator Refresh()
@@ -54,50 +71,40 @@ namespace Gs2.Sample.Money
             _moneySetting.onGetWallet.AddListener(RefreshMoneyAction);
             
             yield return _moneyModel.GetWallet(
-                GameManager.Instance.Client,
+                GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _moneySetting.moneyNamespaceName,
                 _moneySetting.onGetWallet,
                 _moneySetting.onError
             );
         }
+#if GS2_ENABLE_UNITASK
+        public async UniTask RefreshAsync()
+        {
+            void RefreshMoneyAction(
+                EzWallet wallet
+            )
+            {
+                _moneySetting.onGetWallet.RemoveListener(RefreshMoneyAction);
+                
+                _moneyView.SetMoney(wallet.Free + wallet.Paid);
+            }
+
+            _moneySetting.onGetWallet.AddListener(RefreshMoneyAction);
+            
+            await _moneyModel.GetWalletAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _moneySetting.moneyNamespaceName,
+                _moneySetting.onGetWallet,
+                _moneySetting.onError
+            );
+        }
+#endif
         
-        public UnityAction<EzJob, EzJobResultBody> GetJobQueueAction()
+        public int GetWalletBalance()
         {
-            return (job, jobResult) =>
-            {
-                Debug.Log("MoneyPresenter::GetJobQueueAction");
-            };
-        }
-
-        public UnityAction<EzStampTask, EzRunStampTaskResult> GetTaskCompleteAction()
-        {
-            return (task, taskResult) =>
-            {
-                Debug.Log("MoneyPresenter::StateMachineOnDoneStampTask");
-
-                if (task.Action == "Gs2Money:WithdrawByUserId")
-                {
-                    StartCoroutine(
-                        Refresh()
-                    );
-                }
-            };
-        }
-
-        public UnityAction<EzStampSheet, EzRunStampSheetResult> GetSheetCompleteAction()
-        {
-            return (sheet, sheetResult) =>
-            {
-                Debug.Log("MoneyPresenter::StateMachineOnCompleteStampSheet");
-
-                if (sheet.Action == "Gs2Money:DepositByUserId")
-                {
-                    StartCoroutine(
-                        Refresh()
-                    );
-                }
-            };
+            return _moneyModel.Wallet.Free + _moneyModel.Wallet.Paid;
         }
     }
 }

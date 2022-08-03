@@ -34,27 +34,93 @@
 
 自分を含むプレイヤー人数を入力し、 `Create` を選択するとギャザリングを新規作成します。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzCreateGatheringResult> result = null;
-yield return gs2Client.client.Matchmaking.CreateGathering(
-    r => { result = r; },
-    request.gameSession,
-    gs2MatchmakingSetting.matchmakingNamespaceName,
-    new EzPlayer
-    {
-        RoleName = "default"
-    },
-    new List<EzCapacityOfRole>
-    {
-        new EzCapacityOfRole
-        {
-            RoleName = "default",
-            Capacity = capacity
-        },
-    },
-    new List<string>(),
-    new List<EzAttributeRange>()
-);
+            var domain = gs2.Matchmaking.Namespace(
+                namespaceName: matchmakingNamespaceName
+            ).Me(
+                gameSession: gameSession
+            );
+            try
+            {
+                var result = await domain.CreateGatheringAsync(
+                    player: new EzPlayer
+                    {
+                        RoleName = "default"
+                    },
+                    attributeRanges: null,
+                    capacityOfRoles: new[]
+                    {
+                        new EzCapacityOfRole
+                        {
+                            RoleName = "default",
+                            Capacity = Capacity
+                        }
+                    },
+                    allowUserIds: null,
+                    expiresAt: null,
+                    expiresAtTimeSpan: null
+                );
+                Gathering = await result.ModelAsync();
+
+                JoinedPlayerIds.Clear();
+                JoinedPlayerIds.Add(gameSession.AccessToken.UserId);
+
+                onUpdateJoinedPlayerIds.Invoke(Gathering, JoinedPlayerIds);
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+            }
+```
+・コルーチン使用時
+```c#
+            var domain = gs2.Matchmaking.Namespace(
+                namespaceName: matchmakingNamespaceName
+            ).Me(
+                gameSession: gameSession
+            );
+            var future = domain.CreateGathering(
+                player: new EzPlayer
+                {
+                    RoleName = "default"
+                },
+                attributeRanges: null,
+                capacityOfRoles: new [] {
+                    new EzCapacityOfRole
+                    {
+                        RoleName = "default",
+                        Capacity = Capacity
+                    }
+                },
+                allowUserIds: null,
+                expiresAt: null,
+                expiresAtTimeSpan: null
+            );
+            yield return future;
+            if (future.Error != null)
+            {
+                onError.Invoke(
+                    future.Error
+                );
+                yield break;
+            }
+
+            var future2 = future.Result.Model();
+            yield return future2;
+            if (future2.Error != null)
+            {
+                onError.Invoke(
+                    future2.Error
+                );
+                yield break;
+            }
+            
+            JoinedPlayerIds.Clear();
+            Gathering = future2.Result;
+            JoinedPlayerIds.Add(gameSession.AccessToken.UserId);
+
+            onUpdateJoinedPlayerIds.Invoke(Gathering, JoinedPlayerIds);
 ```
 
 募集条件を参加者全員が`default` ロールで設定し、誰でも参加可能なギャザリングを作成しています。  
@@ -65,47 +131,135 @@ Capacity に参加人数を指定しています。
 
 既存のギャザリングへの参加をリクエストします。
 
+・UniTask有効時
 ```c#
-yield return gs2Client.client.Matchmaking.DoMatchmaking(
-    r => { result = r; },
-    request.gameSession,
-    gs2MatchmakingSetting.matchmakingNamespaceName,
-    new EzPlayer
-    {
-        RoleName = "default"
-    },
-    contextToken
-);
+            ResultGatherings.Clear();
+            Gathering = null;
+            var domain = gs2.Matchmaking.Namespace(
+                namespaceName: matchmakingNamespaceName
+            ).Me(
+                gameSession: gameSession
+            );
+            try
+            {
+                ResultGatherings = await domain.DoMatchmakingAsync(
+                    new EzPlayer
+                    {
+                        RoleName = "default"
+                    }
+                ).ToListAsync();
+                JoinedPlayerIds.Clear();
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+            }
+```
+・コルーチン使用時
+```c#
+            ResultGatherings.Clear();
+            var domain = gs2.Matchmaking.Namespace(
+                namespaceName: matchmakingNamespaceName
+            ).Me(
+                gameSession: gameSession
+            );
+            var it = domain.DoMatchmaking(
+                new EzPlayer
+                {
+                    RoleName = "default"
+                }
+            );
+            while (it.HasNext())
+            {
+                yield return it.Next();
+                if (it.Error != null)
+                {
+                    onError.Invoke(it.Error);
+                    break;
+                }
+
+                if (it.Current != null)
+                {
+                    ResultGatherings.Add(it.Current);
+                }
+            }
+                
+            JoinedPlayerIds.Clear();
 ```
 
 このサンプルでは `default` ロールを募集しているギャザリングに参加します。  
 ギャザリングが見つからなかった場合は `NotFoundException` が返ります。  
 
 マッチメイキング処理の途中でタイムアウトをしたときには、
-正常なレスポンスで `EzDoMatchmakingResult.Result.Item` が null が返ります。  
+正常なレスポンスで `EzDoMatchmakingResult.Result.Item` に null が返ります。  
 その場合は、戻り値に含まれる `MatchmakingContextToken` を使って  
 再度ギャザリングを探す処理を継続するようリクエストします。  
 
-ギャザリングの作成に成功すると `マッチング待機` ダイアログになり、参加中のユーザーIDの一覧を表示します。
+ギャザリングの作成に成功すると `マッチング待機` ダイアログに遷移し、参加中のユーザーIDの一覧を表示します。
 
 ### マッチメイキングのキャンセル
 
 マッチメイキングをキャンセルします。
 
+・UniTask有効時
 ```c#
-AsyncResult<EzCancelMatchmakingResult> result = null;
-yield return gs2Client.client.Matchmaking.CancelMatchmaking(
-    r => { result = r; },
-    request.gameSession,
-    gs2MatchmakingSetting.matchmakingNamespaceName,
-    _gathering.Name
-);
+            var domain = gs2.Matchmaking.Namespace(
+                namespaceName: matchmakingNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Gathering(
+                gatheringName: Gathering.Name
+            );
+            try
+            {
+                var result = await domain.CancelMatchmakingAsync();
+                Gathering = await result.ModelAsync();
+                
+                onMatchmakingCancel.Invoke(Gathering);
+                Gathering = null;
+                JoinedPlayerIds.Clear();
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e);
+            }
+```
+・コルーチン使用時
+```c#
+            var domain = gs2.Matchmaking.Namespace(
+                namespaceName: matchmakingNamespaceName
+            ).Me(
+                gameSession: gameSession
+            ).Gathering(
+                gatheringName: Gathering.Name
+            );
+            var future = domain.CancelMatchmaking();
+            yield return future;
+            if (future.Error != null)
+            {
+                onError.Invoke(future.Error);
+                yield break;
+            }
+ 
+            var domain2 = future.Result;
+            var future2 = domain2.Model();
+            yield return future2;
+            if (future.Error != null)
+            {
+                onError.Invoke(future.Error);
+                yield break;
+            }
+            
+            onMatchmakingCancel.Invoke(future2.Result);
+            
+            Gathering = null;
+            JoinedPlayerIds.Clear();
 ```
 
 ### 参加者の増減/マッチメイキング完了の通知
 
 [GS2-Gateway](https://app.gs2.io/docs/index.html#gs2-gateway) を使用してサーバからの通知を受け取ります。
-サーバーから以下のようにメッセージが送られます。
+サーバーからは以下のようなメッセージが送られます。
 
 | メッセージ | 説明 |
 ---|---
@@ -147,6 +301,6 @@ Gs2Matchmaking:Complete | マッチングが完了した
 
 通知ハンドラの登録
 ```c#
-GameManager.Instance.Cllient.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
+GameManager.Instance.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
 ```
 
