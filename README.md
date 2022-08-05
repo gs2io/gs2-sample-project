@@ -9,8 +9,8 @@ Game Server Services (https://gs2.io) の Unity 向けのサンプルプロジ�
 
 Unity 2019.4.40f1
 
-GS2 SDK for Unity　2022.7.5  
-GS2 C# SDK　2022.7.5
+GS2 SDK for Unity　2022.7.6  
+GS2 C# SDK　2022.7.6
 
 ## 注意事項
 
