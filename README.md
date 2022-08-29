@@ -1,299 +1,299 @@
-[⇒README in English](README-en.md)
+[⇒日本語のREADMEへ](README-ja.md)
 
 # GS2 Sample Project for Unity
 
-Game Server Services (https://gs2.io) の Unity 向けのサンプルプロジェクトです。  
-ゲームでの大まかな流れを想定した GS2の各種機能を使った実装サンプルです。
+This is a sample project for Game Server Services (https://gs2.io) for Unity.  
+This is a sample implementation using various GS2 functions for a rough flow in a game.
 
-## 動作環境
+## Operating Environment
 
 Unity 2019.4.40f1
 
-GS2 SDK for Unity　2022.7.6  
-GS2 C# SDK　2022.7.6
+GS2 SDK for Unity 2022.8.6  
+GS2 C# SDK 2022.8.6
 
-## 注意事項
+## Notes
 
-・サンプルに含まれるmanifest.json、packages-lock.jsonファイルには、  
-GS2のSDKのほか、Unity2019.4上での動作に必要なパッケージの記述が含まれます。  
-上記以外のUnityバージョンでプロジェクトを開くと、  
-エラーが発生しパッケージのバージョン変更が必要になる場合があります。  
-その際は、パッケージマネージャーで検証済みバージョンをインストールすることで  
-動作が可能になります。  
+The manifest.json and packages-lock.json files included in the sample contain the  
+In addition to the SDK for GS2, it includes a description of the packages required to run on Unity 2019.4.  
+If you open the project with a Unity version other than the above, you will get  
+An error may occur and the package version may need to be changed.  
+In this case, install the verified version in the package manager.  
+The system will be operational.  
 
-・TextMeshPro用の日本語フォントに  
- 「Noto Sans Japanese」（ https://fonts.google.com/noto/specimen/Noto+Sans+JP ）  
-を使用しています。  
+The Japanese font for TextMeshPro has been changed to  
+ Noto Sans Japanese" (https://fonts.google.com/noto/specimen/Noto+Sans+JP)  
+is used.  
 Licensed under SIL Open Font License 1.1 ( http://scripts.sil.org/OFL )  
 
-## 機能別の解説
+## Explanation by function
 
-各機能を単独で動作させる方法、機能の詳細については以下のページで個別に解説しています。
+How to operate each function independently and details of each function are explained individually in the following pages.
 
-- [アカウントの作成・ログイン 解説 (GS2-Account / GS2-Auth / GS2-Gateway)](Docs/Login.md)
-- [バージョンチェック 解説 (GS2-Version)](Docs/Version.md)
-- [アカウント引継ぎ 解説 (GS2-Account)](Docs/Takeover.md)
-- [お知らせ 解説 (GS2-News)](Docs/News.md)
-- [スタミナ/スタミナストア 解説 (GS2-Stamina)](Docs/Stamina.md)
-- [課金通貨/課金通貨ストア 解説 (GS2-Money / GS2-Showcase)](Docs/Money.md)
-- [ゴールド/インベントリ 解説 (GS2-Inventory)](Docs/Inventory.md)
-- [経験値 解説 (GS2-Experience)](Docs/Experience.md)
-- [クエスト 解説 (GS2-Quest)](Docs/Quest.md)
-- [抽選機能 解説 (GS2-Lottery)](Docs/Lottery.md)
-- [チャット 解説 (GS2-Chat)](Docs/Chat.md)
-- [フレンド 解説 (GS2-Friend)](Docs/Friend.md)
-- [マッチメイキング 解説 (GS2-Matchmaking)](Docs/Matchmaking.md)
-- [リアルタイム対戦 解説 (GS2-Realtime)](Docs/Realtime.md)
+- [Creating and logging in to an account (GS2-Account / GS2-Auth / GS2-Gateway)](Docs/Login_en.md)
+- [Version Check (GS2-Version)](Docs/Version_en.md)
+- [Account Takeover (GS2-Account)](Docs/Takeover_en.md)
+- [Notices (GS2-News)](Docs/News_en.md)
+- [Stamina/Stamina Store (GS2-Stamina)](Docs/Stamina_en.md)
+- [Billing Currency / Billing Currency Store (GS2-Money / GS2-Showcase)](Docs/Money_en.md)
+- [Gold/Inventory (GS2-Inventory)](Docs/Inventory_en.md)
+- [Experience (GS2-Experience)](Docs/Experience_en.md)
+- [Quests (GS2-Quest)](Docs/Quest_en.md)
+- [Lottery Function (GS2-Lottery)](Docs/Lottery_en.md)
+- [Chat (GS2-Chat)](Docs/Chat_en.md)
+- [Friend (GS2-Friend)](Docs/Friend_en.md)
+- [Matchmaking (GS2-Matchmaking)](Docs/Matchmaking_en.md)
+- [Real-Time Game (GS2-Realtime)](Docs/Realtime_en.md)
 
-## 起動の準備
+## Prepare to start
 
-ここではUnity Editor上でPlayボタンでゲームを再生するまでの準備について扱います。
+This section deals with the preparations before playing the game on the Unity Editor with the Play button.
 
-### Unity でプロジェクトを開く
+### Open the project in Unity
 
-Unityで`gs2io/gs2-sample-project` をプロジェクトとして開きます。  
-Unity Package Manager により、依存関係の解決に必要なパッケージのダウンロードが行われます。  
-GS2 SDK for Unity、GS2 C# SDKのダウンロード、インストールが行われます。
+Open `gs2io/gs2-sample-project` as a project in Unity.  
+The Unity Package Manager will download the packages needed to resolve dependencies.  
+GS2 SDK for Unity and GS2 C# SDK will be downloaded and installed.
 
-Assets/Scenes/SampleGameScene.unity シーンを開きます。
+Open the `Assets/Scenes/SampleGameScene_en.unity` scene.
 
-Textの描画にTextMeshProを使用しています。  
-シーンを開いた際に「TMP Importer」ウィンドウが表示されますので  
-「Import TMP Essentials」をクリックし、TMP Essentialsのインポートをお願いします。  
+TextMeshPro is used for drawing Text.  
+When the scene is opened, the "TMP Importer" window will appear.  
+Please click "Import TMP Essentials" to import TMP Essentials.  
 
-### GS2-Deploy を使って初期設定をおこなう
+### Initialize using GS2-Deploy
 
-[マネージメントコンソール](https://app.gs2.io/)のDeploy機能を使ってスタックの作成を行い、  
-サンプルの動作に必要なリソースの準備を行います。
+Use the Deploy function in the [Management Console](https://app.gs2.io/) to create a stack, and  
+Prepare the resources necessary for the sample to work.
 
-Templatesフォルダの以下のファイルでスタックを作成します。  
+Create a stack with the following files in the Templates folder  
 
-#### 必須のテンプレート
+#### Required Templates
 
-| Template files | Functions to be set |
+| Template file | Function to be set up |
 ---|---
-[initialize_credential_template.yaml](Templates/initialize_credential_template.yaml) |クレデンシャル GS2の初期化
-[initialize_account_template.yaml](Templates/initialize_account_template.yaml) |ログイン/アカウント連携・引継ぎ GS2-Gateway
-[initialize_distributor_template.yaml](Templates/initialize_distributor_template.yaml) |GS2-Distributor GS2-JobQueue 設定
+[initialize_credential_template.yaml](Templates/initialize_credential_template.yaml) | initialize credential GS2
+[initialize_account_template.yaml](Templates/initialize_account_template.yaml) |login/account linkage and transfer
+[initialize_distributor_template.yaml](Templates/initialize_distributor_template.yaml) |GS2-Distributor　GS2-JobQueue setting
 
-#### 各機能の動作に必要なテンプレート
+#### Template required for each function to work
 
-| テンプレートファイル | 設定する機能 |
+| Template file | Function to be set up |
 ---|---
-[initialize_stamina_template.yaml](Templates/initialize_stamina_template.yaml) |スタミナ/スタミナストア
-[initialize_money_template.yaml](Templates/initialize_money_template.yaml) |課金通貨/課金通貨ストア
-[initialize_gold_template.yaml](Templates/initialize_gold_template.yaml) |ゴールド
-[initialize_inventory_template.yaml](Templates/initialize_inventory_template.yaml) |インベントリ
-[initialize_experience_template.yaml](Templates/initialize_experience_template.yaml) |経験値
+[initialize_stamina_template.yaml](Templates/initialize_stamina_template.yaml) |Stamina/Stamina Store
+[initialize_money_template.yaml](Templates/initialize_money_template.yaml) | billing currency/ billing currency store
+[initialize_gold_template.yaml](Templates/initialize_gold_template.yaml) | gold
+[initialize_inventory_template.yaml](Templates/initialize_inventory_template.yaml) | inventory
+[initialize_experience_template.yaml](Templates/initialize_experience_template.yaml) | Experience
 
-| テンプレートファイル | 設定する機能 |
+| Template file | Function to be set |
 ---|---
-[initialize_quest_template.yaml](Templates/initialize_quest_template.yaml) |クエスト
-[initialize_lottery_template.yaml](Templates/initialize_lottery_template.yaml) |抽選機能
-[initialize_unit_template.yaml](Templates/initialize_unit_template.yaml) |抽選アイテム用インベントリ ※抽選機能の動作に必要
+[initialize_quest_template.yaml](Templates/initialize_quest_template.yaml) | Quest
+[initialize_lottery_template.yaml](Templates/initialize_lottery_template.yaml) | Lottery
+[initialize_unit_template.yaml](Templates/initialize_unit_template.yaml) | Inventory for lottery items *Necessary for the operation of the lottery function
 
-| テンプレートファイル | 設定する機能 |
+| Template file | Function to be set |
 ---|---
-[initialize_chat_template.yaml](Templates/initialize_chat_template.yaml) |チャット
-[initialize_friend_template.yaml](Templates/initialize_friend_template.yaml) |フレンド機能
+[initialize_chat_template.yaml](Templates/initialize_chat_template.yaml) | Chat
+[initialize_friend_template.yaml](Templates/initialize_friend_template.yaml) | Friend function
 
-| テンプレートファイル | 設定する機能 |
+| Template files | Functions to set up |
 ---|---
-[initialize_realtime_template.yaml](Templates/initialize_realtime_template.yaml) |マッチメイキング/リアルタイム対戦
+[initialize_realtime_template.yaml](Templates/initialize_realtime_template.yaml) | matchmaking/realtime competition
 
-| テンプレートファイル | 設定する機能 | |
+| Template file | Function to be set | |
 ---|---|---
-[initialize_news_template.yaml](Templates/initialize_news_template.yaml) | お知らせ | ※GS2-News お知らせ機能を使う場合に作成
+[initialize_news_template.yaml](Templates/initialize_news_template.yaml) | News | Created when using the GS2-News notification function.
 
-| テンプレートファイル | 設定する機能 | |
+| Template file | Function to be set up | |
 ---|---|---
-[initialize_version_template.yaml](Templates/initialize_version_template.yaml)|アプリバージョン・利用規約チェック|※GS2-Version バージョンチェック機能を使う場合に作成|
+[initialize_version_template.yaml](Templates/initialize_version_template.yaml) | Check app version and terms of use | Created when using the GS2-Version version check function
 
-しばらく待ってすべてのスタックの状態が `CREATE_COMPLETE` になればサーバ側の設定は完了です。
+If you wait a while and all stacks are in `CREATE_COMPLETE`, the server side configuration is complete.
 
-### Unity IAPの有効化、インポート
+### Enabling and importing Unity IAP
 
-GS2-Moneyを使用したサンプルの動作には、Unity IAPの有効化が必要になります。  
+Unity IAP must be enabled for the sample to work with GS2-Money.  
 ( https://docs.unity3d.com/ja/2019.4/Manual/UnityIAPSettingUp.html )  
-サービスウィンドウでのIn-App Purchasingの有効化、  
-IAP パッケージのインポートを行います。  
+Enable In-App Purchasing in the Services window, and  
+Import the IAP package.  
 
-### Settings の設定
+### Settings
 
-ヒエラルキーウィンドウで `Gs2Settings`オブジェクト を選択します。
+Select the `Gs2Settings` object in the Hierarchy window.
 
-インスペクターウィンドウで GS2-Deploy で作成したリソースの情報を登録します。  
-ダウンロード時は空欄になっている、以下の __太字__ の項目に、  
-各スタックの「アウトプット」より必要な情報をコピー・アンド・ペーストします。
+In the inspector window, register the information of the resource created by GS2-Deploy.  
+Fill in the following __bolded__ fields, which are blank when downloaded  
+Copy and paste the necessary information from the "output" of each stack.
 
 ![Gs2Settings](Docs/Gs2Settings.png)
 
-| スクリプトファイル | 設定名 | 説明 |
+| Script File | Setting Name | Description |
 -----------------|------|------
-| __CredentialSetting__ | __Application Client Id__ | __GS2 にアクセスするためのクレデンシャル（クライアントID）__ |
-| __CredentialSetting__ | __Application Client Secret__ | __GS2 にアクセスするためのクレデンシャル（クライアントシークレット）__ |
-| CredentialSetting | distributorNamespaceName | スタンプシート処理をおこなう GS2-Distributor のネームスペース名 |
+| __CredentialSetting__ | __Application Client Id__ | __Credential to access GS2 (Client ID)__ |
+| __CredentialSetting__ | __Application Client Secret__ | __Credential to access GS2 (Client Secret)__ |
+| CredentialSetting | distributorNamespaceName | Namespace name of the GS2-Distributor that will process the stamp sheet |
 
-※initialize_credential_template.yaml テンプレートで作成したスタックの アウトプットリスト タブから  
-アウトプット名　__ApplicationClientId__　の項目の右側に出力されている値を　__Application Client Id__　へ貼り付けます。  
-アウトプット名　__ApplicationClientSecret__　の項目の右側に出力されている値を　__Application Client Secret__　へ貼り付けます。  
+*From the Output List tab of the stack created by the initialize_credential_template.yaml template,  
+Paste the value printed on the right side of the Output Name __ApplicationClientId__ field to __Application Client Id__.  
+Paste the value printed on the right side of the Output Name __ApplicationClientSecret__ field to __Application Client Secret__.  
 
 ![LoginSetting](Docs/LoginSetting.png)
 
-| スクリプトファイル | 設定名                           | 説明 |
------------------|-------------------------------|------
-| LoginSetting | Account Namespace Name        | GS2-Account のネームスペース名 |
-| __LoginSetting__ | __Account Encryption Key Id__ | __GS2-Account でアカウント情報の暗号化に使用する GS2-Key の暗号鍵GRN__ |
-| LoginSetting | Gateway Namespace Name        | GS2-Gateway のネームスペース名 |
+| Script file | Configuration name | Description |
+-----------------|------|------
+| LoginSetting | Account Namespace Name        | Namespace name of GS2-Account |
+| __LoginSetting__ | __Account Encryption Key Id__ | __The encryption key GRN of the GS2-Key used to encrypt account information in GS2-Account__ |
+| LoginSetting | Gateway Namespace Name        | Namespace name of GS2-Gateway |
 
-※__initialize_account_template.yaml__ テンプレートで作成したスタックの アウトプットリスト タブから  
-アウトプット名　__AccountEncryptionKeyId__　の項目の右側に出力されている値を　__Account Encryption Key Id__　へ貼り付けます。
+*From the Output List tab of the stack created by the __initialize_account_template.yaml__ template,  
+Paste the value printed on the right side of the Output Name __AccountEncryptionKeyId__ field into the __Account Encryption Key Id__.
 
-### バージョンチェック機能の有効化
+### Enable version check functionality
 
-デフォルトでは「アプリ起動」後にアプリバージョンチェック、利用規約のチェック機能は無効化されています。
-有効にするには、ヒエラルキーのGameManager → GameManagerコンポーネントの以下のチェックをそれぞれ外します。
+By default, the app version check and Terms of Use check functions are disabled after "app launch".
+To enable it, uncheck each of the following in the GameManager → GameManager component of the hierarchy
 
-![VersionCheck](Docs/VersionCheck.png)
+![VersionCheck](Docs/VersionCheck_en.png)
 
-設定が完了したら、Unity上での起動の準備は完了です。
+Once configured, you are ready to launch on Unity.
 
-## サンプルの流れ
+## Sample flow
 
-![GameStart](Docs/GameStart.png)
+![GameStart](Docs/GameStart_en.png)
 
-サンプルを起動すると　`アプリ起動` のボタンが有効になります。  
-`アプリ起動`をタップすると、GS2 SDKの初期化（GS2-Identifier）、  
-有効化されていればアプリのバージョンチェック、利用規約のユーザー確認、  
-（GS2-Version）を行い、
-アカウントによるログインを実行します。  
-初回起動時は匿名アカウントの自動作成を行います。  
-（GS2-Account）  
+When the sample is launched, the `App Launch` button will be enabled.  
+Tapping `Appli Launch` will initialize the GS2 SDK (GS2-Identifier), the  
+If enabled, the app version check, user confirmation of terms of use, and  
+(GS2-Version), and
+Performs login with an account.  
+When launched for the first time, an anonymous account is automatically created.  
+(GS2-Account)  
 
-[⇒アカウントの作成・ログイン 解説へ](Docs/Login.md)  
-[⇒バージョンチェック 解説へ](Docs/Version.md)  
+[⇒Account creation and login Explanation](Docs/Login_en.md)  
+[⇒Version check Explanation](Docs/Version_en.md)  
 
-![Start](Docs/Start.png)
+![Start](Docs/Start_en.png)
 
-ログイン完了後、タイトル画面に遷移します。  
-`アカウント連携` 機能を呼び出すことができます。  
-作成ずみの匿名アカウントにメールアドレスや、  
-各プラットフォームで利用可能なGame Center/Google Play Game Service のアカウントを連携し、  
-引継ぎを実行できるようにする機能のサンプルです。
-（GS2-Account）
-`お知らせ` でWebViewを開き。お知らせのコンテンツを表示します。  
-（GS2-News）
+After login is completed, the user is taken to the title screen.  
+You can invoke the `account linking` function.  
+You can add an email address or  
+Game Center/Google Play Game Service accounts available on each platform and  
+The following is a sample of the functionality that enables a transfer to be performed.
+(GS2-Account)
+Open WebView with `Notices`. Display the contents of the notice.  
+(GS2-News)
 
-[⇒アカウント引継ぎ 解説へ](Docs/Takeover.md)  
-[⇒お知らせ 解説へ](Docs/News.md)
+[⇒Account takeover explanation](Docs/Takeover_en.md)  
+[⇒News Go to explanation](Docs/News_en.md)
 
-`Tap to Start`　をタップするとゲーム内に遷移します。  
-「プレイヤー」「ゲームサイクル」「コミュニティ」「対戦」の各タブにアクセスが可能です。
+Tap `Tap to Start` to go into the game.  
+You can access the Player, Game Cycle, Community, and Competitive tabs.
 
-![status](Docs/status.png)
+![Player Status](Docs/status.png)
 
-左上に　__レベルと経験値__が表示されます。  
-（GS2-Experience）
+The __level and experience__ are displayed in the upper left corner.  
+(GS2-Experience)
 
-![status2](Docs/status2.png)
+![status2](Docs/status2_en.png)
 
-右上に　__スタミナ__、__課金通貨__、__ゴールド__ が表示されます。  
-（GS2-Stamina、GS2-Money、GS2-Inventory）
+The __Stamina__, __Currency Charged__, and __Gold__ are displayed in the upper right corner.  
+(GS2-Stamina, GS2-Money, GS2-Inventory)
 
-## プレイヤータブ
+## Player Tab
 
-![Player](Docs/Player.png)
+![Player](Docs/Player_en.png)
 
-`スタミナ消費`　・・・　スタミナを減少し、一定時間で回復します。
-（GS2-Stamina）
+`Stamina consumption` - Stamina is reduced and recovered in a certain time.
+(GS2-Stamina)
 
-[⇒スタミナ/スタミナストア 解説へ](Docs/Stamina.md)
+[⇒Stamina/Stamina Store Explanation](Docs/Stamina_en.md)
 
-`ゴールド消費`　・・・　ゴールドを10減少させます。  
-`ゴールド増加`　・・・　ゴールドを100増加させます。  
-（GS2-Inventory）
+`Gold consumption` ・・・ Decreases gold by 10.  
+`Gold increase` ・・・ Gold is increased by 100.  
+(GS2-Inventory)
 
-`インベントリを開く`　・・・　アイテムを一覧表示します。アイテムをタップで消費（つかう）します。  
-`FireElement入手`、`WaterElement入手`　・・・　２種類あるアイテムをそれぞれ5増加させます。  
-（GS2-Inventory）
+`Open Inventory` ・・・ List items. Tap an item to spend it.  
+`Get FireElement`, `Get WaterElement` ・・・ Increases items by 5 each.  
+(GS2-Inventory)
 
-[⇒ゴールド/インベントリ 解説へ](Docs/Inventory.md)
+[⇒Gold/Inventory Explanation](Docs/Inventory_en.md)
 
-`経験値を増加`　・・・　経験値を10増加させます。
+Increases experience ・・・ Increases experience by 10.
 
-[⇒経験値 解説へ](Docs/Experience.md)
+[⇒Experience Explanation](Docs/Experience_en.md)
  
-## ゲームサイクルタブ
+## Game Cycle Tab
 
-![GameCycle](Docs/GameCycle.png)
+![GameCycle](Docs/GameCycle_en.png)
 
-`クエスト開始`　・・・　クエストグループを選択、クエストを開始します。  
-`クエスト完了`　・・・　クエストを完了、もしくは失敗（破棄）します。  
-（GS2-Quest）  
+`Start Quest ` ・・・ Starts a quest.  
+`Quest Completed` ・・・ Completes or fails (discards) a quest.  
+(GS2-Quest)  
 
-[⇒クエスト 解説へ](Docs/Quest.md)
+[⇒Quest Explanation](Docs/Quest_en.md)
 
-`抽選ストア`　・・・　抽選商品リストで商品を選択、商品を購入します。  
-抽選後、アイテムを入手します。アイテムは専用のインベントリに振り込まれます。  
-（GS2-Lottery、GS2-Inventory、GS2-JobQueue、スタンプシート）  
-`抽選インベントリを開く`　・・・　抽選で取得したアイテムを一覧表示します。  
-アイテムをタップすると消費します。  
-（GS2-Inventory）
+`Lottery Store` ・・・ Select an item from the list of lottery items and purchase the item.  
+After the lottery, the item is obtained. Items are transferred to your dedicated inventory.  
+(GS2-Lottery, GS2-Inventory, GS2-JobQueue, Stamp Sheet)  
+Open `Lottery Inventory` ・・・ Lists items acquired through the lottery.  
+Tap an item to consume it.  
+(GS2-Inventory)
 
-[⇒抽選機能 解説へ](Docs/Lottery.md)
+[⇒Lottery Function Explanation](Docs/Lottery_en.md)
 
-## コミュニティタブ
+## Community tab
 
-![Community](Docs/Community.png)
+![Community](Docs/Community_en.png)
 
-`ルームを購読`　・・・　チャットのルームに対して購読を登録し、新着メッセージの投稿通知を受け取れるようにします。  
-`購読の解除`　・・・　チャットのルームの購読を解除します。
-（GS2-Chat）
+`Subscribe room` - Subscribe to a chat room so that you can receive notifications of new messages posted to the room.  
+`Unsubscribe` -- Unsubscribe from a chat room.
+(GS2-Chat)
 
-`プロフィール`　・・・　自プレイヤーのプロフィールの編集を行います。  
-`フレンド`　・・・　フレンドリストを表示します。  
-`送信中リクエスト`　・・・　自プレイヤーから他プレイヤーに送信中のフレンドリクエストの一覧を表示します。  
-`受信中リクエスト`　・・・　他プレイヤーから自プレイヤーに送信されたフレンドリクエストの一覧を表示します。    
-`ブラックリスト`　・・・　ブラックリストを表示します。  
-`フォロー`　・・・　フォロー中のプレイヤーの一覧を表示します。  
-（GS2-Friend）
+`Profile` ・・・ Edit your player's profile.  
+`Friends` - Displays a list of friends.  
+`Request in Progress` - Displays a list of friend requests that are being sent from the player to other players.  
+`Friend request being recieved` - Displays a list of friend requests sent from other players to the player.    
+`Blacklist` ・・・ Displays the blacklist.  
+`Follow` - Displays a list of players you are following.  
+(GS2-Friend)
 
-画面中央下の `＞` を押すとチャットウィンドウが開きます。
+Press `>` at the bottom center of the screen to open the chat window.
 
-![チャット](Docs/Chat.png)
+![Chat](Docs/Chat_en.png)
 
-ChatSettingのroomNameに設定された名前のルームへのメッセージの送受信ができます。
+Messages can be sent and received to and from the room with the name set in roomName in ChatSetting.
 
-## 対戦タブ
+## Matching tab
 
-![Matching](Docs/Matching.png)
+![Matching](Docs/Matching_en.png)
 
-`ギャザリング作成`　・・・　参加人数を設定してギャザリング（マッチングの単位）を作成します。  
-`ギャザリング待機`　・・・　ギャザリングへの参加をリクエストします。  
-（GS2-Matchmaking）  
+Create Gathering -- Create a gathering (unit of matching) by setting the number of participants.  
+Waiting for `gathering` ・・・ It requests participation in a gathering.  
+(GS2-Matchmaking)  
 
-[⇒マッチメイキング 解説へ](Docs/Matchmaking.md)
+[⇒Matchmaking Explanation](Docs/Matchmaking_en.md)
 
-マッチングに成功すると、GS2-Realtimeを使用したRoomへの入室が行われ、  
-参加者同士での通信が可能になります。  
-サンプルでは簡単なじゃんけん対戦を行えます。  
+If the match is successful, the room is entered using GS2-Realtime and  
+Participants can communicate with each other.  
+In the sample, a simple game of rock-paper-scissors can be played.  
 (GS2-Realtime)  
 
-[⇒リアルタイム 解説へ](Docs/Realtime.md)
+[⇒Realtime Explanation](Docs/Realtime_en.md)
 
-## ストア
+## Store
 
-![status2](Docs/status2.png)
+![status2](Docs/status2_en.png)
 
-スタミナストア　（スタミナ表示の＋ボタン）・・・  
-GS2-Exchange と連携して GS2-Money を消費してスタミナ値を回復する商品の購入のサンプルです。  
-（GS2-Stamina、GS2-Exchange、Gs2-Money）  
+Stamina Store (+ button on stamina display) ...  
+This is a sample of purchasing products that work with GS2-Exchange to spend GS2-Money to restore stamina values.  
+(GS2-Stamina, GS2-Exchange, GS2-Money)  
 
-[⇒スタミナ/スタミナストア 解説へ](Docs/Stamina.md)
+[⇒Stamina/Stamina Store Explanation](Docs/Stamina_en.md)
  
-課金通貨ストア　（課金通貨表示の＋ボタン）・・・  
-GS2-Money を使って管理されている課金通貨を、GS2-Showcase で販売するサンプルです。  
-定義されている商品の１つに GS2-Limit による購入回数の制限があり、１回のみ購入が可能になっています。  
-（GS2-Showcase、GS2-Limit、GS2-Money）  
+Billing Currency Store (+ button in billing currency display) ...  
+This is a sample of selling billable currency managed using GS2-Money in GS2-Showcase.  
+One of the defined products has a limit on the number of purchases by GS2-Limit, and can be purchased only once.  
+(GS2-Showcase, GS2-Limit, GS2-Money)  
 
-[⇒課金通貨ストア 解説 へ](Docs/Money.md)
+[⇒Billing Currency Store Explanation](Docs/Money_en.md)
