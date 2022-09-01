@@ -564,7 +564,8 @@ namespace Gs2.Sample.Realtime
                 if (result.Error != null)
                 {
                     _realtimeSetting.onError.Invoke(
-                        result.Error
+                        result.Error,
+                        null
                     );
                     callback.Invoke(
                         new AsyncResult<RelayRealtimeSession>(null, result.Error)
@@ -627,7 +628,8 @@ namespace Gs2.Sample.Realtime
             catch (Gs2Exception e)
             {
                 _realtimeSetting.onError.Invoke(
-                    e
+                    e,
+                    null
                 );
                 return null;
             }

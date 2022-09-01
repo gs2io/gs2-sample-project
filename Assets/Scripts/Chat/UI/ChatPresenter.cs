@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Gs2.Core.Exception;
@@ -78,7 +79,7 @@ namespace Gs2.Sample.Chat
             GameManager.Instance.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
 
             bool roomNotFound = false;
-            void OnError(Gs2Exception e)
+            void OnError(Gs2Exception e, Func<IEnumerator> retry)
             {
                 _onError.RemoveListener(OnError);
                 if (e.Errors[0].message == "chat.room.room.error.notFound")
@@ -109,7 +110,7 @@ namespace Gs2.Sample.Chat
             GameManager.Instance.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
 
             bool roomNotFound = false;
-            void OnError(Gs2Exception e)
+            void OnError(Gs2Exception e, Func<IEnumerator> retry)
             {
                 _onError.RemoveListener(OnError);
                 if (e.Errors[0].message == "chat.room.room.error.notFound")

@@ -65,7 +65,7 @@ namespace Gs2.Sample.Friend
 		    yield return future;
 		    if (future.Error != null)
 		    {
-			    onError.Invoke(future.Error);
+			    onError.Invoke(future.Error, null);
 			    yield break;
 		    }
 
@@ -95,7 +95,7 @@ namespace Gs2.Sample.Friend
 		    }
 		    catch (Gs2Exception e)
 		    {
-			    onError.Invoke(e);
+			    onError.Invoke(e, null);
 		    }
 	    }
 #endif
@@ -129,7 +129,7 @@ namespace Gs2.Sample.Friend
 		    yield return future;
 		    if (future.Error != null)
 		    {
-			    onError.Invoke(future.Error);
+			    onError.Invoke(future.Error, null);
 			    yield break;
 		    }
 		    
@@ -138,7 +138,7 @@ namespace Gs2.Sample.Friend
 		    yield return future2;
 		    if (future2.Error != null)
 		    {
-			    onError.Invoke(future2.Error);
+			    onError.Invoke(future2.Error, null);
 			    yield break;
 		    }
 		    
@@ -176,7 +176,7 @@ namespace Gs2.Sample.Friend
 		    }
 		    catch (Gs2Exception e)
 		    {
-			    onError.Invoke(e);
+			    onError.Invoke(e, null);
 		    }
 	    }
 #endif
@@ -205,7 +205,7 @@ namespace Gs2.Sample.Friend
 			    yield return it.Next();
 			    if (it.Error != null)
 			    {
-				    onError.Invoke(it.Error);
+				    onError.Invoke(it.Error, null);
 				    break;
 			    }
 
@@ -239,7 +239,7 @@ namespace Gs2.Sample.Friend
 		    }
 		    catch (Gs2Exception e)
 		    {
-			    onError.Invoke(e);
+			    onError.Invoke(e, null);
 		    }
 	    }
 #endif
@@ -268,7 +268,7 @@ namespace Gs2.Sample.Friend
 			    yield return it.Next();
 			    if (it.Error != null)
 			    {
-				    onError.Invoke(it.Error);
+				    onError.Invoke(it.Error, null);
 				    break;
 			    }
 
@@ -302,7 +302,7 @@ namespace Gs2.Sample.Friend
 		    }
 		    catch (Gs2Exception e)
 		    {
-			    onError.Invoke(e);
+			    onError.Invoke(e, null);
 		    }
 	    }
 #endif
@@ -330,7 +330,7 @@ namespace Gs2.Sample.Friend
 			    yield return it.Next();
 			    if (it.Error != null)
 			    {
-				    onError.Invoke(it.Error);
+				    onError.Invoke(it.Error, null);
 				    break;
 			    }
 
@@ -364,7 +364,7 @@ namespace Gs2.Sample.Friend
 		    }
 		    catch (Gs2Exception e)
 		    {
-			    onError.Invoke(e);
+			    onError.Invoke(e, null);
 		    }
 	    }
 #endif
@@ -395,7 +395,7 @@ namespace Gs2.Sample.Friend
 		    yield return future;
 		    if (future.Error != null)
 		    {
-			    onError.Invoke(future.Error);
+			    onError.Invoke(future.Error, null);
 			    yield break;
 		    }
  
@@ -430,7 +430,7 @@ namespace Gs2.Sample.Friend
 		    }
 		    catch (Gs2Exception e)
 		    {
-			    onError.Invoke(e);
+			    onError.Invoke(e, null);
 		    }
 	    }
 #endif
@@ -461,7 +461,7 @@ namespace Gs2.Sample.Friend
 		    yield return future;
 		    if (future.Error != null)
 		    {
-			    onError.Invoke(future.Error);
+			    onError.Invoke(future.Error, null);
 			    yield break;
 		    }
  
@@ -470,7 +470,7 @@ namespace Gs2.Sample.Friend
 		    yield return future2;
 		    if (future2.Error != null)
 		    {
-			    onError.Invoke(future2.Error);
+			    onError.Invoke(future2.Error, null);
 			    yield break;
 		    }
 		    
@@ -505,7 +505,7 @@ namespace Gs2.Sample.Friend
 		    }
 		    catch (Gs2Exception e)
 		    {
-			    onError.Invoke(e);
+			    onError.Invoke(e, null);
 		    }
 	    }
 #endif
@@ -532,7 +532,7 @@ namespace Gs2.Sample.Friend
 		    yield return future;
 		    if (future.Error != null)
 		    {
-			    onError.Invoke(future.Error);
+			    onError.Invoke(future.Error, null);
 			    yield break;
 		    }
  
@@ -562,7 +562,7 @@ namespace Gs2.Sample.Friend
 		    }
 		    catch (Gs2Exception e)
 		    {
-			    onError.Invoke(e);
+			    onError.Invoke(e, null);
 		    }
 	    }
 #endif
@@ -591,7 +591,7 @@ namespace Gs2.Sample.Friend
 	        yield return future;
 	        if (future.Error != null)
 	        {
-		        onError.Invoke(future.Error);
+		        onError.Invoke(future.Error, null);
 		        yield break;
 	        }
 	        var result = future.Result;
@@ -626,7 +626,7 @@ namespace Gs2.Sample.Friend
 		    }
 		    catch (Gs2Exception e)
 		    {
-			    onError.Invoke(e);
+			    onError.Invoke(e, null);
 		    }
 	    }
 #endif
@@ -655,7 +655,7 @@ namespace Gs2.Sample.Friend
 	        yield return future;
 	        if (future.Error != null)
 	        {
-		        onError.Invoke(future.Error);
+		        onError.Invoke(future.Error, null);
 		        yield break;
 	        }
 	        
@@ -691,7 +691,7 @@ namespace Gs2.Sample.Friend
 		    }
 		    catch (Gs2Exception e)
 		    {
-			    onError.Invoke(e);
+			    onError.Invoke(e, null);
 		    }
 	    }
 #endif
@@ -720,7 +720,7 @@ namespace Gs2.Sample.Friend
 	        yield return future;
 	        if (future.Error != null)
 	        {
-		        onError.Invoke(future.Error);
+		        onError.Invoke(future.Error, null);
 		        yield break;
 	        }
 	        
@@ -755,7 +755,7 @@ namespace Gs2.Sample.Friend
 		    }
 		    catch (Gs2Exception e)
 		    {
-			    onError.Invoke(e);
+			    onError.Invoke(e, null);
 		    }
 	    }
 #endif
@@ -784,7 +784,7 @@ namespace Gs2.Sample.Friend
 	        yield return future;
 	        if (future.Error != null)
 	        {
-		        onError.Invoke(future.Error);
+		        onError.Invoke(future.Error, null);
 		        yield break;
 	        }
 	        var result = future.Result;
@@ -818,7 +818,7 @@ namespace Gs2.Sample.Friend
 		    }
 		    catch (Gs2Exception e)
 		    {
-			    onError.Invoke(e);
+			    onError.Invoke(e, null);
 		    }
 	    }
 #endif
@@ -847,7 +847,7 @@ namespace Gs2.Sample.Friend
 		        yield return it.Next();
 		        if (it.Error != null)
 		        {
-			        onError.Invoke(it.Error);
+			        onError.Invoke(it.Error, null);
 			        break;
 		        }
 
@@ -880,7 +880,7 @@ namespace Gs2.Sample.Friend
 		    }
 		    catch (Gs2Exception e)
 		    {
-			    onError.Invoke(e);
+			    onError.Invoke(e, null);
 		    }
 	    }
 #endif
@@ -909,7 +909,7 @@ namespace Gs2.Sample.Friend
 	        yield return future;
 	        if (future.Error != null)
 	        {
-		        onError.Invoke(future.Error);
+		        onError.Invoke(future.Error, null);
 		        yield break;
 	        }
 	        var result = future.Result;
@@ -943,7 +943,7 @@ namespace Gs2.Sample.Friend
 		    }
 		    catch (Gs2Exception e)
 		    {
-			    onError.Invoke(e);
+			    onError.Invoke(e, null);
 		    }
 	    }
 #endif
@@ -972,7 +972,7 @@ namespace Gs2.Sample.Friend
 	        yield return future;
 	        if (future.Error != null)
 	        {
-		        onError.Invoke(future.Error);
+		        onError.Invoke(future.Error, null);
 		        yield break;
 	        }
 	        
@@ -981,7 +981,7 @@ namespace Gs2.Sample.Friend
 	        yield return future2;
 	        if (future2.Error != null)
 	        {
-		        onError.Invoke(future2.Error);
+		        onError.Invoke(future2.Error, null);
 		        yield break;
 	        }
 	        
@@ -1013,7 +1013,7 @@ namespace Gs2.Sample.Friend
 		    }
 		    catch (Gs2Exception e)
 		    {
-			    onError.Invoke(e);
+			    onError.Invoke(e, null);
 		    }
 	    }
 #endif
@@ -1043,7 +1043,7 @@ namespace Gs2.Sample.Friend
 	        yield return future;
 	        if (future.Error != null)
 	        {
-		        onError.Invoke(future.Error);
+		        onError.Invoke(future.Error, null);
 		        yield break;
 	        }
 	        
@@ -1079,7 +1079,7 @@ namespace Gs2.Sample.Friend
 		    }
 		    catch (Gs2Exception e)
 		    {
-			    onError.Invoke(e);
+			    onError.Invoke(e, null);
 		    }
 	    }
 #endif
@@ -1109,7 +1109,7 @@ namespace Gs2.Sample.Friend
 	        yield return future;
 	        if (future.Error != null)
 	        {
-		        onError.Invoke(future.Error);
+		        onError.Invoke(future.Error, null);
 		        yield break;
 	        }
  
@@ -1118,7 +1118,7 @@ namespace Gs2.Sample.Friend
 	        yield return future2;
 	        if (future2.Error != null)
 	        {
-		        onError.Invoke(future2.Error);
+		        onError.Invoke(future2.Error, null);
 		        yield break;
 	        }
 
@@ -1151,7 +1151,7 @@ namespace Gs2.Sample.Friend
 		    }
 		    catch (Gs2Exception e)
 		    {
-			    onError.Invoke(e);
+			    onError.Invoke(e, null);
 		    }
 	    }
 #endif
@@ -1180,7 +1180,7 @@ namespace Gs2.Sample.Friend
 		        yield return it.Next();
 		        if (it.Error != null)
 		        {
-			        onError.Invoke(it.Error);
+			        onError.Invoke(it.Error, null);
 			        break;
 		        }
 
@@ -1214,7 +1214,7 @@ namespace Gs2.Sample.Friend
 		    }
 		    catch (Gs2Exception e)
 		    {
-			    onError.Invoke(e);
+			    onError.Invoke(e, null);
 		    }
 	    }
 #endif

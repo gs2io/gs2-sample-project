@@ -53,7 +53,7 @@ namespace Gs2.Sample.Quest
                 yield return it.Next();
                 if (it.Error != null)
                 {
-                    onError.Invoke(it.Error);
+                    onError.Invoke(it.Error, null);
                     callback.Invoke(null);
                     yield break;
                 }
@@ -87,7 +87,7 @@ namespace Gs2.Sample.Quest
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
                 return null;
             }
 
@@ -119,7 +119,7 @@ namespace Gs2.Sample.Quest
                 yield return it.Next();
                 if (it.Error != null)
                 {
-                    onError.Invoke(it.Error);
+                    onError.Invoke(it.Error, null);
                     callback.Invoke(null);
                     yield break;
                 }
@@ -154,7 +154,7 @@ namespace Gs2.Sample.Quest
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
             }
 
             return quests;
@@ -186,7 +186,7 @@ namespace Gs2.Sample.Quest
                 yield return it.Next();
                 if (it.Error != null)
                 {
-                    onError.Invoke(it.Error);
+                    onError.Invoke(it.Error, null);
                     callback.Invoke(null);
                     yield break;
                 }
@@ -222,7 +222,7 @@ namespace Gs2.Sample.Quest
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
             }
 
             return completedQuests;
@@ -264,7 +264,7 @@ namespace Gs2.Sample.Quest
             yield return future;
             if (future.Error != null)
             {
-                onError.Invoke(future.Error);
+                onError.Invoke(future.Error, null);
                 callback.Invoke(null);
                 yield break;
             }
@@ -274,7 +274,7 @@ namespace Gs2.Sample.Quest
             yield return futurew2;
             if (futurew2.Error != null)
             {
-                onError.Invoke(futurew2.Error);
+                onError.Invoke(futurew2.Error, null);
                 callback.Invoke(null);
                 yield break;
             }
@@ -316,7 +316,7 @@ namespace Gs2.Sample.Quest
                 }
                 catch (Gs2Exception e)
                 {
-                    onError.Invoke(e);
+                    onError.Invoke(e, null);
                     return null;
                 }
             }
@@ -332,7 +332,7 @@ namespace Gs2.Sample.Quest
                 }
                 catch (Gs2Exception e)
                 {
-                    onError.Invoke(e);
+                    onError.Invoke(e, null);
                 }
 
                 onStart.Invoke(progress);
@@ -365,7 +365,7 @@ namespace Gs2.Sample.Quest
                 yield return future;
                 if (future.Error != null)
                 {
-                    onError.Invoke(future.Error);
+                    onError.Invoke(future.Error, null);
                     yield break;
                 }
 
@@ -386,7 +386,7 @@ namespace Gs2.Sample.Quest
                         yield return it.Next();
                         if (it.Error != null)
                         {
-                            onError.Invoke(it.Error);
+                            onError.Invoke(it.Error, null);
                             callback.Invoke(null);
                             yield break;
                         }
@@ -430,7 +430,7 @@ namespace Gs2.Sample.Quest
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
                 return null;
             }
             if (progress != null) {
@@ -493,7 +493,7 @@ namespace Gs2.Sample.Quest
             yield return future;
             if (future.Error != null)
             {
-                onError.Invoke(future.Error);
+                onError.Invoke(future.Error, null);
                 callback.Invoke(null);
                 yield break;
             }
@@ -537,7 +537,7 @@ namespace Gs2.Sample.Quest
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
                 return e;
             }
 

@@ -47,7 +47,7 @@ namespace Gs2.Sample.Stamina
             yield return future;
             if (future.Error != null)
             {
-                onError.Invoke(future.Error);
+                onError.Invoke(future.Error, null);
                 yield break;
             }
 
@@ -80,7 +80,7 @@ namespace Gs2.Sample.Stamina
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
             }
         }
 #endif
@@ -109,7 +109,7 @@ namespace Gs2.Sample.Stamina
             yield return future;
             if (future.Error != null)
             {
-                onError.Invoke(future.Error);
+                onError.Invoke(future.Error, null);
                 yield break;
             }
             stamina = future.Result;
@@ -149,7 +149,7 @@ namespace Gs2.Sample.Stamina
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
             }
 
             return null;
@@ -184,7 +184,7 @@ namespace Gs2.Sample.Stamina
             yield return future;
             if (future.Error != null)
             {
-                onError.Invoke(future.Error);
+                onError.Invoke(future.Error, null);
                 yield break;
             }
 
@@ -192,7 +192,7 @@ namespace Gs2.Sample.Stamina
             yield return future2;
             if (future2.Error != null)
             {
-                onError.Invoke(future2.Error);
+                onError.Invoke(future2.Error, null);
                 yield break;
             }
 
@@ -230,7 +230,7 @@ namespace Gs2.Sample.Stamina
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
                 return;
             }
             
@@ -275,7 +275,8 @@ namespace Gs2.Sample.Stamina
             if (future.Error != null)
             {
                 onError.Invoke(
-                    future.Error
+                    future.Error,
+                    null
                 );
                 callback.Invoke(future.Error);
                 yield break;
@@ -327,7 +328,7 @@ namespace Gs2.Sample.Stamina
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
                 return e;
             }
 

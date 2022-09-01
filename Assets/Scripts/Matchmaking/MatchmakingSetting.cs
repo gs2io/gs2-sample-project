@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Gs2.Core.Exception;
 using Gs2.Unity.Gs2Matchmaking.Model;
+using Gs2.Unity.Util;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -28,11 +29,6 @@ namespace Gs2.Sample.Matchmaking
     
     [System.Serializable]
     public class MatchmakingCancelEvent : UnityEvent<EzGathering>
-    {
-    }
-
-    [System.Serializable]
-    public class ErrorEvent : UnityEvent<Gs2Exception>
     {
     }
 

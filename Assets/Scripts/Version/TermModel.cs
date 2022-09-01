@@ -57,7 +57,8 @@ namespace Gs2.Sample.Version
             if (future.Error != null)
             {
                 onError.Invoke(
-                    future.Error
+                    future.Error,
+                    null
                 );
                 yield break;
             }
@@ -108,7 +109,7 @@ namespace Gs2.Sample.Version
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
             }
         }
 #endif
@@ -134,7 +135,8 @@ namespace Gs2.Sample.Version
             if (future.Error != null)
             {
                 onError.Invoke(
-                    future.Error
+                    future.Error,
+                    null
                 );
                 yield break;
             }
@@ -144,7 +146,8 @@ namespace Gs2.Sample.Version
             if (future2.Error != null)
             {
                 onError.Invoke(
-                    future2.Error
+                    future2.Error,
+                    null
                 );
                 yield break;
             }
@@ -179,7 +182,7 @@ namespace Gs2.Sample.Version
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
             }
         }
 #endif

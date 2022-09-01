@@ -52,7 +52,7 @@ namespace Gs2.Sample.Unit
                 yield return future;
                 if (future.Error != null)
                 {
-                    onError.Invoke(future.Error);
+                    onError.Invoke(future.Error, null);
                     yield break;
                 }
 
@@ -70,7 +70,7 @@ namespace Gs2.Sample.Unit
                     yield return it.Next();
                     if (it.Error != null)
                     {
-                        onError.Invoke(it.Error);
+                        onError.Invoke(it.Error, null);
                         break;
                     }
 
@@ -115,7 +115,7 @@ namespace Gs2.Sample.Unit
                 }
                 catch (Gs2Exception e)
                 {
-                    onError.Invoke(e);
+                    onError.Invoke(e, null);
                     return;
                 }
             }
@@ -167,7 +167,7 @@ namespace Gs2.Sample.Unit
                 yield return future;
                 if (future.Error != null)
                 {
-                    onError.Invoke(future.Error);
+                    onError.Invoke(future.Error, null);
                     yield break;
                 }
  
@@ -187,7 +187,7 @@ namespace Gs2.Sample.Unit
                     yield return it.Next();
                     if (it.Error != null)
                     {
-                        onError.Invoke(it.Error);
+                        onError.Invoke(it.Error, null);
                         break;
                     }
 
@@ -229,7 +229,7 @@ namespace Gs2.Sample.Unit
                 }
                 catch (Gs2Exception e)
                 {
-                    onError.Invoke(e);
+                    onError.Invoke(e, null);
                 }
             }
             {
@@ -274,7 +274,7 @@ namespace Gs2.Sample.Unit
             yield return future;
             if (future.Error != null)
             {
-                onError.Invoke(future.Error);
+                onError.Invoke(future.Error, null);
                 yield break;
             }
             
@@ -283,7 +283,7 @@ namespace Gs2.Sample.Unit
             yield return future2;
             if (future2.Error != null)
             {
-                onError.Invoke(future2.Error);
+                onError.Invoke(future2.Error, null);
                 yield break;
             }
             var itemSets = future2.Result;
@@ -292,7 +292,7 @@ namespace Gs2.Sample.Unit
             yield return future3;
             if (future3.Error != null)
             {
-                onError.Invoke(future3.Error);
+                onError.Invoke(future3.Error, null);
                 yield break;
             }
  
@@ -338,7 +338,7 @@ namespace Gs2.Sample.Unit
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
                 return;
             }
 

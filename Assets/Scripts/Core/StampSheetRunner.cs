@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Gs2.Core.Exception;
@@ -42,7 +43,7 @@ namespace Gs2.Sample.Core
         public IEnumerator Run(
             string stampSheet,
             string encryptionKeyId,
-            UnityEvent<Gs2Exception> onError
+            UnityEvent<Gs2Exception, Func<IEnumerator>> onError
         )
         {
             var stateMachine = new StampSheetStateMachine(
@@ -69,7 +70,7 @@ namespace Gs2.Sample.Core
             string stampSheet,
             string distributorNamespaceName,
             string encryptionKeyId,
-            UnityEvent<Gs2Exception> onError
+            UnityEvent<Gs2Exception, Func<IEnumerator>> onError
         )
         {
             var stateMachine = new StampSheetStateMachine(

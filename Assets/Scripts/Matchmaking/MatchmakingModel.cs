@@ -75,7 +75,8 @@ namespace Gs2.Sample.Matchmaking
             {
                 Error = future.Error;
                 onError.Invoke(
-                    future.Error
+                    future.Error,
+                    null
                 );
                 yield break;
             }
@@ -86,7 +87,8 @@ namespace Gs2.Sample.Matchmaking
             {
                 Error = future.Error;
                 onError.Invoke(
-                    future2.Error
+                    future2.Error,
+                    null
                 );
                 yield break;
             }
@@ -142,7 +144,7 @@ namespace Gs2.Sample.Matchmaking
             catch (Gs2Exception e)
             {
                 Error = e;
-                onError.Invoke(e);
+                onError.Invoke(e, null);
             }
         }
 #endif
@@ -176,7 +178,7 @@ namespace Gs2.Sample.Matchmaking
                 if (it.Error != null)
                 {
                     Error = it.Error;
-                    onError.Invoke(it.Error);
+                    onError.Invoke(it.Error, null);
                     break;
                 }
 
@@ -217,7 +219,7 @@ namespace Gs2.Sample.Matchmaking
             catch (Gs2Exception e)
             {
                 Error = e;
-                onError.Invoke(e);
+                onError.Invoke(e, null);
             }
         }
 #endif
@@ -246,7 +248,7 @@ namespace Gs2.Sample.Matchmaking
             yield return future;
             if (future.Error != null)
             {
-                onError.Invoke(future.Error);
+                onError.Invoke(future.Error, null);
                 yield break;
             }
  
@@ -256,7 +258,7 @@ namespace Gs2.Sample.Matchmaking
             if (future.Error != null)
             {
                 Error = future.Error;
-                onError.Invoke(future.Error);
+                onError.Invoke(future.Error, null);
                 yield break;
             }
             
@@ -297,7 +299,7 @@ namespace Gs2.Sample.Matchmaking
             catch (Gs2Exception e)
             {
                 Error = e;
-                onError.Invoke(e);
+                onError.Invoke(e, null);
             }
         }
 #endif

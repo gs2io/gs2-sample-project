@@ -79,7 +79,7 @@ namespace Gs2.Sample.Experience
             yield return future;
             if (future.Error != null)
             {
-                onError.Invoke(future.Error);
+                onError.Invoke(future.Error, null);
                 yield break;
             }
             playerExperienceModel = future.Result;
@@ -108,7 +108,7 @@ namespace Gs2.Sample.Experience
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
                 return;
             }
 
@@ -142,7 +142,7 @@ namespace Gs2.Sample.Experience
             yield return future;
             if (future.Error != null)
             {
-                onError.Invoke(future.Error);
+                onError.Invoke(future.Error, null);
                 yield break;
             }
             itemExperienceModel = future.Result;
@@ -170,7 +170,7 @@ namespace Gs2.Sample.Experience
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
                 return;
             }
 
@@ -207,7 +207,7 @@ namespace Gs2.Sample.Experience
                 yield return it.Next();
                 if (it.Error != null)
                 {
-                    onError.Invoke(it.Error);
+                    onError.Invoke(it.Error, null);
                     break;
                 }
 
@@ -244,7 +244,7 @@ namespace Gs2.Sample.Experience
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
             }
         }
 #endif
@@ -278,7 +278,7 @@ namespace Gs2.Sample.Experience
                 yield return it.Next();
                 if (it.Error != null)
                 {
-                    onError.Invoke(it.Error);
+                    onError.Invoke(it.Error, null);
                     break;
                 }
 
@@ -315,7 +315,7 @@ namespace Gs2.Sample.Experience
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
             }
         }
 #endif
@@ -360,7 +360,8 @@ namespace Gs2.Sample.Experience
             if (future.Error != null)
             {
                 onError.Invoke(
-                    future.Error
+                    future.Error,
+                    null
                 );
                 yield break;
             }
@@ -406,7 +407,7 @@ namespace Gs2.Sample.Experience
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
             }
         }
 #endif

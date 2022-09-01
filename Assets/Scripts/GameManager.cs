@@ -256,7 +256,8 @@ namespace Gs2.Sample
             if (future.Error != null)
             {
                 onError.Invoke(
-                    future.Error
+                    future.Error,
+                    null
                 );
                 yield break;
             }
@@ -541,7 +542,7 @@ namespace Gs2.Sample
                 );
             }
 
-            void OnError(Gs2Exception e)
+            void OnError(Gs2Exception e, Func<IEnumerator> retry)
             {
                 error = true;
             }
@@ -602,7 +603,7 @@ namespace Gs2.Sample
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
                 return;
             }
 
@@ -699,7 +700,7 @@ namespace Gs2.Sample
             yield return future;
             if (future.Error != null)
             {
-                onError.Invoke(future.Error);
+                onError.Invoke(future.Error, null);
                 yield break;
             }
 
@@ -707,7 +708,7 @@ namespace Gs2.Sample
             yield return future2;
             if (future2.Error != null)
             {
-                onError.Invoke(future2.Error);
+                onError.Invoke(future2.Error, null);
                 yield break;
             }
             
@@ -755,7 +756,7 @@ namespace Gs2.Sample
                 yield return future;
                 if (future.Error != null)
                 {
-                    onError.Invoke(future.Error);
+                    onError.Invoke(future.Error, null);
                     yield break;
                 }
 
@@ -778,7 +779,7 @@ namespace Gs2.Sample
                 yield return future;
                 if (future.Error != null)
                 {
-                    onError.Invoke(future.Error);
+                    onError.Invoke(future.Error, null);
                     yield break;
                 }
                 var result = future.Result;
@@ -786,7 +787,7 @@ namespace Gs2.Sample
                 yield return future2;
                 if (future2.Error != null)
                 {
-                    onError.Invoke(future2.Error);
+                    onError.Invoke(future2.Error, null);
                     yield break;
                 }
                 var item = future2.Result;
@@ -827,7 +828,7 @@ namespace Gs2.Sample
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
                 return;
             }
 
@@ -1048,7 +1049,7 @@ namespace Gs2.Sample
         /// ログイン エラー
         /// Login error
         /// </summary>
-        private void OnLoginError(Gs2Exception e)
+        private void OnLoginError(Gs2Exception e, Func<IEnumerator> retry)
         {
             if (e.Errors[0].message == "account.account.account.error.notAuthorized")
             {
@@ -1180,7 +1181,7 @@ namespace Gs2.Sample
         /// エラー表示
         /// Error indication
         /// </summary>
-        public void OnError(Gs2Exception e)
+        public void OnError(Gs2Exception e, Func<IEnumerator> retry)
         {
             string message = String.Empty;
             if (e.Errors.Length > 0)

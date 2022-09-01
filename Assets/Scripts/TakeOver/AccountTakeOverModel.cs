@@ -86,7 +86,7 @@ namespace Gs2.Sample.AccountTakeOver
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
                 return e;
             }
             return null;
@@ -111,7 +111,7 @@ namespace Gs2.Sample.AccountTakeOver
                 yield return it.Next();
                 if (it.Error != null)
                 {
-                    onError.Invoke(it.Error);
+                    onError.Invoke(it.Error, null);
                     callback.Invoke(it.Error);
                     break;
                 }
@@ -159,7 +159,7 @@ namespace Gs2.Sample.AccountTakeOver
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
                 return e;
             }
 
@@ -189,7 +189,7 @@ namespace Gs2.Sample.AccountTakeOver
             yield return future;
             if (future.Error != null)
             {
-                onError.Invoke(future.Error);
+                onError.Invoke(future.Error, null);
                 callback.Invoke(future.Error);
                 yield break;
             }
@@ -198,7 +198,7 @@ namespace Gs2.Sample.AccountTakeOver
             yield return future2;
             if (future2.Error != null)
             {
-                onError.Invoke(future2.Error);
+                onError.Invoke(future2.Error, null);
                 callback.Invoke(future2.Error);
                 yield break;
             }
@@ -235,7 +235,7 @@ namespace Gs2.Sample.AccountTakeOver
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
                 return e;
             }
 
@@ -261,7 +261,7 @@ namespace Gs2.Sample.AccountTakeOver
             yield return future;
             if (future.Error != null)
             {
-                onError.Invoke(future.Error);
+                onError.Invoke(future.Error, null);
                 callback.Invoke(future.Error);
                 yield break;
             }
@@ -270,7 +270,7 @@ namespace Gs2.Sample.AccountTakeOver
             yield return future2;
             if (future2.Error != null)
             {
-                onError.Invoke(future2.Error);
+                onError.Invoke(future2.Error, null);
                 callback.Invoke(future2.Error);
                 yield break;
             }
@@ -306,7 +306,7 @@ namespace Gs2.Sample.AccountTakeOver
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
                 return e;
             }
 
@@ -332,7 +332,7 @@ namespace Gs2.Sample.AccountTakeOver
             yield return future;
             if (future.Error != null)
             {
-                onError.Invoke(future.Error);
+                onError.Invoke(future.Error, null);
                 callback.Invoke(future.Error);
                 yield break;
             }

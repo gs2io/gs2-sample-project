@@ -44,7 +44,8 @@ namespace Gs2.Sample.News
             if (future.Error != null)
             {
                 onError.Invoke(
-                    future.Error
+                    future.Error,
+                    null
                 );
                 yield break;
             }
@@ -111,7 +112,7 @@ namespace Gs2.Sample.News
                 yield return it.Next();
                 if (it.Error != null)
                 {
-                    onError.Invoke(it.Error);
+                    onError.Invoke(it.Error, null);
                     break;
                 }
 

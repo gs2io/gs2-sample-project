@@ -68,7 +68,7 @@ namespace Gs2.Sample.Money
             yield return future;
             if (future.Error != null)
             {
-                onError.Invoke(future.Error);
+                onError.Invoke(future.Error, null);
                 yield break;
             }
             
@@ -100,7 +100,7 @@ namespace Gs2.Sample.Money
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
             }
         }
 #endif
@@ -131,7 +131,8 @@ namespace Gs2.Sample.Money
             if (future.Error != null)
             {
                 onError.Invoke(
-                    future.Error
+                    future.Error,
+                    null
                 );
                 yield break;
             }
@@ -251,7 +252,7 @@ namespace Gs2.Sample.Money
                         }
                         catch (Gs2Exception e)
                         {
-                            onError.Invoke(e);
+                            onError.Invoke(e, null);
                         }
                     }
 
@@ -272,7 +273,7 @@ namespace Gs2.Sample.Money
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
             }
 
             return null;
@@ -338,7 +339,8 @@ namespace Gs2.Sample.Money
                 if (result.Error != null)
                 {
                     onError.Invoke(
-                        result.Error
+                        result.Error,
+                        null
                     );
                     callback.Invoke(
                         result.Error
@@ -381,7 +383,8 @@ namespace Gs2.Sample.Money
                 if (future.Error != null)
                 {
                     onError.Invoke(
-                        future.Error
+                        future.Error,
+                        null
                     );
                     callback.Invoke(
                         future.Error
@@ -422,7 +425,7 @@ namespace Gs2.Sample.Money
                 }
                 catch (Gs2Exception e)
                 {
-                    onError.Invoke(e);
+                    onError.Invoke(e, null);
                     return e;
                 }
 #endif
@@ -458,7 +461,7 @@ namespace Gs2.Sample.Money
                 }
                 catch (Gs2Exception e)
                 {
-                    onError.Invoke(e);
+                    onError.Invoke(e, null);
                     return e;
                 }
 

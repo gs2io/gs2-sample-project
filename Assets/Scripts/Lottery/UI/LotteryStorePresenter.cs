@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -146,7 +147,7 @@ namespace Gs2.Sample.Lottery
             _lotterySetting.onError.RemoveListener(OnError);
         }
 
-        public void OnError(Gs2Exception e)
+        public void OnError(Gs2Exception e, Func<IEnumerator> retry)
         {
             SetState(State.BuyFailed);
         }

@@ -58,7 +58,8 @@ namespace Gs2.Sample.Lottery
             if (future.Error != null)
             {
                 onError.Invoke(
-                    future.Error
+                    future.Error,
+                    null
                 );
                 callback.Invoke(future.Error);
                 yield break;
@@ -95,7 +96,7 @@ namespace Gs2.Sample.Lottery
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
                 return e;
             }
             return null;
@@ -163,7 +164,8 @@ namespace Gs2.Sample.Lottery
             if (future.Error != null)
             {
                 onError.Invoke(
-                    future.Error
+                    future.Error,
+                    null
                 );
             }
         }
@@ -230,7 +232,7 @@ namespace Gs2.Sample.Lottery
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
                 return;
             }
         }

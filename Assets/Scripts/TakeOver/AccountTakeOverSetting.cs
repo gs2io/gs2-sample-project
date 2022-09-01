@@ -1,5 +1,6 @@
 ﻿using Gs2.Core.Exception;
 using Gs2.Unity.Gs2Account.Model;
+using Gs2.Unity.Util;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -12,11 +13,6 @@ namespace Gs2.Sample.AccountTakeOver
 
     [System.Serializable]
     public class DoTakeOverEvent : UnityEvent<EzAccount>
-    {
-    }
-
-    [System.Serializable]
-    public class ErrorEvent : UnityEvent<Gs2Exception>
     {
     }
 

@@ -53,7 +53,8 @@ namespace Gs2.Sample.Realtime
             if (future.Error != null)
             {
                 onError.Invoke(
-                    future.Error
+                    future.Error,
+                    null
                 );
                 callback.Invoke(null);
                 yield break;
@@ -88,7 +89,7 @@ namespace Gs2.Sample.Realtime
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
                 throw;
             }
         }

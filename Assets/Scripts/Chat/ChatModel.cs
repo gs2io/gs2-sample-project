@@ -42,7 +42,7 @@ namespace Gs2.Sample.Chat
             yield return future;
             if (future.Error != null)
             {
-                onError.Invoke(future.Error);
+                onError.Invoke(future.Error, null);
                 yield break;
             }
             
@@ -73,7 +73,7 @@ namespace Gs2.Sample.Chat
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
             }
             Room = await domain.ModelAsync();
             
@@ -105,7 +105,7 @@ namespace Gs2.Sample.Chat
                 yield return it.Next();
                 if (it.Error != null)
                 {
-                    onError.Invoke(it.Error);
+                    onError.Invoke(it.Error, null);
                     break;
                 }
 
@@ -139,7 +139,7 @@ namespace Gs2.Sample.Chat
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
             }
             
             onListSubscribeRooms.Invoke(Rooms);
@@ -173,7 +173,7 @@ namespace Gs2.Sample.Chat
             yield return future;
             if (future.Error != null)
             {
-                onError.Invoke(future.Error);
+                onError.Invoke(future.Error, null);
                 yield break;
             }
 
@@ -182,7 +182,7 @@ namespace Gs2.Sample.Chat
             yield return future2;
             if (future2.Error != null)
             {
-                onError.Invoke(future2.Error);
+                onError.Invoke(future2.Error, null);
                 yield break;
             }
             
@@ -217,7 +217,7 @@ namespace Gs2.Sample.Chat
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
             }
             Room = await result.ModelAsync();
             
@@ -253,7 +253,7 @@ namespace Gs2.Sample.Chat
             yield return future;
             if (future.Error != null)
             {
-                onError.Invoke(future.Error);
+                onError.Invoke(future.Error, null);
                 yield break;
             }
             
@@ -262,7 +262,7 @@ namespace Gs2.Sample.Chat
             yield return future2;
             if (future2.Error != null)
             {
-                onError.Invoke(future2.Error);
+                onError.Invoke(future2.Error, null);
                 yield break;
             }
             
@@ -298,7 +298,7 @@ namespace Gs2.Sample.Chat
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
             }
         }
 #endif
@@ -327,7 +327,7 @@ namespace Gs2.Sample.Chat
             yield return future;
             if (future.Error != null)
             {
-                onError.Invoke(future.Error);
+                onError.Invoke(future.Error, null);
                 yield break;
             }
             
@@ -336,7 +336,7 @@ namespace Gs2.Sample.Chat
             yield return future2;
             if (future2.Error != null)
             {
-                onError.Invoke(future2.Error);
+                onError.Invoke(future2.Error, null);
                 yield break;
             }
             
@@ -369,7 +369,7 @@ namespace Gs2.Sample.Chat
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
             }
         }
 #endif
@@ -403,7 +403,7 @@ namespace Gs2.Sample.Chat
                 yield return it.Next();
                 if (it.Error != null)
                 {
-                    onError.Invoke(it.Error);
+                    onError.Invoke(it.Error, null);
                     break;
                 }
 
@@ -445,7 +445,7 @@ namespace Gs2.Sample.Chat
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
             }
         }
 #endif
@@ -480,7 +480,7 @@ namespace Gs2.Sample.Chat
             yield return future;
             if (future.Error != null)
             {
-                onError.Invoke(future.Error);
+                onError.Invoke(future.Error, null);
                 yield break;
             }
             
@@ -489,7 +489,7 @@ namespace Gs2.Sample.Chat
             yield return future2;
             if (future2.Error != null)
             {
-                onError.Invoke(future2.Error);
+                onError.Invoke(future2.Error, null);
                 yield break;
             }
             
@@ -526,7 +526,7 @@ namespace Gs2.Sample.Chat
             }
             catch (Gs2Exception e)
             {
-                onError.Invoke(e);
+                onError.Invoke(e, null);
             }
         }
 #endif
