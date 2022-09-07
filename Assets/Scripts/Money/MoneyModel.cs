@@ -246,7 +246,7 @@ namespace Gs2.Sample.Money
                             var item = await domain2.ModelAsync();
                             boughtCount = item.Count;
                         }
-                        catch (NotFoundException e)
+                        catch (NotFoundException)
                         {
                             boughtCount = 0;
                         }
@@ -328,7 +328,7 @@ namespace Gs2.Sample.Money
             ErrorEvent onError
         )
         {
-            string receipt;
+            string receipt = string.Empty;
             {
 #if GS2_ENABLE_PURCHASING
                 AsyncResult<PurchaseParameters> result = null;

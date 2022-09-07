@@ -389,7 +389,7 @@ namespace Gs2.Sample.Matchmaking
                     yield break;
                 }
 
-                if (_matchmakingModel.ResultGatherings.Count > 0)
+                if (_matchmakingModel.ResultGatherings.Count > 0 && _matchmakingModel.ResultGatherings[0] != null)
                 {
                     _matchmakingModel.Gathering = _matchmakingModel.ResultGatherings[0];
                     if (_matchmakingModel.Gathering.CapacityOfRoles.Count > 0)
@@ -452,7 +452,7 @@ namespace Gs2.Sample.Matchmaking
                     return;
                 }
 
-                if (_matchmakingModel.ResultGatherings.Count > 0)
+                if (_matchmakingModel.ResultGatherings.Count > 0 && _matchmakingModel.ResultGatherings[0] != null)
                 {
                     _matchmakingModel.Gathering = _matchmakingModel.ResultGatherings[0];
                     if (_matchmakingModel.Gathering.CapacityOfRoles.Count > 0)
