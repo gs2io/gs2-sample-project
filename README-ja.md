@@ -7,10 +7,10 @@ Game Server Services (https://gs2.io) の Unity 向けのサンプルプロジ�
 
 ## 動作環境
 
-Unity 2019.4.40f1
+Unity 2020.3.38f1  LTS
 
-GS2 SDK for Unity　2022.8.6  
-GS2 C# SDK　2022 8.6
+GS2 SDK for Unity 2022.9.3  
+GS2 C# SDK 2022.9.2
 
 ## 注意事項
 

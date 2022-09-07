@@ -435,7 +435,7 @@ namespace Gs2.Sample.Realtime
                         _realtimeSetting.onError
                     );
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     SetState(State.GetRoomFailed);
                     return;
