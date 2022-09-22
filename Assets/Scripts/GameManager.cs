@@ -642,7 +642,7 @@ namespace Gs2.Sample
                 );
             }
 
-            void OnError(Gs2Exception e)
+            void OnError(Gs2Exception e, Func<IEnumerator> retry)
             {
                 error = true;
             }
@@ -1243,6 +1243,11 @@ namespace Gs2.Sample
             Debug.Log("Gathering Name:" + gatheringName);
             
             realtimePresenter.StartGetRoom();
+        }
+        
+        public void Test()
+        {
+            _profile.Finalize();
         }
     }
 }
