@@ -1,4 +1,4 @@
-﻿using Gs2.Sample.Quest;
+using Gs2.Sample.Quest;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -52,16 +52,22 @@ public class WebViewDialog : MonoBehaviour
                 right: horizon + (int)(padding.right * coefficient),
                 bottom: vertical + (int)(padding.bottom * coefficient)
             );
+			
+			webViewObject.SetVisibility(false);
+			webViewObject.gameObject.SetActive(true);
         }
+		else
+		{
+			webViewObject.SetVisibility(false);
+			webViewObject.gameObject.SetActive(true);
+		}
     }
     
     public void Show(string _title, string url)
     {
         Initialize();
-        webViewObject.gameObject.SetActive(true);
         webViewObject.LoadURL(url);
         webViewObject.SetVisibility(true);
-        
         title.SetText(_title);
         
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX
@@ -80,38 +86,40 @@ public class WebViewDialog : MonoBehaviour
 
     public void SetCookie(string key, string value)
     {
-        if (webViewObject != null)
-        {
-            webViewObject.EvaluateJS("document.cookie = '" + key + "=" + value + "';");
-        }
+        webViewObject.EvaluateJS(@"document.cookie = '" + key + "=" + value + "';");
+    }
+
+    public void SaveCookie()
+    {
         webViewObject.SaveCookies();
     }
-    
-    public bool isWebViewActiveAndEnabled()
+
+    public bool isActiveAndEnabled()
     {
         return webViewObject.isActiveAndEnabled;
     }
     
     public void LoadURL(string url)
     {
-        Initialize();
-        webViewObject.gameObject.SetActive(true);
         webViewObject.LoadURL(url);
-        webViewObject.SetVisibility(true);
-        
+
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX
         text.SetText("Open : " + url);
 #endif
-        
-        this.gameObject.SetActive(true);
+
+    }
+    
+    public void SetVisibility(bool visible)
+    {
+        webViewObject.SetVisibility(visible);
+        this.gameObject.SetActive(visible);
     }
 
     public void Hide()
     {
-        webViewObject.ClearCookies();
-        
-        webViewObject.gameObject.SetActive(false);
         webViewObject.SetVisibility(false);
         this.gameObject.SetActive(false);
+		
+		webViewObject.gameObject.SetActive(false);
     }
 }

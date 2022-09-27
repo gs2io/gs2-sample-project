@@ -1,4 +1,5 @@
-﻿using System.Collections;
+using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Assertions;
 #if GS2_ENABLE_UNITASK
@@ -76,7 +77,6 @@ namespace Gs2.Sample.News
             );
         }
 #endif
-        
         /// <summary>
         /// お知らせを開く
         /// Open Notification
@@ -84,7 +84,7 @@ namespace Gs2.Sample.News
         /// <returns></returns>
         public IEnumerator OpenWebView()
         {
-            UIManager.Instance.AddLog("NewsPresenter::Initialize");
+            UIManager.Instance.AddLog("NewsPresenter::OpenWebView");
             
             yield return _newsModel.GetContentsUrl(
                 GameManager.Instance.Domain,
@@ -95,17 +95,58 @@ namespace Gs2.Sample.News
             );
 
             UIManager.Instance.InitWebViewDialog("Notice");
-            while (UIManager.Instance.isWebViewActiveAndEnabled())
+            
+            while (!UIManager.Instance.isWebViewActiveAndEnabled())
             {
                 yield return new WaitForSeconds(0.5f);
             }
+            
+            UIManager.Instance.SetVisibility(true);
             
             foreach (var cookie in _newsModel.cookies)
             {
                 UIManager.Instance.SetCookie(cookie.Key, cookie.Value);
             }
+            UIManager.Instance.SaveCookie();
+
             UIManager.Instance.LoadURL(_newsModel.browserUrl);
         }
+#if GS2_ENABLE_UNITASK
+        /// <summary>
+        /// お知らせを開く
+        /// Open Notification
+        /// </summary>
+        /// <returns></returns>
+        public async UniTask OpenWebViewAsync()
+        {
+            UIManager.Instance.AddLog("NewsPresenter::OpenWebViewAsync");
+            
+            await _newsModel.GetContentsUrlAsync(
+                GameManager.Instance.Domain,
+                GameManager.Instance.Session,
+                _newsSetting.newsNamespaceName,
+                _newsSetting.onGetContentsUrl,
+                _newsSetting.onError
+            );
+
+            UIManager.Instance.InitWebViewDialog("Notice");
+            
+            while (!UIManager.Instance.isWebViewActiveAndEnabled())
+            {
+                await UniTask.Delay(TimeSpan.FromSeconds(0.5f));
+            }
+            
+            UIManager.Instance.SetVisibility(true);
+            
+            foreach (var cookie in _newsModel.cookies)
+            {
+                UIManager.Instance.SetCookie(cookie.Key, cookie.Value);
+            }
+            UIManager.Instance.SaveCookie();
+
+            UIManager.Instance.LoadURL(_newsModel.browserUrl);
+        }
+#endif
         
         /// <summary>
         /// お知らせを開く
@@ -113,8 +154,11 @@ namespace Gs2.Sample.News
         /// </summary>
         public void OnClickNews()
         {
+#if GS2_ENABLE_UNITASK
+            OpenWebViewAsync().Forget();
+#else
             StartCoroutine(OpenWebView());
+#endif
         }
-
     }
 }
