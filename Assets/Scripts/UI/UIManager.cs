@@ -205,14 +205,24 @@ namespace Gs2.Sample
             webViewDialog.SetCookie(key, value);
         }
         
+        public void SaveCookie()
+        {
+            webViewDialog.SaveCookie();
+        }
+        
         public bool isWebViewActiveAndEnabled()
         {
-            return webViewDialog.isActiveAndEnabled;
+            return webViewDialog.isActiveAndEnabled();
         }
         
         public void LoadURL(string url)
         {
             webViewDialog.LoadURL(url);
+        }
+        
+        public void SetVisibility(bool visible)
+        {
+            webViewDialog.SetVisibility(visible);
         }
         
         public void OpenProcessing()
