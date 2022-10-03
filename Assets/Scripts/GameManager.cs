@@ -1244,10 +1244,5 @@ namespace Gs2.Sample
             
             realtimePresenter.StartGetRoom();
         }
-        
-        public void Test()
-        {
-            _profile.Finalize();
-        }
     }
 }

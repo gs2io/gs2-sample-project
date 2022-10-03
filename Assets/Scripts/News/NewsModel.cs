@@ -50,6 +50,7 @@ namespace Gs2.Sample.News
                 yield break;
             }
             
+            cookies.Clear();
             var items = future.Result.ToList();
             foreach (var item in items)
             {
@@ -80,6 +81,7 @@ namespace Gs2.Sample.News
             ).News();
             var result = await domain.GetContentsUrlAsync();
 
+            cookies.Clear();
             var items = result.ToList();
             foreach (var item in items)
             {

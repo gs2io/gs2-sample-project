@@ -190,14 +190,14 @@ namespace Gs2.Sample
             dialog2.AddNegativeListener(callback);
         }
 
-        public void OpenWebViewDialog(string title, string url)
+        public void InitWebViewDialog(string title, UnityAction callback = null)
         {
-            webViewDialog.Show(title, url);
+            webViewDialog.Init(title, callback);
         }
         
-        public void InitWebViewDialog(string title)
+        public void SetCustomHeader(string headerKey, string headerValue)
         {
-            webViewDialog.Init(title);
+            webViewDialog.SetCustomHeader(headerKey, headerValue);
         }
         
         public void SetCookie(string key, string value)
@@ -210,6 +210,11 @@ namespace Gs2.Sample
             webViewDialog.SaveCookie();
         }
         
+        public void ClearCookie()
+        {
+            webViewDialog.ClearCookie();
+        }
+		
         public bool isWebViewActiveAndEnabled()
         {
             return webViewDialog.isActiveAndEnabled();
@@ -220,6 +225,11 @@ namespace Gs2.Sample
             webViewDialog.LoadURL(url);
         }
         
+		public bool IsWebViewLoading()
+        {
+            return webViewDialog.IsLoading();
+        }
+		
         public void SetVisibility(bool visible)
         {
             webViewDialog.SetVisibility(visible);
