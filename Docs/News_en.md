@@ -106,10 +106,17 @@ onGetContentsUrl.Invoke(cookies, browserUrl, zipUrl);
 
 ### Open content in WebView
 
-Set each cookie value retrieved to the WebView side, or in the case of unity-webview, pass it from EvaluateJS().
+Each cookie retrieved is set on the WebView side.  
+In the case of unity-webview, it is passed from EvaluateJS().
+Since the execution timing of the unity-webview JavaScript is at the completion of the page load, it is necessary to set the cookie in the Http header with AddCustomHeader() separately.
+separately set the cookie in the HTTP header with AddCustomHeader() to authenticate access privileges on the first page load.
 
 ```c#
- webViewObject.EvaluateJS("document.cookie = '" + key + "=" + value + "';");
+webViewObject.EvaluateJS("document.cookie = '" + key + "=" + value + "';");
+```
+
+```c#
+webViewObject.AddCustomHeader(headerKey, headerValue);
 ```
 
 Open the connection URL in WebView.

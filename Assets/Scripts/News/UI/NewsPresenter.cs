@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 #if GS2_ENABLE_UNITASK
@@ -77,6 +78,7 @@ namespace Gs2.Sample.News
             );
         }
 #endif
+        
         /// <summary>
         /// お知らせを開く
         /// Open Notification
@@ -94,23 +96,38 @@ namespace Gs2.Sample.News
                 _newsSetting.onError
             );
 
-            UIManager.Instance.InitWebViewDialog("Notice");
-            
+            UIManager.Instance.InitWebViewDialog("Notice", SetCookieCallback);
             while (!UIManager.Instance.isWebViewActiveAndEnabled())
             {
-                yield return new WaitForSeconds(0.5f);
+                yield return null;
             }
+			
+            UIManager.Instance.ClearCookie();
             
-            UIManager.Instance.SetVisibility(true);
-            
+            string cookieValue = string.Empty;
             foreach (var cookie in _newsModel.cookies)
+            {
+                cookieValue += cookie.Key + "=" + cookie.Value + "; ";
+            }
+            UIManager.Instance.SetCustomHeader("Cookie", cookieValue);
+			
+			UIManager.Instance.LoadURL(_newsModel.browserUrl);
+			while (UIManager.Instance.IsWebViewLoading())
+            {
+                yield return null;
+            }
+			UIManager.Instance.SetVisibility(true);
+		}
+		
+		private void SetCookieCallback()
+		{
+		    foreach (var cookie in _newsModel.cookies)
             {
                 UIManager.Instance.SetCookie(cookie.Key, cookie.Value);
             }
-            UIManager.Instance.SaveCookie();
-
-            UIManager.Instance.LoadURL(_newsModel.browserUrl);
-        }
+			UIManager.Instance.SaveCookie();
+		}
+		
 #if GS2_ENABLE_UNITASK
         /// <summary>
         /// お知らせを開く
@@ -129,22 +146,28 @@ namespace Gs2.Sample.News
                 _newsSetting.onError
             );
 
-            UIManager.Instance.InitWebViewDialog("Notice");
+            UIManager.Instance.InitWebViewDialog("Notice", SetCookieCallback);
             
             while (!UIManager.Instance.isWebViewActiveAndEnabled())
             {
-                await UniTask.Delay(TimeSpan.FromSeconds(0.5f));
+                await UniTask.DelayFrame(1);
             }
             
-            UIManager.Instance.SetVisibility(true);
+            UIManager.Instance.ClearCookie();
             
+            string cookieValue = string.Empty;
             foreach (var cookie in _newsModel.cookies)
             {
-                UIManager.Instance.SetCookie(cookie.Key, cookie.Value);
+                cookieValue += cookie.Key + "=" + cookie.Value + "; ";
             }
-            UIManager.Instance.SaveCookie();
-
+            UIManager.Instance.SetCustomHeader("Cookie", cookieValue);
+            
             UIManager.Instance.LoadURL(_newsModel.browserUrl);
+            while (UIManager.Instance.IsWebViewLoading())
+            {
+                await UniTask.DelayFrame(1);
+            }
+            UIManager.Instance.SetVisibility(true);
         }
 #endif
         

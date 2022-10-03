@@ -106,10 +106,17 @@ onGetContentsUrl.Invoke(cookies, browserUrl, zipUrl);
 
 ### WebViewでコンテンツを開く
 
-取得したそれぞれのクッキー値をWebView側に設定します。unity-webview の場合は EvaluateJS() から渡します。
+取得したそれぞれのCookieをWebView側に設定します。  
+unity-webview の場合は EvaluateJS() から渡します。
+unity-webviewのJavaScriptの実行タイミングはページ読み込み完了時になるため、
+別途 AddCustomHeader() でHTTPヘッダーにCookieを設定し、初回のページ読み込みでのアクセス権限の認証を行います。
 
 ```c#
- webViewObject.EvaluateJS("document.cookie = '" + key + "=" + value + "';");
+webViewObject.EvaluateJS("document.cookie = '" + key + "=" + value + "';");
+```
+
+```c#
+webViewObject.AddCustomHeader(headerKey, headerValue);
 ```
 
 WebViewで接続URLを開きます。
