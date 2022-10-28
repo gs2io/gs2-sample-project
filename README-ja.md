@@ -7,21 +7,20 @@ Game Server Services (https://gs2.io) の Unity 向けのサンプルプロジ�
 
 ## 動作環境
 
-Unity 2020.3.38f1  LTS
+Unity 2020.3.41f1  LTS
 
-GS2 SDK for Unity 2022.9.3  
-GS2 C# SDK 2022.9.2
+GS2 SDK for Unity 2022.10.4  
+GS2 C# SDK 2022.10.10
 
 ## 注意事項
 
-・サンプルに含まれるmanifest.json、packages-lock.jsonファイルには、  
-GS2のSDKのほか、Unity2019.4上での動作に必要なパッケージの記述が含まれます。  
+- サンプルに含まれるmanifest.json、packages-lock.jsonファイルには、  
+GS2のSDKのほか、Unity.2020.3上での動作に必要なパッケージの記述が含まれます。  
 上記以外のUnityバージョンでプロジェクトを開くと、  
 エラーが発生しパッケージのバージョン変更が必要になる場合があります。  
-その際は、パッケージマネージャーで検証済みバージョンをインストールすることで  
-動作が可能になります。  
+その場合は、パッケージマネージャーで検証済みバージョンをインストールすることで動作可能になります。  
 
-・TextMeshPro用の日本語フォントに  
+- TextMeshPro用の日本語フォントに  
  「Noto Sans Japanese」（ https://fonts.google.com/noto/specimen/Noto+Sans+JP ）  
 を使用しています。  
 Licensed under SIL Open Font License 1.1 ( http://scripts.sil.org/OFL )  

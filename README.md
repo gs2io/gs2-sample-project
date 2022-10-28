@@ -7,21 +7,20 @@ This is a sample implementation using various GS2 functions for a rough flow in 
 
 ## Operating Environment
 
-Unity 2020.3.38f1  LTS
+Unity 2020.3.41f1  LTS
 
-GS2 SDK for Unity 2022.9.3  
-GS2 C# SDK 2022.9.2
+GS2 SDK for Unity 2022.10.4  
+GS2 C# SDK 2022.10.10
 
 ## Notes
 
-The manifest.json and packages-lock.json files included in the sample contain the  
-In addition to the SDK for GS2, it includes a description of the packages required to run on Unity 2019.4.  
+- The manifest.json and packages-lock.json files included in the sample contain the  
+In addition to the SDK for GS2, it includes a description of the packages required to run on Unity 2020.3.  
 If you open the project with a Unity version other than the above, you will get  
 An error may occur and the package version may need to be changed.  
-In this case, install the verified version in the package manager.  
-The system will be operational.  
+In that case, you can install the verified version in the package manager to make it work.  
 
-The Japanese font for TextMeshPro has been changed to  
+- The Japanese font for TextMeshPro has been changed to  
  Noto Sans Japanese" (https://fonts.google.com/noto/specimen/Noto+Sans+JP)  
 is used.  
 Licensed under SIL Open Font License 1.1 ( http://scripts.sil.org/OFL )  

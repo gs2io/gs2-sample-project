@@ -27,7 +27,7 @@ A sample of the content to be displayed in the announcement is available on gith
 ZIP the content files downloaded from this page, and then  
 Upload the master data from `Import Master Data` in the __GS2-News__ section of the Management Console.
 
-````
+```
 Folder Composition
 
 gs2-news-sample
@@ -42,9 +42,17 @@ gs2-news-sample
 
 ## About WebView
 
-The WebView used in the sample is unity-webview(https://github.com/gree/unity-webview).  
+The sample uses the free WebView plug-in [unity-webview](https://github.com/gree/unity-webview) as an environment to try out GS2-News.  
 The supported platforms are iOS/Android/mac, and Windows operation is not supported.  
-It is installed from the package manager.
+It is installed by the package manager according to the sample manifest.json.  
+
+However, unity-webview lacks some functionality in handling cookies and is not recommended.  
+The paid plug-in [UniWebView](https://uniwebview.com/) is the recommended environment (support for external plug-ins is outside the scope of GS2's services).  
+
+If you already have UniWebView, install it in the Assets folder and uncomment the first line of WebViewDialog.cs to work with UniWebView.
+```c#
+//#define USE_UNIWEBVIEW
+```
 
 ## Flow of displaying notifications
 
@@ -106,21 +114,33 @@ onGetContentsUrl.Invoke(cookies, browserUrl, zipUrl);
 
 ### Open content in WebView
 
-Each cookie retrieved is set on the WebView side.  
-In the case of unity-webview, it is passed from EvaluateJS().
-Since the execution timing of the unity-webview JavaScript is at the completion of the page load, it is necessary to set the cookie in the Http header with AddCustomHeader() separately.
-separately set the cookie in the HTTP header with AddCustomHeader() to authenticate access privileges on the first page load.
+The three retrieved cookies are set on the WebView side.  
+In the case of unity-webview, a page for cookie setting in JavaScript is generated, set by passing it to loadHTML, and then the desired page is loaded.
 
 ```c#
-webViewObject.EvaluateJS("document.cookie = '" + key + "=" + value + "';");
+string html = "<html lang=\"utf-8\"><head><title></title><script>\n";
+foreach (var cookie in _newsModel.cookies)
+{
+    html += String.Format("document.cookie = '{0}={1}; path=/'; \n", cookie.Key, cookie.Value);
+}
+html += "</script></head><body></body></html>";
+UIManager.Instance.LoadHTML(html, _newsModel.browserUrl);
 ```
 
+Open the destination URL in WebView.。
+
 ```c#
-webViewObject.AddCustomHeader(headerKey, headerValue);
+webViewObject.LoadURL(url);
+```
+
+If it is UniWebView, set the cookie setting on the UniWebView side.
+
+```c#
+UniWebView.SetCookie(url, key + "=" + value + "; path=/;");
 ```
 
 Open the connection URL in WebView.
 
 ```c#
-webViewObject.LoadURL(url);
+webViewObject.Load(url);
 ```

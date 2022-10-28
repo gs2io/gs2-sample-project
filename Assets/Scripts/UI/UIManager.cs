@@ -190,24 +190,19 @@ namespace Gs2.Sample
             dialog2.AddNegativeListener(callback);
         }
 
-        public void InitWebViewDialog(string title, UnityAction callback = null)
+        public void InitWebViewDialog(string title)
         {
-            webViewDialog.Init(title, callback);
+            webViewDialog.Init(title);
+        }
+
+        public bool UseUniWebView()
+        {
+            return webViewDialog.UseUniWebView();
         }
         
-        public void SetCustomHeader(string headerKey, string headerValue)
+        public void SetCookie(string url, string key, string value)
         {
-            webViewDialog.SetCustomHeader(headerKey, headerValue);
-        }
-        
-        public void SetCookie(string key, string value)
-        {
-            webViewDialog.SetCookie(key, value);
-        }
-        
-        public void SaveCookie()
-        {
-            webViewDialog.SaveCookie();
+            webViewDialog.SetCookie(url, key, value);
         }
         
         public void ClearCookie()
@@ -215,14 +210,19 @@ namespace Gs2.Sample
             webViewDialog.ClearCookie();
         }
 		
-        public bool isWebViewActiveAndEnabled()
+        public bool IsWebViewActiveAndEnabled()
         {
-            return webViewDialog.isActiveAndEnabled();
+            return webViewDialog.IsActiveAndEnabled();
         }
         
         public void LoadURL(string url)
         {
             webViewDialog.LoadURL(url);
+        }
+        
+        public void LoadHTML(string html, string baseUrl)
+        {
+            webViewDialog.LoadHTML(html, baseUrl);
         }
         
 		public bool IsWebViewLoading()

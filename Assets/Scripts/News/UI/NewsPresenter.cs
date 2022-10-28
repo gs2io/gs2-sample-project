@@ -50,7 +50,6 @@ namespace Gs2.Sample.News
                 _newsSetting.onError
             );
         }
-        
 #if GS2_ENABLE_UNITASK
         /// <summary>
         /// お知らせの初期化
@@ -95,37 +94,42 @@ namespace Gs2.Sample.News
                 _newsSetting.onGetContentsUrl,
                 _newsSetting.onError
             );
-
-            UIManager.Instance.InitWebViewDialog("Notice", SetCookieCallback);
-            while (!UIManager.Instance.isWebViewActiveAndEnabled())
+            
+            UIManager.Instance.InitWebViewDialog("Notice");
+            while (!UIManager.Instance.IsWebViewActiveAndEnabled())
             {
                 yield return null;
             }
-			
             UIManager.Instance.ClearCookie();
-            
-            string cookieValue = string.Empty;
-            foreach (var cookie in _newsModel.cookies)
+
+            if (UIManager.Instance.UseUniWebView())
             {
-                cookieValue += cookie.Key + "=" + cookie.Value + "; ";
+                foreach (var cookie in _newsModel.cookies)
+                {
+                    UIManager.Instance.SetCookie(_newsModel.browserUrl, cookie.Key, cookie.Value);
+                }
             }
-            UIManager.Instance.SetCustomHeader("Cookie", cookieValue);
-			
-			UIManager.Instance.LoadURL(_newsModel.browserUrl);
-			while (UIManager.Instance.IsWebViewLoading())
+            else
+            {
+                string html = "<html lang=\"utf-8\"><head><title></title><script>\n";
+                foreach (var cookie in _newsModel.cookies)
+                {
+                    html += String.Format("document.cookie = '{0}={1}; path=/'; \n", cookie.Key, cookie.Value);
+                }
+                html += "</script></head><body></body></html>";
+                UIManager.Instance.LoadHTML(html, _newsModel.browserUrl);
+                while (UIManager.Instance.IsWebViewLoading())
+                {
+                    yield return null;
+                }
+            }
+
+            UIManager.Instance.LoadURL(_newsModel.browserUrl);
+            while (UIManager.Instance.IsWebViewLoading())
             {
                 yield return null;
             }
 			UIManager.Instance.SetVisibility(true);
-		}
-		
-		private void SetCookieCallback()
-		{
-		    foreach (var cookie in _newsModel.cookies)
-            {
-                UIManager.Instance.SetCookie(cookie.Key, cookie.Value);
-            }
-			UIManager.Instance.SaveCookie();
 		}
 		
 #if GS2_ENABLE_UNITASK
@@ -146,22 +150,35 @@ namespace Gs2.Sample.News
                 _newsSetting.onError
             );
 
-            UIManager.Instance.InitWebViewDialog("Notice", SetCookieCallback);
-            
-            while (!UIManager.Instance.isWebViewActiveAndEnabled())
+            UIManager.Instance.InitWebViewDialog("Notice");
+            while (!UIManager.Instance.IsWebViewActiveAndEnabled())
             {
                 await UniTask.DelayFrame(1);
             }
-            
             UIManager.Instance.ClearCookie();
-            
-            string cookieValue = string.Empty;
-            foreach (var cookie in _newsModel.cookies)
+
+            if (UIManager.Instance.UseUniWebView())
             {
-                cookieValue += cookie.Key + "=" + cookie.Value + "; ";
+                foreach (var cookie in _newsModel.cookies)
+                {
+                    UIManager.Instance.SetCookie(_newsModel.browserUrl, cookie.Key, cookie.Value);
+                }
             }
-            UIManager.Instance.SetCustomHeader("Cookie", cookieValue);
-            
+            else
+            {
+                string html = "<html lang=\"utf-8\"><head><title></title><script>\n";
+                foreach (var cookie in _newsModel.cookies)
+                {
+                    html += String.Format("document.cookie = '{0}={1}; path=/'; \n", cookie.Key, cookie.Value);
+                }
+                html += "</script></head><body></body></html>";
+                UIManager.Instance.LoadHTML(html, _newsModel.browserUrl);
+                while (UIManager.Instance.IsWebViewLoading())
+                {
+                    await UniTask.DelayFrame(1);
+                }
+            }
+
             UIManager.Instance.LoadURL(_newsModel.browserUrl);
             while (UIManager.Instance.IsWebViewLoading())
             {

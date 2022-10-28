@@ -1,3 +1,5 @@
+//#define USE_UNIWEBVIEW // Enable this when using UniWebView.
+
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -12,7 +14,11 @@ public class WebViewDialog : MonoBehaviour
     [SerializeField] private CanvasScaler canvasScaler;
     [SerializeField] private RectOffset padding;
 
+#if USE_UNIWEBVIEW
+    private UniWebView webViewObject;
+#else
     private WebViewObject webViewObject;
+#endif
 
     public UnityEvent OnLoaded = new UnityEvent();
 
@@ -23,8 +29,58 @@ public class WebViewDialog : MonoBehaviour
     {
         closeButton.onClick.AddListener(Hide);
     }
-	
-    private void Initialize(UnityAction callback = null)
+
+    public bool UseUniWebView()
+    {
+#if USE_UNIWEBVIEW
+        return true;
+#else
+        return false;
+#endif
+    }
+#if USE_UNIWEBVIEW
+    private void Initialize()
+    {
+        if (!webViewObject)
+        {
+            webViewObject = new GameObject("WebViewObject").AddComponent<UniWebView>();
+            
+            float coefficient = 0.0f;
+            Vector2 reference = canvasScaler.referenceResolution;
+            int horizon = (int)((Screen.width - (reference.x * Screen.height / reference.y)) / 2);
+            int vertical = (int)((Screen.height - (reference.y * Screen.width / reference.x)) / 2);
+            if (horizon < 0)
+            {
+                horizon = 0;
+                coefficient = Screen.width / reference.x;
+            }
+            if (vertical < 0)
+            {
+                vertical = 0;
+                coefficient = Screen.height / reference.y;
+            }
+            if (coefficient == 0)
+            {
+                coefficient = Screen.width / reference.x;
+            }
+            webViewObject.Frame = new Rect(
+                horizon + (int)(padding.left * coefficient),
+                vertical + (int)(padding.top * coefficient),
+                Screen.width - (horizon + (int)(padding.left * coefficient)) - (horizon + (int)(padding.right * coefficient)) ,
+                Screen.height - (vertical + (int)(padding.top * coefficient)) - (vertical + (int)(padding.bottom * coefficient))
+            );
+            
+		    webViewObject.Hide();
+		    webViewObject.gameObject.SetActive(true);
+        }
+	    else
+	    {
+		    webViewObject.Hide();
+		    webViewObject.gameObject.SetActive(true);
+	    }
+    }
+#else
+    private void Initialize()
     {
         if (!webViewObject)
         {
@@ -39,17 +95,12 @@ public class WebViewDialog : MonoBehaviour
 				ld: (msg) => {
 				    isLoading = false;
 				    Debug.Log("Loaded : " + msg);
-
-					OnLoaded.Invoke();
 				},
 				err: (msg) => {
 				    Debug.Log("Error : " + msg);
 				},
                 enableWKWebView: true
             );
-            
-            if (callback != null)
-	            OnLoaded.AddListener(callback);
             
             float coefficient = 0.0f;
             Vector2 reference = canvasScaler.referenceResolution;
@@ -85,57 +136,77 @@ public class WebViewDialog : MonoBehaviour
 			webViewObject.gameObject.SetActive(true);
 		}
     }
-    
-    public void Init(string _title, UnityAction callback = null)
+#endif
+
+    public void Init(string _title)
     {
-        Initialize(callback);
+        Initialize();
         
         title.SetText(_title);
     }
     
-    public void SetCustomHeader(string headerKey, string headerValue)
+    public void SetCookie(string url, string key, string value)
     {
-	    webViewObject.RemoveCustomHeader(headerKey);
-	    webViewObject.AddCustomHeader(headerKey, headerValue);
-	    Debug.Log("headerKey : " + headerKey);
-	    Debug.Log("headerValue : " + headerValue);
-    }
-
-    public void SetCookie(string key, string value)
-    {
-        webViewObject.EvaluateJS(@"document.cookie = '" + key + "=" + value + "'");
-        Debug.Log("key : " + key);
-        Debug.Log("value : " + value);
+#if !USE_UNIWEBVIEW
+        ;
+#else
+        UniWebView.SetCookie(url, key + "=" + value + "; path=/;");
+#endif
     }
     
-    public void SaveCookie()
-    {
-        webViewObject.SaveCookies();
-    }
-
     public void ClearCookie()
     {
+#if !USE_UNIWEBVIEW
         webViewObject.ClearCookies();
+#else
+        UniWebView.ClearCookies();
+#endif
     }
 	
-    public bool isActiveAndEnabled()
+    public bool IsActiveAndEnabled()
     {
         return webViewObject.isActiveAndEnabled;
     }
     
     public void LoadURL(string url)
     {
+#if !USE_UNIWEBVIEW
         webViewObject.LoadURL(url);
+#else
+        webViewObject.Load(url);
+#endif
 		
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX
         text.SetText("Open : " + url);
 #endif
+#if !USE_UNIWEBVIEW
 	    isLoading = true;
+#endif
+    }
+    
+    public void LoadHTML(string html, string baseUrl)
+    {
+#if !USE_UNIWEBVIEW
+        webViewObject.LoadHTML(html, baseUrl);
+#else
+        webViewObject.LoadHTMLString(html, baseUrl);
+#endif
+		
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX
+        text.SetText("Open : " + html);
+#endif
+#if !USE_UNIWEBVIEW
+        isLoading = true;
+#endif
     }
     
     public bool IsLoading()
     {
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX
+        return false;
+#else
         return isLoading;
+#endif
     }
 	
 	public void Reload()
@@ -145,13 +216,24 @@ public class WebViewDialog : MonoBehaviour
 	
     public void SetVisibility(bool visible)
     {
+#if !USE_UNIWEBVIEW
         webViewObject.SetVisibility(visible);
+#else
+        if (visible)
+            webViewObject.Show();
+        else
+            webViewObject.Hide();
+#endif
         this.gameObject.SetActive(visible);
     }
 
     public void Hide()
     {
+#if !USE_UNIWEBVIEW
         webViewObject.SetVisibility(false);
+#else
+        webViewObject.Hide();
+#endif
         this.gameObject.SetActive(false);
 		
         webViewObject.gameObject.SetActive(false);

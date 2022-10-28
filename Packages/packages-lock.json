@@ -21,7 +21,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ide.rider": {
-      "version": "3.0.15",
+      "version": "3.0.16",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -69,7 +69,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.purchasing": {
-      "version": "4.3.0",
+      "version": "4.5.1",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -105,7 +105,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.test-framework": {
-      "version": "1.1.31",
+      "version": "1.1.33",
       "depth": 1,
       "source": "registry",
       "dependencies": {
@@ -134,7 +134,7 @@
       }
     },
     "io.gs2.csharp.sdk": {
-      "version": "2022.9.2",
+      "version": "2022.10.10",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -143,7 +143,7 @@
       "url": "https://upm.gs2.io/npm"
     },
     "io.gs2.unity.sdk": {
-      "version": "2022.9.3",
+      "version": "2022.10.4",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -156,7 +156,7 @@
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "b0bd77c2430f555bc430b182e1c56fb5e8888c2a"
+      "hash": "151053c9058c7a740f09139c6b2ebe89b8e9d44b"
     },
     "com.unity.modules.androidjni": {
       "version": "1.0.0",

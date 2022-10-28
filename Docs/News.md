@@ -24,7 +24,7 @@
 
 お知らせで表示するコンテンツのサンプルが、githubの  
 [gs2-news-sample](https://github.com/gs2io/gs2-news-sample) にありますので、  
-こちらのページからダウンロードしたコンテンツファイル群をZIP形式で圧縮し、  
+こちらのページからダウンロードしたコンテンツファイル群をZip形式で圧縮し、  
 マネージメントコンソールの __GS2-News__ の項目の`マスターデータのインポート`よりアップロードしてください。  
 
 ```
@@ -42,15 +42,26 @@ gs2-news-sample
 
 ## WebViewについて
 
-サンプルで使用しているWebViewは　unity-webview(https://github.com/gree/unity-webview) です。  
+サンプルではGS2-Newsの動作をお試し頂く環境として、無料のWebViewプラグイン [unity-webview](https://github.com/gree/unity-webview) を使用しています。  
 対応プラットフォームは iOS/Android/mac となっており、Windowsでの動作には対応しておりません。  
-パッケージマネージャーからインストールされます。  
+サンプルのmanifest.jsonによりパッケージマネージャーでインストールされます。  
+
+※ただし、unity-webviewにはCookieの扱いで機能不足な部分があり、非推奨の環境となります。
+有料プラグインの [UniWebView](https://uniwebview.com/) を推奨環境としています
+（外部プラグインのサポートについてはGS2のサービスの範囲外となります）。
+
+UniWebViewをすでにお持ちの方は、Assetsフォルダにインストールののち、
+WebViewDialog.cs の１行目にある
+```c#
+//#define USE_UNIWEBVIEW
+```
+のコメントアウトを外すと、UniWebViewで動作するようになっています。
 
 ## お知らせの表示の流れ
 
 ### URLとクッキー値の取得
 
-GS2-Newsから、展開された配信コンテンツへの接続URLと、アクセス権限の検証のために使用するクッキーのキーと値を取得します。
+GS2-Newsから、静的に生成された配信コンテンツへの接続先URLと、アクセス権限検証に使用するCookieのKeyとValueを取得します。
 
 ・UniTask有効時
 ```c#
@@ -106,21 +117,35 @@ onGetContentsUrl.Invoke(cookies, browserUrl, zipUrl);
 
 ### WebViewでコンテンツを開く
 
-取得したそれぞれのCookieをWebView側に設定します。  
-unity-webview の場合は EvaluateJS() から渡します。
-unity-webviewのJavaScriptの実行タイミングはページ読み込み完了時になるため、
-別途 AddCustomHeader() でHTTPヘッダーにCookieを設定し、初回のページ読み込みでのアクセス権限の認証を行います。
+取得した3つのCookieをWebView側に設定します。  
+unity-webview の場合は、JavaScriptのcookie設定用ページを生成し、loadHTMLに渡すことで設定した後、目的のページをロードしています。
 
 ```c#
-webViewObject.EvaluateJS("document.cookie = '" + key + "=" + value + "';");
+string html = "<html lang=\"utf-8\"><head><title></title><script>\n";
+foreach (var cookie in _newsModel.cookies)
+{
+    html += String.Format("document.cookie = '{0}={1}; path=/'; \n", cookie.Key, cookie.Value);
+}
+html += "</script></head><body></body></html>";
+UIManager.Instance.LoadHTML(html, _newsModel.browserUrl);
 ```
 
+WebViewで接続先URLを開きます。
+
 ```c#
-webViewObject.AddCustomHeader(headerKey, headerValue);
+webViewObject.LoadURL(url);
+```
+
+
+UniWebViewであれば、cookieを設定をUniWebView側に設定します。
+
+
+```c#
+UniWebView.SetCookie(url, key + "=" + value + "; path=/;");
 ```
 
 WebViewで接続URLを開きます。
 
 ```c#
-webViewObject.LoadURL(url);
+webViewObject.Load(url);
 ```
