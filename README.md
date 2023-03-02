@@ -7,10 +7,10 @@ This is a sample implementation using various GS2 functions for a rough flow in 
 
 ## Operating Environment
 
-Unity 2020.3.41f1  LTS
+Unity 2020.3.45f1  LTS
 
-GS2 SDK for Unity 2022.10.4  
-GS2 C# SDK 2022.10.10
+GS2 SDK for Unity 2023.2.8  
+GS2 C# SDK 2023.2.7
 
 ## Notes
 

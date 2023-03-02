@@ -42,16 +42,16 @@ namespace Gs2.Sample
 
         private GameState gameState = GameState.START;
 
-        [Tooltip("アプリ起動時のアプリバージョンチェックをスキップします。")]
+        [Tooltip("アプリ起動時のアプリバージョンチェックをスキップします。\nSkip app version check at app startup.")]
         public bool skipCheckVersion = true;
-        [Tooltip("アプリ起動時の利用規約チェックをスキップします。")]
+        [Tooltip("アプリ起動時の利用規約チェックをスキップします。\nSkip the Terms of Use check when launching the application.")]
         public bool skipCheckTerm = true;
         
         [SerializeField] private VersionModel _versionModel;
         [SerializeField] private TermModel _termModel;
 
         [SerializeField] public AccountTakeOverPresenter takeoverPresenter;
-        
+
         [SerializeField] public StaminaPresenter staminaPresenter;
         [SerializeField] public MoneyPresenter moneyPresenter;
         [SerializeField] public GoldPresenter goldPresenter;
@@ -61,13 +61,13 @@ namespace Gs2.Sample
         [SerializeField] public LotteryStorePresenter lotteryStorePresenter;
         [SerializeField] public UnitPresenter unitPresenter;
         [SerializeField] public ExperiencePresenter experiencePresenter;
-        
+
         [SerializeField] public ChatPresenter chatPresenter;
         [SerializeField] public FriendPresenter friendPresenter;
-        
+
         [SerializeField] public MatchmakingPresenter matchmakingPresenter;
         [SerializeField] public RealtimePresenter realtimePresenter;
-        
+
         /// <summary>
         /// アカウント情報の保存領域
         /// Account information storage area
@@ -75,10 +75,10 @@ namespace Gs2.Sample
         [SerializeField] public PlayerPrefsAccountRepository accountRepository;
 
         private int _saveSlot = 0;
-        
+
         private Profile _profile;
         public Profile Profile => _profile;
-        
+
         private Gs2Domain _domain;
         public Gs2Domain Domain => _domain;
 
@@ -89,40 +89,33 @@ namespace Gs2.Sample
 
         private Coroutine _dispatchCoroutine;
 
-        
+
         /// <summary>
         /// クレデンシャル 認証情報
         /// Credential
         /// </summary>
-        [SerializeField]
-        private CredentialSetting _credentialSetting;
+        [SerializeField] private CredentialSetting _credentialSetting;
 
         /// <summary>
         /// ログイン
         /// Login
         /// </summary>
-        [SerializeField]
-        private LoginSetting _loginSetting;
+        [SerializeField] private LoginSetting _loginSetting;
 
-        [SerializeField]
-        private VersionSetting _versionSetting;
-        
-        [SerializeField]
-        private TermSetting _termSetting;
-        
+        [SerializeField] private Gs2.Sample.Version.VersionSetting _versionSetting;
+
+        [SerializeField] private TermSetting _termSetting;
+
         // Stamina
-        [SerializeField]
-        private StaminaSetting _staminaSetting;
+        [SerializeField] private StaminaSetting _staminaSetting;
         private StaminaModel _staminaModel;
-        
+
         // Money
-        [SerializeField]
-        private MoneySetting _moneySetting;
+        [SerializeField] private MoneySetting _moneySetting;
         private MoneyModel _moneyModel;
-        
+
         // Gold
-        [SerializeField]
-        private GoldSetting _goldSetting;
+        [SerializeField] private GoldSetting _goldSetting;
         private GoldModel _goldModel;
 
         // Realtime
@@ -135,24 +128,24 @@ namespace Gs2.Sample
         public void Start()
         {
             Assert.IsNotNull(_credentialSetting);
-            
+
             Assert.IsNotNull(_loginSetting);
-            
+
             Assert.IsNotNull(_staminaSetting);
             _staminaModel = GetComponent<StaminaModel>();
             Assert.IsNotNull(_staminaModel);
-            
+
             Assert.IsNotNull(_moneySetting);
             _moneyModel = GetComponent<MoneyModel>();
             Assert.IsNotNull(_moneyModel);
-            
+
             Assert.IsNotNull(_goldSetting);
             _goldModel = GetComponent<GoldModel>();
             Assert.IsNotNull(_goldModel);
 
             _realtimeModel = GetComponent<RealtimeModel>();
             Assert.IsNotNull(_realtimeModel);
-            
+
             UIManager.Instance.SetActiveGame(false);
         }
 
@@ -171,7 +164,7 @@ namespace Gs2.Sample
             UIManager.Instance.SetSelectAccountButtonInteractable(false);
             UIManager.Instance.SetRemoveAccountButtonInteractable(false);
             UIManager.Instance.SetActiveTitleProgress(true);
-            
+
             UIManager.Instance.SetTapToStartInteractable(false);
             UIManager.Instance.SetTakeOverInteractable(false);
             UIManager.Instance.SetNewsInteractable(false);
@@ -185,7 +178,7 @@ namespace Gs2.Sample
         public void InitializeCredential()
         {
             UIManager.Instance.AddLog("InitializeCredential");
-            
+
 #if GS2_ENABLE_UNITASK
             InitializeGs2Async(
                 _credentialSetting.applicationClientId,
@@ -206,7 +199,7 @@ namespace Gs2.Sample
             );
 #endif
         }
-        
+
         /// <summary>
         /// GS2 SDK 初期化
         /// GS2 SDK Initialization
@@ -227,8 +220,11 @@ namespace Gs2.Sample
             );
 
             await _profile.InitializeAsync();
+
+            _profile.Gs2Session.OnDisconnect += DisconnectHandler;
+
             _domain = new Gs2Domain(_profile, distributorNamespaceName);
-            
+
             onInitializeGs2.Invoke(_domain);
         }
 #endif
@@ -244,14 +240,14 @@ namespace Gs2.Sample
             Assert.IsFalse(string.IsNullOrEmpty(clientSecret), "string.IsNullOrEmpty(clientSecret)");
             Assert.IsNotNull(onInitializeGs2, "onInitializeGs2 != null");
             Assert.IsNotNull(onError, "onError != null");
-            
+
             _profile = new Profile(
                 clientId,
                 clientSecret,
                 new Gs2BasicReopener()
             );
 
-            var future = _profile.Initialize();
+            var future = _profile.InitializeFuture();
             yield return future;
             if (future.Error != null)
             {
@@ -261,12 +257,19 @@ namespace Gs2.Sample
                 );
                 yield break;
             }
-            
+
+            _profile.Gs2Session.OnDisconnect += DisconnectHandler;
+
             var domain = new Gs2Domain(_profile, distributorNamespaceName);
 
             onInitializeGs2.Invoke(domain);
         }
-        
+
+        public void DisconnectHandler()
+        {
+            Debug.Log("OnDisconnect");
+        }
+
         /// <summary>
         /// 想定上のアプリケーション終了
         /// Application termination on assumption
@@ -467,7 +470,7 @@ namespace Gs2.Sample
             UIManager.Instance.AddLog("Login");
 
             _loginSetting.onLogin.AddListener(OnLogin);
-            _loginSetting.onError.AddListener(OnError);
+            _loginSetting.onError.AddListener(OnLoginError);
             
             await AutoLoginAsync(
                 accountRepository,
@@ -492,7 +495,7 @@ namespace Gs2.Sample
             UIManager.Instance.AddLog("Login");
 
             _loginSetting.onLogin.AddListener(OnLogin);
-            _loginSetting.onError.AddListener(OnError);
+            _loginSetting.onError.AddListener(OnLoginError);
             
             yield return AutoLogin(
                 accountRepository,
@@ -746,11 +749,19 @@ namespace Gs2.Sample
             {
                 var future = _profile.LoginFuture(
                     new Gs2AccountAuthenticator(
+                        _profile.Gs2Session,
                         _profile.Gs2RestSession,
                         accountNamespaceName,
                         accountEncryptionKeyId,
                         userId,
-                        password
+                        password,
+                        // サーバからプッシュ通知を受けるためのユーザーIDを設定
+                        // Set user ID to receive push notifications from the server
+                        new GatewaySetting 
+                        {
+                            gatewayNamespaceName = gatewayNamespaceName,
+                            allowConcurrentAccess = false
+                        }
                     )
                 );
                 yield return future;
@@ -763,37 +774,7 @@ namespace Gs2.Sample
                 gameSession = future.Result;
             }
 
-            UIManager.Instance.AddLog("Gateway.SetUserId");
-
-            // サーバからプッシュ通知を受けるためのユーザーIDを設定
-            // Set user ID to receive push notifications from the server
-            {
-                var domain = gs2.Gateway.Namespace(
-                    namespaceName: gatewayNamespaceName
-                ).Me(
-                    gameSession: gameSession
-                ).WebSocketSession();
-                var future = domain.SetUserId(
-                    allowConcurrentAccess: null
-                );
-                yield return future;
-                if (future.Error != null)
-                {
-                    onError.Invoke(future.Error, null);
-                    yield break;
-                }
-                var result = future.Result;
-                var future2 = result.Model();
-                yield return future2;
-                if (future2.Error != null)
-                {
-                    onError.Invoke(future2.Error, null);
-                    yield break;
-                }
-                var item = future2.Result;
-                
-                onLogin.Invoke(gameSession);
-            }
+            onLogin.Invoke(gameSession);
         }
 #if GS2_ENABLE_UNITASK
         /// <summary>
@@ -818,11 +799,19 @@ namespace Gs2.Sample
             {
                 gameSession = await _profile.LoginAsync(
                     new Gs2AccountAuthenticator(
+                        _profile.Gs2Session,
                         _profile.Gs2RestSession,
                         accountNamespaceName,
                         accountEncryptionKeyId,
                         userId,
-                        password
+                        password,
+                        // サーバからプッシュ通知を受けるためのユーザーIDを設定
+                        // Set user ID to receive push notifications from the server
+                        new GatewaySetting 
+                        {
+                            gatewayNamespaceName = gatewayNamespaceName,
+                            allowConcurrentAccess = false
+                        }
                     )
                 );
             }
@@ -832,21 +821,6 @@ namespace Gs2.Sample
                 return;
             }
 
-            UIManager.Instance.AddLog("Gateway.SetUserId");
-
-            // サーバからプッシュ通知を受けるためのユーザーIDを設定
-            // Set user ID to receive push notifications from the server
-            
-            var domain = gs2.Gateway.Namespace(
-                namespaceName: gatewayNamespaceName
-            ).Me(
-                gameSession: gameSession
-            ).WebSocketSession();
-            var result = await domain.SetUserIdAsync(
-                allowConcurrentAccess: null
-            );
-            var item = await result.ModelAsync();
-            
             onLogin.Invoke(gameSession);
         }
 #endif
@@ -1051,34 +1025,41 @@ namespace Gs2.Sample
         /// </summary>
         private void OnLoginError(Gs2Exception e, Func<IEnumerator> retry)
         {
-            if (e.Errors[0].message == "account.account.account.error.notAuthorized")
+            if (e.Errors.Length > 0)
             {
-                switch (UIManager.Instance.Lang)
+                if (e.Errors[0].message == "account.account.account.error.notAuthorized")
                 {
-                    case  UIManager.Language.ja:
-                        Debug.Log("アカウントの認証に失敗したため、アカウントを削除します。");
-                        break;
-                    case  UIManager.Language.en:
-                        Debug.Log("Delete account due to account authorization failure.");
-                        break;
-                }
-                accountRepository.DeleteAccount();
-            }
-            else if (e.Errors[0].message == "account.account.account.error.notFound")
-            {
-                switch (UIManager.Instance.Lang)
-                {
-                    case UIManager.Language.ja:
-                        Debug.Log("アカウントの認証に失敗したため、アカウントを削除します。");
-                        break;
-                    case UIManager.Language.en:
-                        Debug.Log("Delete account due to account authorization failure.");
-                        break;
-                }
-                accountRepository.DeleteAccount();
-            }
-        }
+                    switch (UIManager.Instance.Lang)
+                    {
+                        case UIManager.Language.ja:
+                            Debug.Log("アカウントの認証に失敗したため、アカウントを削除します。");
+                            break;
+                        case UIManager.Language.en:
+                            Debug.Log("Delete account due to account authorization failure.");
+                            break;
+                    }
 
+                    accountRepository.DeleteAccount();
+                }
+                else if (e.Errors[0].message == "account.account.account.error.notFound")
+                {
+                    switch (UIManager.Instance.Lang)
+                    {
+                        case UIManager.Language.ja:
+                            Debug.Log("アカウントの認証に失敗したため、アカウントを削除します。");
+                            break;
+                        case UIManager.Language.en:
+                            Debug.Log("Delete account due to account authorization failure.");
+                            break;
+                    }
+
+                    accountRepository.DeleteAccount();
+                }
+            }
+
+            UIManager.Instance.AddAcceptListner(OnFinish);
+        }
+        
         public void OnStartTitle()
         {
             takeoverPresenter.Initialize();

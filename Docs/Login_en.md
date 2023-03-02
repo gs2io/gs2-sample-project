@@ -97,35 +97,52 @@ try
 {
     gameSession = await _profile.LoginAsync(
         new Gs2AccountAuthenticator(
+            _profile.Gs2Session,
             _profile.Gs2RestSession,
             accountNamespaceName,
             accountEncryptionKeyId,
             userId,
-            password
+            password,
+            // Set user ID to receive push notifications from the server
+            new GatewaySetting 
+            {
+                gatewayNamespaceName = gatewayNamespaceName,
+                allowConcurrentAccess = false
+            },
+            null
         )
     );
 }
 catch (Gs2Exception e)
 {
-    onError.Invoke(e);
+    onError.Invoke(e, null);
     return;
 }
+
+onLogin.Invoke(gameSession);
 ```
 When coroutine is used
 ```c#
 var future = _profile.LoginFuture(
     new Gs2AccountAuthenticator(
+        _profile.Gs2Session,
         _profile.Gs2RestSession,
         accountNamespaceName,
         accountEncryptionKeyId,
         userId,
-        password
+        password,
+        // Set user ID to receive push notifications from the server
+        new GatewaySetting 
+        {
+            gatewayNamespaceName = gatewayNamespaceName,
+            allowConcurrentAccess = false
+        }
     )
 );
 yield return future;
 if (future.Error != null)
 {
-    onError.Invoke(future.Error);
+    onError.Invoke(future.Error, null);
     yield break;
 }
 
@@ -139,55 +156,16 @@ When the access token is successfully renewed, access to the API can be continue
 
 | Arguments | Description |
 ------|-----
-| Gs2RestSession session | session class used by Profile to connect to GS2 |
+| Gs2WebSocketSession session | WebSocket session class used by Profile to connect to GS2                  |
+| Gs2RestSession restSession | Rest session class used by Profile to connect to GS2                       |
 | string accountNamespaceName | Namespace name of GS2-Account |
 | string keyId | The encryption key GRN of the GS2-Key used to encrypt account information in GS2-Account |
 | string userId | User ID for EzAccount account information |
 | string password | Password for EzAccount account information |
+| GatewaySetting gatewaySetting | Call Gs2Gateway.SetUserId after login to set the user ID to receive push notifications from the server |
+| VersionSetting versionSetting | Call Gs2Version.CheckVersion after login to perform version check      |
 
-Receives a GameSession that holds an access token.
-
-When UniTask is enabled
-```c#
-var domain = gs2.Gateway.Namespace(
-    namespaceName: gatewayNamespaceName
-).Me(
-    gameSession: gameSession
-).WebSocketSession();
-var result = await domain.SetUserIdAsync(
-    allowConcurrentAccess: null
-);
-var item = await result.ModelAsync();
-
-onLogin.Invoke(gameSession);
-```
-When coroutine is used
-```c#
-var domain = gs2.Gateway.Namespace(
-    namespaceName: gatewayNamespaceName
-).Me(
-    gameSession: gameSession
-).WebSocketSession();
-var future = domain.SetUserId(
-    allowConcurrentAccess: null
-);
-yield return future;
-if (future.Error != null)
-{
-    onError.Invoke(future.Error);
-    yield break;
-}
-var result = future.Result;
-var future2 = result.Model();
-yield return future2;
-if (future2.Error != null)
-{
-    onError.Invoke(future2.Error);
-    yield break;
-}
-var item = future2.Result;
-```
-
+Receives a GameSession that holds an access token.  
 Set your own user ID logged in to [GS2-Gateway](https://app.gs2.io/docs/en/index.html#gs2-gateway) and
 and receive push notifications for this user client.  
 Notification of message posting in chat ([GS2-Chat](Chat_en.md)), notification of

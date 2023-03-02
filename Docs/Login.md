@@ -98,35 +98,51 @@ try
 {
     gameSession = await _profile.LoginAsync(
         new Gs2AccountAuthenticator(
+            _profile.Gs2Session,
             _profile.Gs2RestSession,
             accountNamespaceName,
             accountEncryptionKeyId,
             userId,
-            password
+            password,
+            // サーバからプッシュ通知を受けるためのユーザーIDを設定
+            new GatewaySetting 
+            {
+                gatewayNamespaceName = gatewayNamespaceName,
+                allowConcurrentAccess = false
+            }
         )
     );
 }
 catch (Gs2Exception e)
 {
-    onError.Invoke(e);
+    onError.Invoke(e, null);
     return;
 }
+
+onLogin.Invoke(gameSession);
 ```
 ・コルーチン使用
 ```c#
 var future = _profile.LoginFuture(
     new Gs2AccountAuthenticator(
+        _profile.Gs2Session,
         _profile.Gs2RestSession,
         accountNamespaceName,
         accountEncryptionKeyId,
         userId,
-        password
+        password,
+        // サーバからプッシュ通知を受けるためのユーザーIDを設定
+        new GatewaySetting 
+        {
+            gatewayNamespaceName = gatewayNamespaceName,
+            allowConcurrentAccess = false
+        }
     )
 );
 yield return future;
 if (future.Error != null)
 {
-    onError.Invoke(future.Error);
+    onError.Invoke(future.Error, null);
     yield break;
 }
 
@@ -138,58 +154,19 @@ Gs2AccountAuthenticator という認証クラスに以下の引数を渡し、Lo
 Profile はAPIへのアクセス時、アクセストークンの期限が切れていることがエラーとして返されたときにはGs2AccountAuthenticatorを使用して再認証を自動で試みます。
 アクセストークンの更新が成功したときは継続してAPIにアクセスを行うことができます。
 
-| 引数 | 説明 |
-------|-----
-| Gs2RestSession session | ProfileがGS2との接続に使用するセッションクラス |
-| string accountNamespaceName | GS2-Accountのネームスペース名                          |
-| string keyId | GS2-Account でアカウント情報の暗号化に使用する GS2-Key の暗号鍵GRN |
-| string userId | EzAccount　アカウント情報のユーザーID                      |
-| string password | EzAccount　アカウント情報のパスワード                       |
+| 引数 | 説明                                                     |
+------|--------------------------------------------------------
+| Gs2WebSocketSession session | ProfileがGS2との接続に使用するWebSocketセッションクラス                  |
+| Gs2RestSession restSession | ProfileがGS2との接続に使用するRestセッションクラス                       |
+| string accountNamespaceName | GS2-Accountのネームスペース名                                   |
+| string keyId | GS2-Account でアカウント情報の暗号化に使用する GS2-Key の暗号鍵GRN          |
+| string userId | EzAccount　アカウント情報のユーザーID                               |
+| string password | EzAccount　アカウント情報のパスワード                                |
+| GatewaySetting gatewaySetting | ログイン後に Gs2Gateway.SetUserId を呼び出し、サーバからプッシュ通知を受けるためのユーザーIDを設定 |
+| VersionSetting versionSetting | ログイン後に Gs2Version.CheckVersion を呼び出し、バージョンチェックを実行      |
 
-アクセストークンを保持する GameSessionを受け取ります。
-
-・UniTask有効時
-```c#
-var domain = gs2.Gateway.Namespace(
-    namespaceName: gatewayNamespaceName
-).Me(
-    gameSession: gameSession
-).WebSocketSession();
-var result = await domain.SetUserIdAsync(
-    allowConcurrentAccess: null
-);
-var item = await result.ModelAsync();
-
-onLogin.Invoke(gameSession);
-```
-・コルーチン使用時
-```c#
-var domain = gs2.Gateway.Namespace(
-    namespaceName: gatewayNamespaceName
-).Me(
-    gameSession: gameSession
-).WebSocketSession();
-var future = domain.SetUserId(
-    allowConcurrentAccess: null
-);
-yield return future;
-if (future.Error != null)
-{
-    onError.Invoke(future.Error);
-    yield break;
-}
-var result = future.Result;
-var future2 = result.Model();
-yield return future2;
-if (future2.Error != null)
-{
-    onError.Invoke(future2.Error);
-    yield break;
-}
-var item = future2.Result;
-```
-
+アクセストークンを保持する GameSessionを受け取ります。  
 [GS2-Gateway](https://app.gs2.io/docs/index.html#gs2-gateway) にログインした自分のユーザーIDを設定し、このユーザークライアントに対するプッシュ通知を受け取れるようにしています。  
-チャット([GS2-Chat](Chat.md))のメッセージ投稿の通知、フレンド申請([GS2-Friend](Friend.md))等の通知、マッチメイキング([GS2-Matchmaking](Matchmaking.md))の遷移の通知を受けとるために使用します。
+チャット([GS2-Chat](Chat.md))のメッセージ投稿の通知、フレンド申請([GS2-Friend](Friend.md))等の通知、マッチメイキング([GS2-Matchmaking](Matchmaking.md))の遷移の通知を受け取るために使用します。
 
 

@@ -22,8 +22,12 @@ public class WebViewDialog : MonoBehaviour
 
     public UnityEvent OnLoaded = new UnityEvent();
 
+#if !UNITY_EDITOR_WIN && !UNITY_STANDALONE_WIN && !UNITY_EDITOR_LINUX
+#if !USE_UNIWEBVIEW
     private bool isLoading;
-    
+#endif
+#endif
+
     // Start is called before the first frame update
     void Start()
     {
@@ -38,6 +42,8 @@ public class WebViewDialog : MonoBehaviour
         return false;
 #endif
     }
+
+#if !UNITY_EDITOR_WIN && !UNITY_STANDALONE_WIN && !UNITY_EDITOR_LINUX
 #if USE_UNIWEBVIEW
     private void Initialize()
     {
@@ -137,10 +143,13 @@ public class WebViewDialog : MonoBehaviour
 		}
     }
 #endif
+#endif
 
     public void Init(string _title)
     {
+#if !UNITY_EDITOR_WIN && !UNITY_STANDALONE_WIN && !UNITY_EDITOR_LINUX
         Initialize();
+#endif
         
         title.SetText(_title);
     }
@@ -178,9 +187,10 @@ public class WebViewDialog : MonoBehaviour
 		
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX
         text.SetText("Open : " + url);
-#endif
+#else
 #if !USE_UNIWEBVIEW
 	    isLoading = true;
+#endif
 #endif
     }
     
@@ -194,9 +204,10 @@ public class WebViewDialog : MonoBehaviour
 		
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX
         text.SetText("Open : " + html);
-#endif
+#else
 #if !USE_UNIWEBVIEW
         isLoading = true;
+#endif
 #endif
     }
     
