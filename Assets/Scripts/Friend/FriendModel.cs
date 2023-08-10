@@ -1113,17 +1113,7 @@ namespace Gs2.Sample.Friend
 		        yield break;
 	        }
  
-	        var result = future.Result;
-	        var future2 = result.Model();
-	        yield return future2;
-	        if (future2.Error != null)
-	        {
-		        onError.Invoke(future2.Error, null);
-		        yield break;
-	        }
-
-	        var item = future2.Result;
-	        onUnfollow.Invoke(item);
+	        onUnfollow.Invoke();
         }
 #if GS2_ENABLE_UNITASK
 	    public async UniTask UnfollowAsync(
@@ -1145,9 +1135,8 @@ namespace Gs2.Sample.Friend
 		    );
 		    try
 		    {
-			    var item = await domain.ModelAsync();
-			    var result = await domain.UnfollowAsync();
-			    onUnfollow.Invoke(item);
+			    var item = await domain.UnfollowAsync();
+			    onUnfollow.Invoke();
 		    }
 		    catch (Gs2Exception e)
 		    {

@@ -155,9 +155,10 @@ namespace Gs2.Sample.Lottery
                 gameSession: gameSession
             ).Showcase(
                 showcaseName: showcaseName
+            ).DisplayItem(
+                displayItemId: displayItemId
             );
             var future = domain.Buy(
-                displayItemId: displayItemId,
                 config: tempConfig.ToArray()
             );
             yield return future;
@@ -221,11 +222,12 @@ namespace Gs2.Sample.Lottery
                 gameSession: gameSession
             ).Showcase(
                 showcaseName: showcaseName
+            ).DisplayItem(
+                displayItemId: displayItemId
             );
             try
             {
                 var result = await domain.BuyAsync(
-                    displayItemId: displayItemId,
                     quantity: null,
                     config: tempConfig.ToArray()
                 );

@@ -1,4 +1,4 @@
-[⇒日本語のREADMEへ](README-ja.md)
+[=> README in Japanese](README-ja.md)
 
 # GS2 Sample Project for Unity
 
@@ -7,10 +7,11 @@ This is a sample implementation using various GS2 functions for a rough flow in 
 
 ## Operating Environment
 
-Unity 2020.3.45f1  LTS
+Unity 2020.3.48f1 LTS  
 
-GS2 SDK for Unity 2023.2.8  
-GS2 C# SDK 2023.2.7
+GS2 C# SDK 2023.8.11  
+GS2 SDK for Unity 2023.8.12  
+
 
 ## Notes
 
@@ -169,8 +170,8 @@ Performs login with an account.
 When launched for the first time, an anonymous account is automatically created.  
 (GS2-Account)  
 
-[⇒Account creation and login Explanation](Docs/Login_en.md)  
-[⇒Version check Explanation](Docs/Version_en.md)  
+[=> Account creation and login Explanation](Docs/Login_en.md)  
+[=> Version check Explanation](Docs/Version_en.md)  
 
 ![Start](Docs/Start_en.png)
 
@@ -183,8 +184,8 @@ The following is a sample of the functionality that enables a transfer to be per
 Open WebView with `Notices`. Display the contents of the notice.  
 (GS2-News)
 
-[⇒Account takeover explanation](Docs/Takeover_en.md)  
-[⇒News Go to explanation](Docs/News_en.md)
+[=> Account takeover explanation](Docs/Takeover_en.md)  
+[=> News Go to explanation](Docs/News_en.md)
 
 Tap `Tap to Start` to go into the game.  
 You can access the Player, Game Cycle, Community, and Competitive tabs.
@@ -206,36 +207,36 @@ The __Stamina__, __Currency Charged__, and __Gold__ are displayed in the upper r
 `Stamina consumption` - Stamina is reduced and recovered in a certain time.
 (GS2-Stamina)
 
-[⇒Stamina/Stamina Store Explanation](Docs/Stamina_en.md)
+[=> Stamina/Stamina Store Explanation](Docs/Stamina_en.md)
 
-`Gold consumption` ・・・ Decreases gold by 10.  
-`Gold increase` ・・・ Gold is increased by 100.  
+`Gold consumption` - Decreases gold by 10.  
+`Gold increase` - Gold is increased by 100.  
 (GS2-Inventory)
 
-`Open Inventory` ・・・ List items. Tap an item to spend it.  
-`Get FireElement`, `Get WaterElement` ・・・ Increases items by 5 each.  
+`Open Inventory` - List items. Tap an item to spend it.  
+`Get FireElement`, `Get WaterElement` - Increases items by 5 each.  
 (GS2-Inventory)
 
-[⇒Gold/Inventory Explanation](Docs/Inventory_en.md)
+[=> Gold/Inventory Explanation](Docs/Inventory_en.md)
 
-Increases experience ・・・ Increases experience by 10.
+Increases experience - Increases experience by 10.
 
-[⇒Experience Explanation](Docs/Experience_en.md)
+[=> Experience Explanation](Docs/Experience_en.md)
  
 ## Game Cycle Tab
 
 ![GameCycle](Docs/GameCycle_en.png)
 
-`Start Quest ` ・・・ Starts a quest.  
-`Quest Completed` ・・・ Completes or fails (discards) a quest.  
+`Start Quest ` - Starts a quest.  
+`Quest Completed` - Completes or fails (discards) a quest.  
 (GS2-Quest)  
 
-[⇒Quest Explanation](Docs/Quest_en.md)
+[=> Quest Explanation](Docs/Quest_en.md)
 
-`Lottery Store` ・・・ Select an item from the list of lottery items and purchase the item.  
+`Lottery Store` - Select an item from the list of lottery items and purchase the item.  
 After the lottery, the item is obtained. Items are transferred to your dedicated inventory.  
 (GS2-Lottery, GS2-Inventory, GS2-JobQueue, Stamp Sheet)  
-Open `Lottery Inventory` ・・・ Lists items acquired through the lottery.  
+Open `Lottery Inventory` - Lists items acquired through the lottery.  
 Tap an item to consume it.  
 (GS2-Inventory)
 
@@ -246,14 +247,14 @@ Tap an item to consume it.
 ![Community](Docs/Community_en.png)
 
 `Subscribe room` - Subscribe to a chat room so that you can receive notifications of new messages posted to the room.  
-`Unsubscribe` -- Unsubscribe from a chat room.
+`Unsubscribe` - Unsubscribe from a chat room.
 (GS2-Chat)
 
-`Profile` ・・・ Edit your player's profile.  
+`Profile` - Edit your player's profile.  
 `Friends` - Displays a list of friends.  
 `Request in Progress` - Displays a list of friend requests that are being sent from the player to other players.  
 `Friend request being recieved` - Displays a list of friend requests sent from other players to the player.    
-`Blacklist` ・・・ Displays the blacklist.  
+`Blacklist` - Displays the blacklist.  
 `Follow` - Displays a list of players you are following.  
 (GS2-Friend)
 
@@ -268,17 +269,17 @@ Messages can be sent and received to and from the room with the name set in room
 ![Matching](Docs/Matching_en.png)
 
 Create Gathering -- Create a gathering (unit of matching) by setting the number of participants.  
-Waiting for `gathering` ・・・ It requests participation in a gathering.  
+Waiting for `gathering` - It requests participation in a gathering.  
 (GS2-Matchmaking)  
 
-[⇒Matchmaking Explanation](Docs/Matchmaking_en.md)
+[=> Matchmaking Explanation](Docs/Matchmaking_en.md)
 
 If the match is successful, the room is entered using GS2-Realtime and  
 Participants can communicate with each other.  
 In the sample, a simple game of rock-paper-scissors can be played.  
 (GS2-Realtime)  
 
-[⇒Realtime Explanation](Docs/Realtime_en.md)
+[=> Realtime Explanation](Docs/Realtime_en.md)
 
 ## Store
 
@@ -288,11 +289,11 @@ Stamina Store (+ button on stamina display) ...
 This is a sample of purchasing products that work with GS2-Exchange to spend GS2-Money to restore stamina values.  
 (GS2-Stamina, GS2-Exchange, GS2-Money)  
 
-[⇒Stamina/Stamina Store Explanation](Docs/Stamina_en.md)
+[=> Stamina/Stamina Store Explanation](Docs/Stamina_en.md)
  
 Billing Currency Store (+ button in billing currency display) ...  
 This is a sample of selling billable currency managed using GS2-Money in GS2-Showcase.  
 One of the defined products has a limit on the number of purchases by GS2-Limit, and can be purchased only once.  
 (GS2-Showcase, GS2-Limit, GS2-Money)  
 
-[⇒Billing Currency Store Explanation](Docs/Money_en.md)
+[=> Billing Currency Store Explanation](Docs/Money_en.md)

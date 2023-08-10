@@ -88,7 +88,7 @@ namespace Gs2.Sample.Friend
     }
     
     [System.Serializable]
-    public class UnfollowEvent : UnityEvent<EzFollowUser>
+    public class UnfollowEvent : UnityEvent
     {
     }
     

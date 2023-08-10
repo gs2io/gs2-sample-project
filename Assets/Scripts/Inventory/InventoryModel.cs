@@ -40,7 +40,7 @@ namespace Gs2.Sample.Inventory
         public List<EzItemSet> ItemSets = new List<EzItemSet>();
 
         /// <summary>
-        /// インベントリモデルを取得
+        /// インベントリモデル/アイテムモデルを取得
         /// Get Inventory Model
         /// </summary>
         public IEnumerator GetInventoryModel(

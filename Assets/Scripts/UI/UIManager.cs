@@ -352,13 +352,15 @@ namespace Gs2.Sample
         
         public void OnTapServiceLink(string url)
         {
+            if (url.Contains("GS2-"))
+                url = url.Replace("GS2-","");
             switch (Lang)
             {
                 case  Language.ja:
-                    Application.OpenURL("https://app.gs2.io/docs/index.html#"+url.ToLower());
+                    Application.OpenURL("https://docs.gs2.io/ja/api_reference/"+url.ToLower()+"/game_engine/");
                     break;
                 case  Language.en:
-                    Application.OpenURL("https://app.gs2.io/docs/en/index.html#"+url.ToLower());
+                    Application.OpenURL("https://docs.gs2.io/en/api_reference/"+url.ToLower()+"/game_engine/");
                     break;
             }
         }

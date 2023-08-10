@@ -27,7 +27,7 @@ namespace Gs2.Sample.Chat
     }
     
     [System.Serializable]
-    public class UnsubscribeEvent : UnityEvent<EzSubscribe>
+    public class UnsubscribeEvent : UnityEvent
     {
     }
 

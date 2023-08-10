@@ -11,6 +11,15 @@ Resources:
     Type: GS2::Friend::Namespace
     Properties:
       Name: ${FriendNamespaceName}
+      FollowNotification:
+        GatewayNamespaceId: !Join
+          - ':'
+          - - 'grn'
+            - 'gs2'
+            - !GetAttr Gs2::Region
+            - !GetAttr Gs2::OwnerId
+            - 'gateway'
+            - ${GatewayNamespaceName}
       ReceiveRequestNotification:
         GatewayNamespaceId: !Join
           - ':'

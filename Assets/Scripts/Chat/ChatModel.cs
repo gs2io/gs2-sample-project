@@ -332,16 +332,8 @@ namespace Gs2.Sample.Chat
             }
             
             var result = future.Result;
-            var future2 = result.Model();
-            yield return future2;
-            if (future2.Error != null)
-            {
-                onError.Invoke(future2.Error, null);
-                yield break;
-            }
-            
-            var item = future2.Result; 
-            onUnsubscribe.Invoke(item);
+
+            onUnsubscribe.Invoke();
         }
 #if GS2_ENABLE_UNITASK
         public async UniTask UnsubscribeAsync(
@@ -363,9 +355,8 @@ namespace Gs2.Sample.Chat
             try
             {
                 var result = await domain.UnsubscribeAsync();
-                var item = await result.ModelAsync();
 
-                onUnsubscribe.Invoke(item);
+                onUnsubscribe.Invoke();
             }
             catch (Gs2Exception e)
             {

@@ -252,11 +252,13 @@ var domain = gs2.Showcase.Namespace(
     gameSession: gameSession
 ).Showcase(
     showcaseName: showcaseName
+).DisplayItem(
+    displayItemId: selectedProduct.Id
 );
 try
 {
     var result = await domain.BuyAsync(
-        displayItemId: selectedProduct.Id,
+        quantity: 1,
         config: new[]
         {
             new EzConfig
@@ -291,9 +293,11 @@ var domain = gs2.Showcase.Namespace(
     gameSession: gameSession
 ).Showcase(
     showcaseName: showcaseName
+).DisplayItem(
+    displayItemId: selectedProduct.Id
 );
 var future = domain.Buy(
-    displayItemId: selectedProduct.Id,
+    quantity: 1,
     config: new []
     {
         new EzConfig

@@ -1138,7 +1138,7 @@ namespace Gs2.Sample
                 {
                     var future = _domain.Dispatch(_session);
                     yield return future;
-                    if (future != null)
+                    if (future.Error != null)
                     {
                         yield break;
                     }

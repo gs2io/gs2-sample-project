@@ -1,4 +1,4 @@
-[⇒README in English](README-en.md)
+[⇒README in English](README.md)
 
 # GS2 Sample Project for Unity
 
@@ -7,10 +7,10 @@ Game Server Services (https://gs2.io) の Unity 向けのサンプルプロジ�
 
 ## 動作環境
 
-Unity 2020.3.45f1  LTS
+Unity 2020.3.48f1  LTS  
 
-GS2 SDK for Unity 2023.2.8  
-GS2 C# SDK 2023.2.7
+GS2 C# SDK 2023.8.11  
+GS2 SDK for Unity 2023.8.12  
 
 ## 注意事項
 

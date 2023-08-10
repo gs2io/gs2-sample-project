@@ -1129,9 +1129,7 @@ namespace Gs2.Sample.Friend
         
         public IEnumerator Unfollow(string targetUserId)
         {
-            void OnUnfollow(
-                EzFollowUser user
-            )
+            void OnUnfollow()
             {
                 _friendSetting.onUnfollow.RemoveListener(OnUnfollow);
                 
@@ -1154,9 +1152,7 @@ namespace Gs2.Sample.Friend
 #if GS2_ENABLE_UNITASK
         public async UniTask UnfollowAsync(string targetUserId)
         {
-            void OnUnfollow(
-                EzFollowUser user
-            )
+            void OnUnfollow()
             {
                 _friendSetting.onUnfollow.RemoveListener(OnUnfollow);
                 
