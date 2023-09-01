@@ -1,4 +1,4 @@
-[⇒README in English](README.md)
+[⇒README in English](README-en.md)
 
 # GS2 Sample Project for Unity
 
@@ -9,8 +9,8 @@ Game Server Services (https://gs2.io) の Unity 向けのサンプルプロジ�
 
 Unity 2020.3.48f1  LTS  
 
-GS2 C# SDK 2023.8.11  
-GS2 SDK for Unity 2023.8.12  
+GS2 C# SDK 2023.8.18  
+GS2 SDK for Unity 2023.8.19  
 
 ## 注意事項
 
@@ -113,7 +113,7 @@ Templatesフォルダの以下のファイルでスタックを作成します�
 ### Unity IAPの有効化、インポート
 
 GS2-Moneyを使用したサンプルの動作には、Unity IAPの有効化が必要になります。  
-( https://docs.unity3d.com/ja/2019.4/Manual/UnityIAPSettingUp.html )  
+( https://docs.unity3d.com/ja/2020.3/Manual/UnityIAPSettingUp.html )  
 サービスウィンドウでのIn-App Purchasingの有効化、  
 IAP パッケージのインポートを行います。  
 

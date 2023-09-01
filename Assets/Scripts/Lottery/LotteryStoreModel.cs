@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using Gs2.Core.Exception;
 using Gs2.Gs2Lottery.Model;
+using Gs2.Gs2Lottery.Request;
+using Gs2.Gs2Lottery.Result;
 using Gs2.Unity.Core;
 using Gs2.Unity.Gs2Lottery.Model;
 using Gs2.Unity.Gs2Showcase.Model;
@@ -120,18 +122,19 @@ namespace Gs2.Sample.Lottery
         {
             var tempConfig = new List<EzConfig>(config);
             
+            // 抽選処理の結果を取得
+            // Obtain the results of the lottery process
             void LotteryResult(
                 string _namespace,
-                string lotteryName,
-                DrawnPrize[] prizes
+                DrawByUserIdRequest request,
+                DrawByUserIdResult result
             )
             {
-                // 抽選処理の結果を取得
-                // Obtain the results of the lottery process
-
                 // 抽選で獲得したアイテム
                 // Items won in the lottery
                 var DrawnPrizes = new List<EzDrawnPrize>();
+                if (result == null) return;
+                var prizes = result.Items;
                 foreach (var prize in prizes)
                 {
                     var item = EzDrawnPrize.FromModel(prize);
@@ -145,7 +148,7 @@ namespace Gs2.Sample.Lottery
             
             // 抽選結果取得コールバックを登録
             // Register lottery result acquisition callback
-            Gs2Lottery.Domain.Gs2Lottery.DrawnResult = LotteryResult;
+            Gs2Lottery.Domain.Gs2Lottery.DrawByUserIdComplete.AddListener( LotteryResult );
             
             // 商品の購入をリクエスト
             // Request to purchase an item
@@ -169,6 +172,8 @@ namespace Gs2.Sample.Lottery
                     null
                 );
             }
+            
+            Gs2Lottery.Domain.Gs2Lottery.DrawByUserIdComplete.RemoveListener( LotteryResult );
         }
 #if GS2_ENABLE_UNITASK
         /// <summary>
@@ -192,13 +197,15 @@ namespace Gs2.Sample.Lottery
             // Obtain the results of the lottery process
             void LotteryResult(
                 string _namespace,
-                string lotteryName,
-                DrawnPrize[] prizes
+                DrawByUserIdRequest request,
+                DrawByUserIdResult result
             )
             {
                 // 抽選で獲得したアイテム
                 // Items won in the lottery
                 var DrawnPrizes = new List<EzDrawnPrize>();
+                if (result == null) return;
+                var prizes = result.Items;
                 foreach (var prize in prizes)
                 {
                     var item = EzDrawnPrize.FromModel(prize);
@@ -212,7 +219,7 @@ namespace Gs2.Sample.Lottery
             
             // 抽選結果取得コールバックを登録
             // Register lottery result acquisition callback
-            Gs2Lottery.Domain.Gs2Lottery.DrawnResult = LotteryResult;
+            Gs2Lottery.Domain.Gs2Lottery.DrawByUserIdComplete.AddListener( LotteryResult );
             
             // 商品の購入をリクエスト
             // Request to purchase an item
@@ -237,6 +244,8 @@ namespace Gs2.Sample.Lottery
                 onError.Invoke(e, null);
                 return;
             }
+            
+            Gs2Lottery.Domain.Gs2Lottery.DrawByUserIdComplete.RemoveListener( LotteryResult );
         }
 #endif
     }

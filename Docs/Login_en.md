@@ -10,19 +10,19 @@ Sample function to login using [GS2-Account](https://app.gs2.io/docs/en/index.ht
 
 ![Login](LoginSetting.png)
 
-| Setting Name | Description |
---------|-----
-| accountNamespaceName | GS2-Account's namespace name
-| accountEncryptionKeyId | encryption key GRN of GS2-Key used to encrypt account information in GS2-Account
-| gatewayNamespaceName | namespace name of GS2-Gateway
+| Setting Name           | Description                                                                      |
+|------------------------|----------------------------------------------------------------------------------|
+| accountNamespaceName   | GS2-Account's namespace name                                                     
+| accountEncryptionKeyId | encryption key GRN of GS2-Key used to encrypt account information in GS2-Account 
+| gatewayNamespaceName   | namespace name of GS2-Gateway                                                    
 
-| Event | Description |
----------|------
-| OnLoadAccount(EzAccount account) | Called when an account is loaded. | OnLoadAccount(EzAccount account)
-| OnSaveAccount(EzAccount account) | Called when an account is saved. | OnSaveAccount(EzAccount account)
-| OnCreateAccount(EzAccount account) | Called when an account is created. | OnCreateAccount(EzAccount account)
-| OnLogin(EzAccount account, GameSession session) | Called when login succeeds. | OnLogin(EzAccount account, GameSession session)
-| OnError(Gs2Exception error) | Called when an error occurs. | OnError(Gs2Exception error)
+| Event                                           | Description                                     |                                                  |
+--------------------------------------------------|-------------------------------------------------|--------------------------------------------------|
+| OnLoadAccount(EzAccount account)                | Called when an account is loaded.               | OnLoadAccount(EzAccount account)                 
+| OnSaveAccount(EzAccount account)                | Called when an account is saved.                | OnSaveAccount(EzAccount account)                 
+| OnCreateAccount(EzAccount account)              | Called when an account is created.              | OnCreateAccount(EzAccount account)               
+| OnLogin(EzAccount account, GameSession session) | Called when login succeeds.                     | OnLogin(EzAccount account, GameSession session)  
+| OnError(Gs2Exception error)                     | Called when an error occurs.                    | OnError(Gs2Exception error)                      
 
 ## Login Flow
 
@@ -154,16 +154,16 @@ Pass the following arguments to an authentication class called Gs2AccountAuthent
 Profile will automatically attempt to re-authenticate using Gs2AccountAuthenticator when an error is returned that the access token has expired when accessing the API.
 When the access token is successfully renewed, access to the API can be continued.
 
-| Arguments | Description |
-------|-----
-| Gs2WebSocketSession session | WebSocket session class used by Profile to connect to GS2                  |
-| Gs2RestSession restSession | Rest session class used by Profile to connect to GS2                       |
-| string accountNamespaceName | Namespace name of GS2-Account |
-| string keyId | The encryption key GRN of the GS2-Key used to encrypt account information in GS2-Account |
-| string userId | User ID for EzAccount account information |
-| string password | Password for EzAccount account information |
-| GatewaySetting gatewaySetting | Call Gs2Gateway.SetUserId after login to set the user ID to receive push notifications from the server |
-| VersionSetting versionSetting | Call Gs2Version.CheckVersion after login to perform version check      |
+| Arguments                     | Description                                                                                             |
+|-------------------------------|---------------------------------------------------------------------------------------------------------|
+| Gs2WebSocketSession session   | WebSocket session class used by Profile to connect to GS2                                               |
+| Gs2RestSession restSession    | Rest session class used by Profile to connect to GS2                                                    |
+| string accountNamespaceName   | Namespace name of GS2-Account                                                                           |
+| string keyId                  | The encryption key GRN of the GS2-Key used to encrypt account information in GS2-Account                |
+| string userId                 | User ID for EzAccount account information                                                               |
+| string password               | Password for EzAccount account information                                                              |
+| GatewaySetting gatewaySetting | Call Gs2Gateway.SetUserId after login to set the user ID to receive push notifications from the server  |
+| VersionSetting versionSetting | Call Gs2Version.CheckVersion after login to perform version check                                       |
 
 Receives a GameSession that holds an access token.  
 Set your own user ID logged in to [GS2-Gateway](https://app.gs2.io/docs/en/index.html#gs2-gateway) and

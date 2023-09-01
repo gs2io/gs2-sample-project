@@ -140,20 +140,27 @@ if (future.Error != null)
 ```
 
 A stamp sheet for purchasing lottery items is issued by GS2-Showcase.  
-In implementations using the GS2Domain class ("gs2" in the source), the processing of stamp sheets on the client side is __automatically executed__.  
+In implementations using the GS2Domain class ("gs2" in the source), stamp sheet processing on the client side is __auto-executed__.  
+In the initialize_lottery_template.yaml template, stamp sheet execution is set to client execution.
 
+```yaml
+      TransactionSetting: false
+        EnableAutoRun: false
+```
 The list of products resulting from the lottery can be retrieved with the following callback.
 
 ```c#
 // Obtain the results of the lottery process
 void LotteryResult(
     string _namespace,
-    string lotteryName,
-    DrawnPrize[] prizes
+    DrawByUserIdRequest request,
+    DrawByUserIdResult result
 )
 {
     // Items won in the lottery
     var DrawnPrizes = new List<EzDrawnPrize>();
+    if (result == null) return;
+    var prizes = result.Items;
     foreach (var prize in prizes)
     {
         var item = EzDrawnPrize.FromModel(prize);
@@ -166,7 +173,7 @@ void LotteryResult(
 }
 
 // Register lottery result acquisition callback
-Gs2Lottery.Domain.Gs2Lottery.DrawnResult = LotteryResult;
+Gs2Lottery.Domain.Gs2Lottery.DrawByUserIdComplete.AddListener( LotteryResult );
 ```
 
 At the time the lottery results are retrieved, the client will perform the lottery production, list the items retrieved, etc., if necessary in the actual game.  

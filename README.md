@@ -9,9 +9,8 @@ This is a sample implementation using various GS2 functions for a rough flow in 
 
 Unity 2020.3.48f1 LTS  
 
-GS2 C# SDK 2023.8.11  
-GS2 SDK for Unity 2023.8.12  
-
+GS2 C# SDK 2023.8.18  
+GS2 SDK for Unity 2023.8.19  
 
 ## Notes
 
@@ -114,7 +113,7 @@ If you wait a while and all stacks are in `CREATE_COMPLETE`, the server side con
 ### Enabling and importing Unity IAP
 
 Unity IAP must be enabled for the sample to work with GS2-Money.  
-( https://docs.unity3d.com/ja/2019.4/Manual/UnityIAPSettingUp.html )  
+( https://docs.unity3d.com/ja/2020.3/Manual/UnityIAPSettingUp.html )  
 Enable In-App Purchasing in the Services window, and  
 Import the IAP package.  
 

@@ -243,44 +243,52 @@ namespace Gs2.Sample.Quest
             ErrorEvent onError
         )
         {
-            var domain = gs2.Quest.Namespace(
-                namespaceName: questNamespaceName
-            ).Me(
-                gameSession: gameSession
-            );
-            var future = domain.Start(
-                questGroupName: selectedQuestGroup.Name,
-                questName: selectedQuest.Name,
-                force: null,
-                config: new[]
-                {
-                    new EzConfig
+            {
+                var domain = gs2.Quest.Namespace(
+                    namespaceName: questNamespaceName
+                ).Me(
+                    gameSession: gameSession
+                );
+                var future = domain.Start(
+                    questGroupName: selectedQuestGroup.Name,
+                    questName: selectedQuest.Name,
+                    force: null,
+                    config: new[]
                     {
-                        Key = "slot",
-                        Value = MoneyModel.Slot.ToString()
+                        new EzConfig
+                        {
+                            Key = "slot",
+                            Value = MoneyModel.Slot.ToString()
+                        }
                     }
+                );
+                yield return future;
+                if (future.Error != null)
+                {
+                    onError.Invoke(future.Error, null);
+                    callback.Invoke(null);
+                    yield break;
                 }
-            );
-            yield return future;
-            if (future.Error != null)
-            {
-                onError.Invoke(future.Error, null);
-                callback.Invoke(null);
-                yield break;
             }
-
-            var domain2 = future.Result.Progress();
-            var futurew2 = domain2.Model();
-            yield return futurew2;
-            if (futurew2.Error != null)
             {
-                onError.Invoke(futurew2.Error, null);
-                callback.Invoke(null);
-                yield break;
-            }
+                var domain = gs2.Quest.Namespace(
+                    namespaceName: questNamespaceName
+                ).Me(
+                    gameSession: gameSession
+                ).Progress();
+                var future = domain.Model();
+                yield return future;
+                if (future.Error != null)
+                {
+                    onError.Invoke(future.Error, null);
+                    callback.Invoke(null);
+                    yield break;
+                }
+                progress = future.Result;
 
-            onStart.Invoke(futurew2.Result);
-            callback.Invoke(futurew2.Result);
+                onStart.Invoke(future.Result);
+                callback.Invoke(future.Result);
+            }
         }
 #if GS2_ENABLE_UNITASK
         public async UniTask<EzProgress> QuestStartAsync(

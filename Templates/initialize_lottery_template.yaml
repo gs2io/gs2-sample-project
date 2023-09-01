@@ -110,16 +110,6 @@ Resources:
               - queue
               - ${JobQueueNamespaceName}
         KeyId: !GetAttr LotteryKey.Item.KeyId
-      QueueNamespaceId:
-        '!Join':
-          - ':'
-          - - grn
-            - gs2
-            - '!GetAttr': Gs2::Region
-            - '!GetAttr': Gs2::OwnerId
-            - queue
-            - ${JobQueueNamespaceName}
-      KeyId: !GetAttr LotteryKey.Item.KeyId
     DependsOn:
       - LotteryKey
 

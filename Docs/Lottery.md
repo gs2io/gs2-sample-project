@@ -18,16 +18,16 @@ IAP パッケージのインポートを行います。
 
 ![Lottery](Lottery.png)
 
-| 設定名 | 説明                                                     |
-|---|--------------------------------------------------------|
-| lotteryName | GS2-Lotteryの抽選マスターデータの種類名, GS2-Showcaseの商品棚マスターデータの商品名 |
-| ShowcaseNamespaceName | GS2-Showcaseのネームスペース名                                 |
+| 設定名                   | 説明                                                                    |
+|-----------------------|--------------------------------------------------------------------------|
+| lotteryName           | GS2-Lotteryの抽選マスターデータの種類名, GS2-Showcaseの商品棚マスターデータの商品名 |
+| ShowcaseNamespaceName | GS2-Showcaseのネームスペース名                                               |
 
-| イベント                                                        | 説明 |
-|-------------------------------------------------------------|---|
-| OnGetShowcase(EzShowcase)                                   | 商品棚情報を取得したときに呼び出されます。 |
+| イベント                                                     | 説明  　　　　　　　　                    |
+|-------------------------------------------------------------|---------------------------------------|
+| OnGetShowcase(EzShowcase)                                   | 商品棚情報を取得したときに呼び出されます。    |
 | OnAcquireInventoryItem(List<AcquireItemSetByUserIdRequest>) | 抽選でアイテムを入手したときに呼び出されます。 |
-| OnError(Gs2Exception error)                                 | エラーが発生したときに呼び出されます。 |
+| OnError(Gs2Exception error)                                 | エラーが発生したときに呼び出されます。        |
 
 ## 抽選商品購入処理の流れ
 
@@ -143,6 +143,12 @@ if (future.Error != null)
 
 GS2-Showcaseで抽選商品購入スタンプシートが発行されます。  
 GS2Domainクラス（ソース内で "gs2" ）を使用した実装ではクライアント側でのスタンプシートの処理は __自動実行__ されます。  
+initialize_lottery_template.yaml テンプレートでは、スタンプシートの実行はクライアント実行に設定されています。
+
+```yaml
+      TransactionSetting:
+        EnableAutoRun: false
+```
 
 抽選結果の商品リストは以下のコールバックで取得できます。
 
@@ -151,13 +157,15 @@ GS2Domainクラス（ソース内で "gs2" ）を使用した実装ではクラ�
 // Obtain the results of the lottery process
 void LotteryResult(
     string _namespace,
-    string lotteryName,
-    DrawnPrize[] prizes
+    DrawByUserIdRequest request,
+    DrawByUserIdResult result
 )
 {
     // 抽選で獲得したアイテム
     // Items won in the lottery
     var DrawnPrizes = new List<EzDrawnPrize>();
+    if (result == null) return;
+    var prizes = result.Items;
     foreach (var prize in prizes)
     {
         var item = EzDrawnPrize.FromModel(prize);
@@ -171,7 +179,7 @@ void LotteryResult(
 
 // 抽選結果取得コールバックを登録
 // Register lottery result acquisition callback
-Gs2Lottery.Domain.Gs2Lottery.DrawnResult = LotteryResult;
+Gs2Lottery.Domain.Gs2Lottery.DrawByUserIdComplete.AddListener( LotteryResult );
 ```
 
 抽選結果が取得できたタイミングで、実際のゲーム内では必要であればクライアントは抽選演出、取得したアイテムの一覧表示等を行います。  
