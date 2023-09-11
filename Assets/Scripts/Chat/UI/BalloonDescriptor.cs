@@ -16,6 +16,9 @@ namespace Gs2.Sample.Chat
         [SerializeField]
         public Button button;
 
+        private string _name;
+        public string Name => _name;
+        
         public void SetUserId(string text)
         {
             userId.SetText(text);
@@ -24,6 +27,11 @@ namespace Gs2.Sample.Chat
         public void SetText(string text, bool other)
         {
             chatText.SetText(text);
+        }
+        
+        public void SetName(string name)
+        {
+            _name = name;
         }
     }
 }

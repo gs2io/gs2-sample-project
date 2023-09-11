@@ -266,16 +266,22 @@ namespace Gs2.Sample.Chat
 
                 if (_chatView.messagesContent != null)
                 {
+                    var nameList = new List<string>();
                     foreach (Transform child in _chatView.messagesContent.transform)
                     {
                         if (child != null && child.gameObject != _chatView.messagePrefab && child.gameObject != _chatView.myMessagePrefab)
                         {
-                            Destroy(child.gameObject);
+                            var balloonObject = child.gameObject.GetComponent<BalloonDescriptor>();
+                            if (balloonObject != null)
+                                nameList.Add(balloonObject.Name);
                         }
                     }
-
+                    
                     foreach (var message in messages)
                     {
+                        if (nameList.Contains(message.Name))
+                            continue;
+                        
                         GameObject balloonObject;
                         if (message.UserId == GameManager.Instance.Session.AccessToken.UserId)
                         {
@@ -289,6 +295,7 @@ namespace Gs2.Sample.Chat
                         }
 
                         var balloonDescriptor = balloonObject.GetComponent<BalloonDescriptor>();
+                        balloonDescriptor.SetName(message.Name);
                         balloonDescriptor.SetUserId(message.UserId);
                         balloonDescriptor.SetText(message.Metadata, false);
                         if (balloonDescriptor.button != null)
@@ -331,16 +338,22 @@ namespace Gs2.Sample.Chat
 
                 if (_chatView.messagesContent != null)
                 {
+                    var nameList = new List<string>();
                     foreach (Transform child in _chatView.messagesContent.transform)
                     {
                         if (child != null && child.gameObject != _chatView.messagePrefab && child.gameObject != _chatView.myMessagePrefab)
                         {
-                            Destroy(child.gameObject);
+                            var balloonObject = child.gameObject.GetComponent<BalloonDescriptor>();
+                            if (balloonObject != null)
+                                nameList.Add(balloonObject.Name);
                         }
                     }
-
+                    
                     foreach (var message in messages)
                     {
+                        if (nameList.Contains(message.Name))
+                            continue;
+                        
                         GameObject balloonObject;
                         if (message.UserId == GameManager.Instance.Session.AccessToken.UserId)
                         {
@@ -354,6 +367,7 @@ namespace Gs2.Sample.Chat
                         }
 
                         var balloonDescriptor = balloonObject.GetComponent<BalloonDescriptor>();
+                        balloonDescriptor.SetName(message.Name);
                         balloonDescriptor.SetUserId(message.UserId);
                         balloonDescriptor.SetText(message.Metadata, false);
                         if (balloonDescriptor.button != null)
