@@ -94,7 +94,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.test-framework": {
-      "version": "1.1.33",
+      "version": "1.1.29",
       "depth": 1,
       "source": "registry",
       "dependencies": {
@@ -123,22 +123,20 @@
       }
     },
     "io.gs2.csharp.sdk": {
-      "version": "2023.8.18",
+      "version": "file:../../gs2-sdk/csharp/Assets/Scripts/Runtime/Sdk/Gs2",
       "depth": 0,
-      "source": "registry",
+      "source": "local",
       "dependencies": {
         "com.unity.modules.unitywebrequest": "1.0.0"
-      },
-      "url": "https://upm.gs2.io/npm"
+      }
     },
     "io.gs2.unity.sdk": {
-      "version": "2023.8.19",
+      "version": "file:../../gs2-sdk/unity/Assets/Scripts/Runtime/Sdk/Gs2/Unity",
       "depth": 0,
-      "source": "registry",
+      "source": "local",
       "dependencies": {
         "io.gs2.csharp.sdk": "2022.9.2"
-      },
-      "url": "https://upm.gs2.io/npm"
+      }
     },
     "net.gree.unity-webview": {
       "version": "https://github.com/gree/unity-webview.git?path=/dist/package",

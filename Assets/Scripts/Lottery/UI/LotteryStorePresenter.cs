@@ -40,8 +40,6 @@ namespace Gs2.Sample.Lottery
         [SerializeField]
         private UnitPresenter _unitPresenter;
         
-        private StampSheetRunner _stampSheetRunner;
-        
         public enum State
         {
             MainMenu,
