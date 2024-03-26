@@ -747,9 +747,10 @@ var domain = gs2.Friend.Namespace(
     namespaceName: friendNamespaceName
 ).Me(
     gameSession: gameSession
-).FollowUser(
-    targetUserId: targetUserId,
+).Follow(
     withProfile: false
+).FollowUser(
+    targetUserId: targetUserId
 );
 try
 {
@@ -768,9 +769,10 @@ var domain = gs2.Friend.Namespace(
     namespaceName: friendNamespaceName
 ).Me(
     gameSession: gameSession
-).FollowUser(
-    targetUserId: targetUserId,
+).Follow(
     withProfile: false
+).FollowUser(
+    targetUserId: targetUserId
 );
 var future = domain.Follow();
 yield return future;
@@ -809,27 +811,29 @@ catch (Gs2Exception e)
 ```
 ・コルーチン使用時
 ```c#
+FollowUsers.Clear();
 var domain = gs2.Friend.Namespace(
     namespaceName: friendNamespaceName
 ).Me(
     gameSession: gameSession
-).FollowUser(
-    targetUserId: targetUserId,
-    withProfile: false
+).Follow(
+    false
 );
-var future = domain.Follow();
-yield return future;
-if (future.Error != null)
+var it = domain.Follows();
+while (it.HasNext())
 {
-    onError.Invoke(future.Error);
-    yield break;
-}
+    yield return it.Next();
+    if (it.Error != null)
+    {
+        onError.Invoke(it.Error, null);
+        break;
+    }
 
-var result = future.Result;
-var future2 = result.Model();
-yield return future2;
-var item = future2.Result;
-onFollow.Invoke(item);
+    if (it.Current != null)
+    {
+        FollowUsers.Add(it.Current);
+    }
+}
 ```
 
 `フォロー`ダイアログのユーザー項目の`削除`で、フォローしている相手をアンフォローします。
@@ -840,15 +844,15 @@ var domain = gs2.Friend.Namespace(
     namespaceName: friendNamespaceName
 ).Me(
     gameSession: gameSession
-).FollowUser(
-    targetUserId: targetUserId,
+).Follow(
     withProfile: false
+).FollowUser(
+    targetUserId: targetUserId
 );
 try
 {
     var result = await domain.UnfollowAsync();
-    var item = await result.ModelAsync();
-    onUnfollow.Invoke(item);
+    onUnfollow.Invoke();
 }
 catch (Gs2Exception e)
 {
@@ -861,9 +865,10 @@ var domain = gs2.Friend.Namespace(
     namespaceName: friendNamespaceName
 ).Me(
     gameSession: gameSession
-).FollowUser(
-    targetUserId: targetUserId,
+).Follow(
     withProfile: false
+).FollowUser(
+    targetUserId: targetUserId
 );
 var future = domain.Unfollow();
 yield return future;

@@ -1,0 +1,27 @@
+﻿GS2TemplateFormatVersion: "2019-05-01"
+Description: GS2-JobQueue initialize template Version 2024-03-12
+
+Globals:
+  Alias:
+    JobQueueNamespaceName: default              # GS2-JobQueue ネームスペース名 / Namespace name
+    GatewayNamespaceName: gateway-0001          # 通知を行う GS2-Gatewayネームスペース名 / GS2-Gateway namespace name for notification
+
+Resources:
+  JobQueueNamespace:
+    Type: GS2::JobQueue::Namespace
+    Properties:
+      Name: ${JobQueueNamespaceName}
+      PushNotification:
+        GatewayNamespaceId: !Join
+          - ':'
+          - - 'grn'
+            - 'gs2'
+            - !GetAttr Gs2::Region
+            - !GetAttr Gs2::OwnerId
+            - 'gateway'
+            - ${GatewayNamespaceName}
+
+Outputs:
+  DistributorNamespaceName: !GetAttr DistributorNamespace.Item.Name
+  JobQueueNamespaceName: !GetAttr JobQueueNamespace.Item.Name
+  JobQueueNamespaceId: !GetAttr JobQueueNamespace.Item.NamespaceId

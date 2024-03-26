@@ -9,7 +9,7 @@ Globals:
     StaminaNamespaceName: stamina-0001  # GS2-Stamina ネームスペース名 / Namespace name
     StaminaName: main                   # GS2-Stamina クエストの対価に設定するスタミナモデル名 / Stamina model name to be set as compensation for the quest
     MoneyNamespaceName: money-0001      # GS2-Money クエストの報酬に設定するネームスペース名 / Namespace name to be set for quest rewards
-    JobQueueNamespaceName: job-queue    # GS2-Jobqueue ネームスペース名 / Namespace name
+    JobQueueNamespaceName: default      # GS2-Jobqueue ネームスペース名 / Namespace name
 
 Resources:
   QuestKeyNamespace:

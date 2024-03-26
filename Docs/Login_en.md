@@ -95,22 +95,22 @@ When UniTask is enabled
 GameSession gameSession;
 try
 {
-    gameSession = await _profile.LoginAsync(
+    gameSession = await _domain.LoginAsync(
         new Gs2AccountAuthenticator(
-            _profile.Gs2Session,
-            _profile.Gs2RestSession,
-            accountNamespaceName,
-            accountEncryptionKeyId,
-            userId,
-            password,
+            accountSetting: new AccountSetting
+            {
+                accountNamespaceName = accountNamespaceName,
+                keyId = accountEncryptionKeyId
+            },
             // Set user ID to receive push notifications from the server
-            new GatewaySetting 
+            gatewaySetting: new GatewaySetting
             {
                 gatewayNamespaceName = gatewayNamespaceName,
                 allowConcurrentAccess = false
-            },
-            null
-        )
+            }
+        ),
+        userId,
+        password
     );
 }
 catch (Gs2Exception e)
@@ -123,21 +123,22 @@ onLogin.Invoke(gameSession);
 ```
 When coroutine is used
 ```c#
-var future = _profile.LoginFuture(
+var future = _domain.LoginFuture(
     new Gs2AccountAuthenticator(
-        _profile.Gs2Session,
-        _profile.Gs2RestSession,
-        accountNamespaceName,
-        accountEncryptionKeyId,
-        userId,
-        password,
+        accountSetting: new AccountSetting
+        {
+            accountNamespaceName = accountNamespaceName,
+            keyId = accountEncryptionKeyId
+        },
         // Set user ID to receive push notifications from the server
-        new GatewaySetting 
+        gatewaySetting: new GatewaySetting
         {
             gatewayNamespaceName = gatewayNamespaceName,
             allowConcurrentAccess = false
         }
-    )
+    ),
+    userId,
+    password
 );
 yield return future;
 if (future.Error != null)
@@ -156,20 +157,20 @@ When the access token is successfully renewed, access to the API can be continue
 
 | Arguments                     | Description                                                                                             |
 |-------------------------------|---------------------------------------------------------------------------------------------------------|
-| Gs2WebSocketSession session   | WebSocket session class used by Profile to connect to GS2                                               |
-| Gs2RestSession restSession    | Rest session class used by Profile to connect to GS2                                                    |
-| string accountNamespaceName   | Namespace name of GS2-Account                                                                           |
-| string keyId                  | The encryption key GRN of the GS2-Key used to encrypt account information in GS2-Account                |
+| AccountSetting accountSetting | Information for authentication with GS2-Account |
+|  string accountNamespaceName   | Namespace name of GS2-Account                                                                           |
+|  string keyId                  | The encryption key GRN of the GS2-Key used to encrypt account information in GS2-Account                |
+| GatewaySetting gatewaySetting | Call Gs2Gateway.SetUserId after login to set the user ID to receive push notifications from the server  |
+|  string gatewayNamespaceName |  Namespace Name of GS2-Gateway                                   |
+|  string allowConcurrentAccess |  Whether to allow multiple logins with the same user ID          |
+| VersionSetting versionSetting | Call Gs2Version.CheckVersion after login to perform version check    
+|  string versionNamespaceName | GS2-Version namespace name      |
+|  EzTargetVersion targetVersions | Game Version Information      |
 | string userId                 | User ID for EzAccount account information                                                               |
 | string password               | Password for EzAccount account information                                                              |
-| GatewaySetting gatewaySetting | Call Gs2Gateway.SetUserId after login to set the user ID to receive push notifications from the server  |
-| VersionSetting versionSetting | Call Gs2Version.CheckVersion after login to perform version check                                       |
 
-Receives a GameSession that holds an access token.  
-Set your own user ID logged in to [GS2-Gateway](https://app.gs2.io/docs/en/index.html#gs2-gateway) and
-and receive push notifications for this user client.  
-Notification of message posting in chat ([GS2-Chat](Chat_en.md)), notification of
-Notification of [GS2-Friend](Friend_en.md), etc.
-Used to receive notifications of matchmaking ([GS2-Matchmaking](Matchmaking_en.md)) transitions.
+Receive a GameSession that holds an access token.  
+Set your own user ID logged into [GS2-Gateway](https://app.gs2.io/docs/index.html#gs2-gateway) to receive push notifications for this user client.  
+To receive notifications of chat ([GS2-Chat](Chat.md)) message posts, friend requests ([GS2-Friend](Friend.md)), etc., and matchmaking ([GS2-Matchmaking](Matchmaking.md)) transitions Use.
 
 

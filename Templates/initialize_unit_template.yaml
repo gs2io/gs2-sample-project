@@ -37,7 +37,7 @@ Resources:
               metadata: "{\"displayName\":\"[N] 0003\",\"rarity\":0}"
               stackingLimit: 1
               allowMultipleStacks: true
-              sortValue: 10200}
+              sortValue: 10200
             - name: 'rare_0001'
               metadata: "{\"displayName\":\"[R] 0001\",\"rarity\":1}"
               stackingLimit: 1

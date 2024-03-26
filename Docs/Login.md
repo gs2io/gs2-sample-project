@@ -96,21 +96,22 @@ PlayerPrefsに新規作成したアカウント情報を保存します。
 GameSession gameSession;
 try
 {
-    gameSession = await _profile.LoginAsync(
+    gameSession = await _domain.LoginAsync(
         new Gs2AccountAuthenticator(
-            _profile.Gs2Session,
-            _profile.Gs2RestSession,
-            accountNamespaceName,
-            accountEncryptionKeyId,
-            userId,
-            password,
-            // サーバからプッシュ通知を受けるためのユーザーIDを設定
-            new GatewaySetting 
+            accountSetting: new AccountSetting
+            {
+                accountNamespaceName = accountNamespaceName,
+                keyId = accountEncryptionKeyId
+            },
+            // サーバからアプリ内プッシュ通知を受けるためのユーザーIDを設定
+            gatewaySetting: new GatewaySetting
             {
                 gatewayNamespaceName = gatewayNamespaceName,
                 allowConcurrentAccess = false
             }
-        )
+        ),
+        userId,
+        password
     );
 }
 catch (Gs2Exception e)
@@ -123,21 +124,22 @@ onLogin.Invoke(gameSession);
 ```
 ・コルーチン使用
 ```c#
-var future = _profile.LoginFuture(
+var future = _domain.LoginFuture(
     new Gs2AccountAuthenticator(
-        _profile.Gs2Session,
-        _profile.Gs2RestSession,
-        accountNamespaceName,
-        accountEncryptionKeyId,
-        userId,
-        password,
-        // サーバからプッシュ通知を受けるためのユーザーIDを設定
-        new GatewaySetting 
+        accountSetting: new AccountSetting
+        {
+            accountNamespaceName = accountNamespaceName,
+            keyId = accountEncryptionKeyId
+        },
+        // サーバからアプリ内プッシュ通知を受けるためのユーザーIDを設定
+        gatewaySetting: new GatewaySetting
         {
             gatewayNamespaceName = gatewayNamespaceName,
             allowConcurrentAccess = false
         }
-    )
+    ),
+    userId,
+    password
 );
 yield return future;
 if (future.Error != null)
@@ -156,14 +158,17 @@ Profile はAPIへのアクセス時、アクセストークンの期限が切れ
 
 | 引数 | 説明                                                     |
 ------|--------------------------------------------------------
-| Gs2WebSocketSession session | ProfileがGS2との接続に使用するWebSocketセッションクラス                  |
-| Gs2RestSession restSession | ProfileがGS2との接続に使用するRestセッションクラス                       |
-| string accountNamespaceName | GS2-Accountのネームスペース名                                   |
-| string keyId | GS2-Account でアカウント情報の暗号化に使用する GS2-Key の暗号鍵GRN          |
+| AccountSetting accountSetting | GS2-Accountで認証を行うための情報 |
+|  string accountNamespaceName |  GS2-Accountのネームスペース名                                   |
+|  string keyId |  GS2-Account でアカウント情報の暗号化に使用する GS2-Key の暗号鍵GRN          |
+| GatewaySetting gatewaySetting | ログイン後に Gs2Gateway.SetUserId を呼び出し、サーバからプッシュ通知を受けるためのユーザーIDを設定 |
+|  string gatewayNamespaceName |  GS2-Gatewayのネームスペース名                                   |
+|  string allowConcurrentAccess |  同一ユーザーIDでの多重ログインを許容するか          |
+| VersionSetting versionSetting | ログイン後に Gs2Version.CheckVersion を呼び出し、バージョンチェックを実行      |
+|  string versionNamespaceName | GS2-Version のネームスペース名      |
+|  EzTargetVersion targetVersions | ゲームのバージョン情報      |
 | string userId | EzAccount　アカウント情報のユーザーID                               |
 | string password | EzAccount　アカウント情報のパスワード                                |
-| GatewaySetting gatewaySetting | ログイン後に Gs2Gateway.SetUserId を呼び出し、サーバからプッシュ通知を受けるためのユーザーIDを設定 |
-| VersionSetting versionSetting | ログイン後に Gs2Version.CheckVersion を呼び出し、バージョンチェックを実行      |
 
 アクセストークンを保持する GameSessionを受け取ります。  
 [GS2-Gateway](https://app.gs2.io/docs/index.html#gs2-gateway) にログインした自分のユーザーIDを設定し、このユーザークライアントに対するプッシュ通知を受け取れるようにしています。  

@@ -48,7 +48,7 @@ namespace Gs2.Sample.Realtime
             handType = (RPSType) type;
             state = RPSState.Decide;
             
-#if GS2_ENABLE_UNITASK
+#if GS2_ENABLE_UNITASK && !UNITY_WEBGL
             SendAsync().Forget();
 #else
             StartCoroutine(Send());
@@ -63,7 +63,7 @@ namespace Gs2.Sample.Realtime
 
             state = RPSState.Select;
             
-#if GS2_ENABLE_UNITASK
+#if GS2_ENABLE_UNITASK && !UNITY_WEBGL
             SendAsync().Forget();
 #else
             StartCoroutine(Send());
@@ -113,7 +113,7 @@ namespace Gs2.Sample.Realtime
                 }
             }
         }
-#if GS2_ENABLE_UNITASK
+#if GS2_ENABLE_UNITASK && !UNITY_WEBGL
         public async UniTask UpdateProfileAsync()
         {
             while (true)
@@ -175,7 +175,7 @@ namespace Gs2.Sample.Realtime
                 binary
             );
         }
-#if GS2_ENABLE_UNITASK
+#if GS2_ENABLE_UNITASK && !UNITY_WEBGL
         public async UniTask SendAsync()
         {
             ByteString binary = null;

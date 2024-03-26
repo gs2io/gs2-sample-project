@@ -123,12 +123,19 @@ namespace Gs2.Sample.Inventory
             }
             {
                 ItemModels.Clear();
-                var domain = gs2.Inventory.Namespace(
-                    namespaceName: inventoryNamespaceName
-                ).InventoryModel(
-                    inventoryName: inventoryModelName
-                );
-                ItemModels = await domain.ItemModelsAsync().ToListAsync();
+                try
+                {
+                    var ItemModels = await gs2.Inventory.Namespace(
+                        namespaceName: inventoryNamespaceName
+                    ).InventoryModel(
+                        inventoryName: inventoryModelName
+                    ).ItemModelsAsync().ToListAsync();
+                }
+                catch (Gs2Exception e)
+                {
+                    onError.Invoke(e, null);
+                    return;
+                }
             }
 
             onGetInventoryModel.Invoke(inventoryModelName, Model, ItemModels);
@@ -232,7 +239,14 @@ namespace Gs2.Sample.Inventory
                 ).Inventory(
                     inventoryName: inventoryName
                 );
-                ItemSets = await domain.ItemSetsAsync().ToListAsync();
+                try
+                {
+                    ItemSets = await domain.ItemSetsAsync().ToListAsync();
+                }
+                catch (Gs2Exception e)
+                {
+                    onError.Invoke(e, null);
+                }
             }
             
             onGetInventory.Invoke(Inventory, ItemSets);
@@ -325,7 +339,7 @@ namespace Gs2.Sample.Inventory
                 }
             }
             
-            onAcquire.Invoke(Inventory, ItemSets.ToList(), value);
+            onAcquire.Invoke(Inventory, ItemSets, value);
         }
 #if GS2_ENABLE_UNITASK
         /// <summary>
@@ -388,16 +402,17 @@ namespace Gs2.Sample.Inventory
                 }
             }
             {
-                var domain = gs2.Inventory.Namespace(
-                    namespaceName: inventoryNamespaceName
-                ).Me(
-                    gameSession: gameSession
-                ).Inventory(
-                    inventoryName: inventoryName
-                );
                 try
                 {
-                    ItemSets = await domain.ItemSetsAsync().ToListAsync();
+                    ItemSets = await gs2.Inventory.Namespace(
+                        namespaceName: inventoryNamespaceName
+                    ).Me(
+                        gameSession: gameSession
+                    ).Inventory(
+                        inventoryName: inventoryName
+                    ).ItemSetsAsync().ToListAsync();
+                    
+                    onAcquire.Invoke(Inventory, ItemSets, value);
                 }
                 catch (Gs2Exception e)
                 {
@@ -405,8 +420,6 @@ namespace Gs2.Sample.Inventory
                     return;
                 }
             }
-            
-            onAcquire.Invoke(Inventory, ItemSets.ToList(), value);
         }
 #endif
         

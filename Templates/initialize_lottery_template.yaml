@@ -10,7 +10,7 @@ Globals:
     KeyName: lottery-showcase-key            # GS2-Key 購入処理のスタンプシートの署名計算に使用する暗号鍵 / Cryptographic key used to calculate signatures on stamp sheets for purchase processing
     LotteryKeyName: lottery-key              # GS2-Key 抽選処理のスタンプシートの署名計算に使用する暗号鍵 / Cryptographic key used to calculate signatures on stamp sheets for lottery processing
     MoneyNamespaceName: money-0001           # GS2-Money ネームスペース名 / Namespace name
-    JobQueueNamespaceName: job-queue         # GS2-JobQueue ネームスペース名 / Namespace name
+    JobQueueNamespaceName: default           # GS2-JobQueue ネームスペース名 / Namespace name
     InventoryNamespaceName: unit-0001        # GS2-Inventory ネームスペース名 / Namespace name
     InventoryModelName: unit                 # GS2-Inventory インベントリモデル名 / Inventory model name
 

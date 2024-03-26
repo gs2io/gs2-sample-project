@@ -7,15 +7,15 @@ This is a sample implementation using various GS2 functions for a rough flow in 
 
 ## Operating Environment
 
-Unity 2020.3.48f1 LTS  
+Unity 2021.3.36f1 LTS  
 
-GS2 C# SDK 2023.8.18  
-GS2 SDK for Unity 2023.8.19  
+GS2 C# SDK 2024.3.10  
+GS2 SDK for Unity 2024.3.7  
 
 ## Notes
 
 - The manifest.json and packages-lock.json files included in the sample contain the  
-In addition to the SDK for GS2, it includes a description of the packages required to run on Unity 2020.3.  
+In addition to the SDK for GS2, it includes a description of the packages required to run on Unity 2021.3.  
 If you open the project with a Unity version other than the above, you will get  
 An error may occur and the package version may need to be changed.  
 In that case, you can install the verified version in the package manager to make it work.  
@@ -73,7 +73,7 @@ Create a stack with the following files in the Templates folder
 ---|---
 [initialize_credential_template.yaml](Templates/initialize_credential_template.yaml) | initialize credential GS2
 [initialize_account_template.yaml](Templates/initialize_account_template.yaml) |login/account linkage and transfer
-[initialize_distributor_template.yaml](Templates/initialize_distributor_template.yaml) |GS2-Distributor　GS2-JobQueue setting
+[initialize_job_queue_template.yaml](Templates/initialize_job_queue_template.yaml) |GS2-JobQueue setting
 
 #### Template required for each function to work
 
@@ -113,7 +113,7 @@ If you wait a while and all stacks are in `CREATE_COMPLETE`, the server side con
 ### Enabling and importing Unity IAP
 
 Unity IAP must be enabled for the sample to work with GS2-Money.  
-( https://docs.unity3d.com/ja/2020.3/Manual/UnityIAPSettingUp.html )  
+( https://docs.unity3d.com/2021.3/Documentation/Manual/UnityIAPSettingUp.html )  
 Enable In-App Purchasing in the Services window, and  
 Import the IAP package.  
 

@@ -76,9 +76,6 @@ namespace Gs2.Sample
 
         private int _saveSlot = 0;
 
-        private Profile _profile;
-        public Profile Profile => _profile;
-
         private Gs2Domain _domain;
         public Gs2Domain Domain => _domain;
 
@@ -213,17 +210,22 @@ namespace Gs2.Sample
             Gs2.Unity.Util.ErrorEvent onError
         )
         {
-            _profile = new Profile(
-                clientId,
-                clientSecret,
-                new Gs2BasicReopener()
-            );
-
-            await _profile.InitializeAsync();
-
-            _profile.Gs2Session.OnDisconnect += DisconnectHandler;
-
-            _domain = new Gs2Domain(_profile, distributorNamespaceName);
+            try
+            {
+                _domain = await Gs2.Unity.Core.Gs2Client.CreateAsync(
+                    new Gs2.Core.Model.BasicGs2Credential(
+                        clientId,
+                        clientSecret
+                    )
+                );
+            }
+            catch (Gs2Exception e)
+            {
+                onError.Invoke(e, null);
+                return;
+            }
+            
+            _domain.Connection.WebSocketSession.OnDisconnect += DisconnectHandler;
 
             onInitializeGs2.Invoke(_domain);
         }
@@ -240,29 +242,22 @@ namespace Gs2.Sample
             Assert.IsFalse(string.IsNullOrEmpty(clientSecret), "string.IsNullOrEmpty(clientSecret)");
             Assert.IsNotNull(onInitializeGs2, "onInitializeGs2 != null");
             Assert.IsNotNull(onError, "onError != null");
-
-            _profile = new Profile(
-                clientId,
-                clientSecret,
-                new Gs2BasicReopener()
+            
+            var future = Gs2.Unity.Core.Gs2Client.CreateFuture(
+                new Gs2.Core.Model.BasicGs2Credential(
+                    clientId,
+                    clientSecret
+                )
             );
-
-            var future = _profile.InitializeFuture();
             yield return future;
-            if (future.Error != null)
-            {
-                onError.Invoke(
-                    future.Error,
-                    null
-                );
-                yield break;
+            if (future.Error != null) {
+                throw future.Error;
             }
+            _domain = future.Result;
+            
+            _domain.Connection.WebSocketSession.OnDisconnect += DisconnectHandler;
 
-            _profile.Gs2Session.OnDisconnect += DisconnectHandler;
-
-            var domain = new Gs2Domain(_profile, distributorNamespaceName);
-
-            onInitializeGs2.Invoke(domain);
+            onInitializeGs2.Invoke(_domain);
         }
 
         public void DisconnectHandler()
@@ -303,12 +298,12 @@ namespace Gs2.Sample
             
 #if GS2_ENABLE_UNITASK
             FinalizeGs2Async(
-                _profile
+                _domain.Connection
             ).Forget();
 #else
             StartCoroutine(
                 FinalizeGs2(
-                    _profile
+                    _domain.Connection
                 )
             );
 #endif
@@ -320,23 +315,23 @@ namespace Gs2.Sample
         /// </summary>
 #if GS2_ENABLE_UNITASK
         private async UniTask FinalizeGs2Async(
-            Profile profile
+            Gs2Connection connection
         )
         {
-            if (profile == null)
+            if (connection == null)
                 return;
 
-            await profile.FinalizeAsync();
+            await connection.DisconnectAsync();
         }
 #endif
         private IEnumerator FinalizeGs2(
-            Profile profile
+            Gs2Connection connection
         )
         {
-            if (profile == null)
+            if (connection == null)
                 yield break;
 
-            yield return profile.Finalize();
+            yield return connection.DisconnectFuture();
         }
         
         /// <summary>
@@ -743,30 +738,30 @@ namespace Gs2.Sample
             string gatewayNamespaceName
         )
         {
-            UIManager.Instance.AddLog("Profile.LoginFuture");
+            UIManager.Instance.AddLog("Authentication");
 
             GameSession gameSession;
             {
-                var future = _profile.LoginFuture(
+                var future = _domain.LoginFuture(
                     new Gs2AccountAuthenticator(
-                        _profile.Gs2Session,
-                        _profile.Gs2RestSession,
-                        accountNamespaceName,
-                        accountEncryptionKeyId,
-                        userId,
-                        password,
-                        // サーバからプッシュ通知を受けるためのユーザーIDを設定
-                        // Set user ID to receive push notifications from the server
-                        new GatewaySetting 
+                        accountSetting: new AccountSetting
+                        {
+                            accountNamespaceName = accountNamespaceName,
+                            keyId = accountEncryptionKeyId
+                        },
+                        // サーバからアプリ内プッシュ通知を受けるためのユーザーIDを設定
+                        // Set user ID to receive in-app push notifications from the server
+                        gatewaySetting: new GatewaySetting
                         {
                             gatewayNamespaceName = gatewayNamespaceName,
                             allowConcurrentAccess = false
                         }
-                    )
+                    ),
+                    userId,
+                    password
                 );
                 yield return future;
-                if (future.Error != null)
-                {
+                if (future.Error != null) {
                     onError.Invoke(future.Error, null);
                     yield break;
                 }
@@ -797,22 +792,23 @@ namespace Gs2.Sample
             GameSession gameSession;
             try
             {
-                gameSession = await _profile.LoginAsync(
+                gameSession = await _domain.LoginAsync(
                     new Gs2AccountAuthenticator(
-                        _profile.Gs2Session,
-                        _profile.Gs2RestSession,
-                        accountNamespaceName,
-                        accountEncryptionKeyId,
-                        userId,
-                        password,
-                        // サーバからプッシュ通知を受けるためのユーザーIDを設定
-                        // Set user ID to receive push notifications from the server
-                        new GatewaySetting 
+                        accountSetting: new AccountSetting
+                        {
+                            accountNamespaceName = accountNamespaceName,
+                            keyId = accountEncryptionKeyId
+                        },
+                        // サーバからアプリ内プッシュ通知を受けるためのユーザーIDを設定
+                        // Set user ID to receive in-app push notifications from the server
+                        gatewaySetting: new GatewaySetting
                         {
                             gatewayNamespaceName = gatewayNamespaceName,
                             allowConcurrentAccess = false
                         }
-                    )
+                    ),
+                    userId,
+                    password
                 );
             }
             catch (Gs2Exception e)

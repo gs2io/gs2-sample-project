@@ -50,12 +50,12 @@ namespace Gs2.Sample.Friend
         /// <returns></returns>
         public void Initialize()
         {
-            GameManager.Instance.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
+            GameManager.Instance.Domain.Connection.WebSocketSession.OnNotificationMessage += PushNotificationHandler;
         }
         
         public void Finish()
         {
-            GameManager.Instance.Profile.Gs2Session.OnNotificationMessage -= PushNotificationHandler;
+            GameManager.Instance.Domain.Connection.WebSocketSession.OnNotificationMessage -= PushNotificationHandler;
         }
 
         /// <summary>

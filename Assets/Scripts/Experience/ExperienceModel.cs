@@ -392,7 +392,7 @@ namespace Gs2.Sample.Experience
             ).Exchange();
             try
             {
-                var result = await domain.ExchangeAsync(
+                var TransactionDomain = await domain.ExchangeAsync(
                     rateName: exchangeRateName,
                     count: value,
                     config: new[]
@@ -404,6 +404,8 @@ namespace Gs2.Sample.Experience
                         }
                     }
                 );
+
+                var result = await TransactionDomain.WaitAsync();
             }
             catch (Gs2Exception e)
             {

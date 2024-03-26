@@ -836,12 +836,12 @@ namespace Gs2.Sample.Friend
         )
         {
 	        BlackList.Clear();
-	        var domain = gs2.Friend.Namespace(
+	        var it = gs2.Friend.Namespace(
 		        namespaceName: friendNamespaceName
 	        ).Me(
 		        gameSession: gameSession
+		    ).BlackListUsers(
 	        );
-	        var it = domain.BlackLists();
 	        while (it.HasNext())
 	        {
 		        yield return it.Next();
@@ -868,15 +868,15 @@ namespace Gs2.Sample.Friend
 		    ErrorEvent onError
 	    )
 	    {
-		    var domain = gs2.Friend.Namespace(
-			    namespaceName: friendNamespaceName
-		    ).Me(
-			    gameSession: gameSession
-		    );
 		    try
 		    {
-			    BlackList = await domain.BlackListsAsync().ToListAsync();
-			    onGetBlackList.Invoke(BlackList);
+		        var item = await gs2.Friend.Namespace(
+                    namespaceName: friendNamespaceName
+                ).Me(
+                    gameSession: gameSession
+                ).BlackListUsersAsync().ToListAsync();
+
+			    onGetBlackList.Invoke(item);
 		    }
 		    catch (Gs2Exception e)
 		    {
@@ -1035,9 +1035,10 @@ namespace Gs2.Sample.Friend
 		        namespaceName: friendNamespaceName
 	        ).Me(
 		        gameSession: gameSession
-	        ).FollowUser(
-		        targetUserId: targetUserId,
+	        ).Follow(
 		        withProfile: false
+	        ).FollowUser(
+		        targetUserId: targetUserId
 	        );
 	        var future = domain.Follow();
 	        yield return future;
@@ -1067,9 +1068,10 @@ namespace Gs2.Sample.Friend
 			    namespaceName: friendNamespaceName
 		    ).Me(
 			    gameSession: gameSession
+			).Follow(
+				    withProfile: false
 		    ).FollowUser(
-			    targetUserId: targetUserId,
-			    withProfile: false
+			    targetUserId: targetUserId
 		    );
 		    try
 		    {
@@ -1101,9 +1103,10 @@ namespace Gs2.Sample.Friend
 		        namespaceName: friendNamespaceName
 	        ).Me(
 		        gameSession: gameSession
-	        ).FollowUser(
-		        targetUserId: targetUserId,
+	        ).Follow(
 		        withProfile: false
+	        ).FollowUser(
+		        targetUserId: targetUserId
 	        );
 	        var future = domain.Unfollow();
 	        yield return future;
@@ -1129,9 +1132,10 @@ namespace Gs2.Sample.Friend
 			    namespaceName: friendNamespaceName
 		    ).Me(
 			    gameSession: gameSession
-		    ).FollowUser(
-			    targetUserId: targetUserId,
+		    ).Follow(
 			    withProfile: false
+		    ).FollowUser(
+			    targetUserId: targetUserId
 		    );
 		    try
 		    {
@@ -1162,6 +1166,8 @@ namespace Gs2.Sample.Friend
 		        namespaceName: friendNamespaceName
 	        ).Me(
 		        gameSession: gameSession
+	        ).Follow(
+		        false
 	        );
 	        var it = domain.Follows();
 	        while (it.HasNext())
@@ -1178,7 +1184,7 @@ namespace Gs2.Sample.Friend
 			        FollowUsers.Add(it.Current);
 		        }
 	        }
-		    
+
 	        onDescribeFollowUsers.Invoke(FollowUsers);
         }
 #if GS2_ENABLE_UNITASK
@@ -1194,7 +1200,9 @@ namespace Gs2.Sample.Friend
 			    namespaceName: friendNamespaceName
 		    ).Me(
 			    gameSession: gameSession
-		    );
+		    ).Follow(
+			    false
+			);
 		    try
 		    {
 			    FollowUsers = await domain.FollowsAsync().ToListAsync();

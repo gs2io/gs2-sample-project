@@ -161,12 +161,12 @@ namespace Gs2.Sample.Realtime
         {
             UIManager.Instance.AddLog("Initialize");
             
-            GameManager.Instance.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
+            GameManager.Instance.Domain.Connection.WebSocketSession.OnNotificationMessage += PushNotificationHandler;
         }
         
         public void Finish()
         {
-            GameManager.Instance.Profile.Gs2Session.OnNotificationMessage -= PushNotificationHandler;
+            GameManager.Instance.Domain.Connection.WebSocketSession.OnNotificationMessage -= PushNotificationHandler;
         }
         
         /// <summary>
@@ -287,7 +287,7 @@ namespace Gs2.Sample.Realtime
                     
                     case State.GetRoom:
                         UIManager.Instance.OpenProcessing();
-#if GS2_ENABLE_UNITASK
+#if GS2_ENABLE_UNITASK && !UNITY_WEBGL
                         GetRoomAsync().Forget();
 #else
                         StartCoroutine(
@@ -298,7 +298,7 @@ namespace Gs2.Sample.Realtime
                         
                     case State.ConnectRoom:
                         UIManager.Instance.OpenProcessing();
-#if GS2_ENABLE_UNITASK
+#if GS2_ENABLE_UNITASK && !UNITY_WEBGL
                         ConnectRoomAsync().Forget();
 #else
                         StartCoroutine(
@@ -324,7 +324,7 @@ namespace Gs2.Sample.Realtime
                     case State.Main:
                         UIManager.Instance.CloseProcessing();
                         _realtimeView.OnEnableEvent();
-#if GS2_ENABLE_UNITASK
+#if GS2_ENABLE_UNITASK && !UNITY_WEBGL
                         myCharacter.UpdateProfileAsync().Forget();
 #else
                         StartCoroutine(
@@ -411,7 +411,7 @@ namespace Gs2.Sample.Realtime
             
             SetState(State.ConnectRoom);
         }
-#if GS2_ENABLE_UNITASK
+#if GS2_ENABLE_UNITASK && !UNITY_WEBGL
         /// <summary>
         /// GS2-Realtime のルーム情報を取得
         /// Get GS2-Realtime room information
@@ -473,7 +473,7 @@ namespace Gs2.Sample.Realtime
                 _realtimeModel.room.EncryptionKey
             );
         }
-#if GS2_ENABLE_UNITASK
+#if GS2_ENABLE_UNITASK && !UNITY_WEBGL
         private async UniTask ConnectRoomAsync()
         {
             var session = await ConnectRoomAsync(
@@ -573,7 +573,7 @@ namespace Gs2.Sample.Realtime
                 }
             }
         }
-#if GS2_ENABLE_UNITASK
+#if GS2_ENABLE_UNITASK && !UNITY_WEBGL
         private async UniTask<RelayRealtimeSession> ConnectRoomAsync(
             string ipAddress,
             int port,
@@ -649,7 +649,7 @@ namespace Gs2.Sample.Realtime
             ClearPlayers();
             players.Clear();
             
-#if GS2_ENABLE_UNITASK
+#if GS2_ENABLE_UNITASK && !UNITY_WEBGL
             _realtimeModel.realtimeSession.CloseAsync().Forget();
 #else
             StartCoroutine(

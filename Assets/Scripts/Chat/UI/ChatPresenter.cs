@@ -76,7 +76,7 @@ namespace Gs2.Sample.Chat
         /// <returns></returns>
         public IEnumerator Initialize()
         {
-            GameManager.Instance.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
+            GameManager.Instance.Domain.Connection.WebSocketSession.OnNotificationMessage += PushNotificationHandler;
 
             bool roomNotFound = false;
             void OnError(Gs2Exception e, Func<IEnumerator> retry)
@@ -107,7 +107,7 @@ namespace Gs2.Sample.Chat
 #if GS2_ENABLE_UNITASK
         public async UniTask InitializeAsync()
         {
-            GameManager.Instance.Profile.Gs2Session.OnNotificationMessage += PushNotificationHandler;
+            GameManager.Instance.Domain.Connection.WebSocketSession.OnNotificationMessage += PushNotificationHandler;
 
             bool roomNotFound = false;
             void OnError(Gs2Exception e, Func<IEnumerator> retry)
@@ -139,7 +139,7 @@ namespace Gs2.Sample.Chat
         
         public void Finish()
         {
-            GameManager.Instance.Profile.Gs2Session.OnNotificationMessage -= PushNotificationHandler;
+            GameManager.Instance.Domain.Connection.WebSocketSession.OnNotificationMessage -= PushNotificationHandler;
         }
         
         /// <summary>

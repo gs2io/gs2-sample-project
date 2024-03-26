@@ -7,15 +7,15 @@ Game Server Services (https://gs2.io) の Unity 向けのサンプルプロジ�
 
 ## 動作環境
 
-Unity 2020.3.48f1  LTS  
+Unity 2021.3.36f1 LTS  
 
-GS2 C# SDK 2023.8.18  
-GS2 SDK for Unity 2023.8.19  
+GS2 C# SDK 2024.3.10  
+GS2 SDK for Unity 2024.3.7  
 
 ## 注意事項
 
 - サンプルに含まれるmanifest.json、packages-lock.jsonファイルには、  
-GS2のSDKのほか、Unity.2020.3上での動作に必要なパッケージの記述が含まれます。  
+GS2のSDKのほか、Unity.2021.3上での動作に必要なパッケージの記述が含まれます。  
 上記以外のUnityバージョンでプロジェクトを開くと、  
 エラーが発生しパッケージのバージョン変更が必要になる場合があります。  
 その場合は、パッケージマネージャーで検証済みバージョンをインストールすることで動作可能になります。  
@@ -73,7 +73,7 @@ Templatesフォルダの以下のファイルでスタックを作成します�
 ---|---
 [initialize_credential_template.yaml](Templates/initialize_credential_template.yaml) |クレデンシャル GS2の初期化
 [initialize_account_template.yaml](Templates/initialize_account_template.yaml) |ログイン/アカウント連携・引継ぎ GS2-Gateway
-[initialize_distributor_template.yaml](Templates/initialize_distributor_template.yaml) |GS2-Distributor GS2-JobQueue 設定
+[initialize_job_queue_template.yaml](Templates/initialize_job_queue_template.yaml) |GS2-JobQueue 設定
 
 #### 各機能の動作に必要なテンプレート
 
@@ -113,7 +113,7 @@ Templatesフォルダの以下のファイルでスタックを作成します�
 ### Unity IAPの有効化、インポート
 
 GS2-Moneyを使用したサンプルの動作には、Unity IAPの有効化が必要になります。  
-( https://docs.unity3d.com/ja/2020.3/Manual/UnityIAPSettingUp.html )  
+( https://docs.unity3d.com/ja/2021.3/Manual/UnityIAPSettingUp.html )  
 サービスウィンドウでのIn-App Purchasingの有効化、  
 IAP パッケージのインポートを行います。  
 
