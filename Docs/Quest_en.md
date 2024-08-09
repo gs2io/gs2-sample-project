@@ -67,7 +67,7 @@ var domain = gs2.Quest.Namespace(
 ).Me(
     gameSession: gameSession
 ).Progress();
-var future = domain.Model();
+var future = domain.ModelFuture();
 yield return future;
 if (future.Error != null)
 {
@@ -279,7 +279,7 @@ var domain = gs2.Quest.Namespace(
 ).Me(
     gameSession: gameSession
 );
-var future = domain.Start(
+var future = domain.StartFuture(
     questGroupName: selectedQuestGroup.Name,
     questName: selectedQuest.Name,
     force: null,
@@ -354,7 +354,7 @@ var domain = gs2.Quest.Namespace(
 ).Me(
     gameSession: gameSession
 ).Progress();
-var future = domain.End(
+var future = domain.EndFuture(
     isComplete: isComplete,
     rewards: rewards.ToArray(),
     config: new []

@@ -81,24 +81,34 @@ namespace Gs2.Sample.Matchmaking
         private State matchmakingState = State.MainMenu;
         
         /// <summary>
-        /// 通知が届いたか
+        /// ギャザリングに新しい参加者が参加したときの通知が届いたか
         /// </summary>
-        private bool _recievedNotification;
+        private bool _hasReceivedJoinNotification;
         
         /// <summary>
-        /// 通知の種別
+        /// 参加したユーザーのUserId
         /// </summary>
-        private string _issuer;
-
+        private string _joinUserId;
+        
         /// <summary>
-        /// マッチメイキング完了通知のgatheringName
+        /// ギャザリングから参加者が離脱したときの通知が届いたか
+        /// </summary>
+        private bool _hasReceivedLeaveNotification;
+        
+        /// <summary>
+        /// 離脱したユーザーのUserId
+        /// </summary>
+        private string _leaveUserId;
+        
+        /// <summary>
+        /// ギャザリングが成立したときの通知が届いたか
+        /// </summary>
+        private bool _hasReceivedCompleteNotification;
+        
+        /// <summary>
+        /// マッチメイキングが完了したギャザリングのgatheringName
         /// </summary>
         private string _gatheringName;
-        
-        /// <summary>
-        /// 通知で対象になっているUserId
-        /// </summary>
-        private string _userId;
         
         // Start is called before the first frame update
         void Start()
@@ -113,7 +123,9 @@ namespace Gs2.Sample.Matchmaking
             _matchmakingView.OnCloseEvent();
             _joinGatheringView.OnCloseEvent();
             
-            _recievedNotification = false;
+            _hasReceivedJoinNotification = false;
+            _hasReceivedLeaveNotification = false;
+            _hasReceivedCompleteNotification = false;
             
             _matchmakingSetting.onUpdateJoinedPlayerIds.AddListener(
                 (gathering, joinedPlayerIds) =>
@@ -152,93 +164,103 @@ namespace Gs2.Sample.Matchmaking
 
         public void Initialize()
         {
-            GameManager.Instance.Domain.Connection.WebSocketSession.OnNotificationMessage += PushNotificationHandler;
+            GameManager.Instance.Domain.Matchmaking.OnJoinNotification += JoinNotificationHandler;
+            GameManager.Instance.Domain.Matchmaking.OnLeaveNotification += LeaveNotificationHandler;
+            GameManager.Instance.Domain.Matchmaking.OnCompleteNotification += CompleteNotificationHandler;
+            
         }
         
         public void Finish()
         {
-            GameManager.Instance.Domain.Connection.WebSocketSession.OnNotificationMessage -= PushNotificationHandler;
+            GameManager.Instance.Domain.Matchmaking.OnJoinNotification -= JoinNotificationHandler;
+            GameManager.Instance.Domain.Matchmaking.OnLeaveNotification -= LeaveNotificationHandler;
+            GameManager.Instance.Domain.Matchmaking.OnCompleteNotification -= CompleteNotificationHandler;
         }
         
         /// <summary>
         /// 任意のタイミングで届く通知
         /// ※メインスレッド外
+        /// Notifications delivered at any given time
+        /// *Outside the main thread
         /// </summary>
-        /// <param name="message"></param>
-        public void PushNotificationHandler(NotificationMessage message)
+        /// <param name="notification"></param>
+        public void JoinNotificationHandler(JoinNotification notification)
         {
-            Debug.Log("PushNotificationHandler :" + message.issuer);
+            Debug.Log("JoinNotificationHandler : " + notification.JoinUserId);
             
-            if (!message.issuer.StartsWith("Gs2Matchmaking:")) return;
+            _matchmakingModel.JoinedPlayerIds.Add(notification.JoinUserId);
+            _joinUserId = notification.JoinUserId;
+            _hasReceivedJoinNotification = true;
+        }
 
-            _issuer = message.issuer;
-
-            if (message.issuer.EndsWith(":Join"))
-            {
-                var notification = JoinNotification.FromJson(JsonMapper.ToObject(message.payload));
-                if (!_matchmakingModel.JoinedPlayerIds.Contains(notification.JoinUserId))
-                {
-                    _matchmakingModel.JoinedPlayerIds.Add(notification.JoinUserId);
-                    _userId = notification.JoinUserId;
-                    _recievedNotification = true;
-                }
-            }
-            else if (message.issuer.EndsWith(":Leave"))
-            {
-                var notification = LeaveNotification.FromJson(JsonMapper.ToObject(message.payload));
-                _matchmakingModel.JoinedPlayerIds.Remove(notification.LeaveUserId);
-                _userId = notification.LeaveUserId;
-                _recievedNotification = true;
-            }
-            else if (message.issuer.EndsWith(":Complete"))
-            {
-                var notification = CompleteNotification.FromJson(JsonMapper.ToObject(message.payload));
-                _gatheringName = notification.GatheringName;
-                _recievedNotification = true;
-            }
+        /// <summary>
+        /// 任意のタイミングで届く通知
+        /// ※メインスレッド外
+        /// Notifications delivered at any given time
+        /// *Outside the main thread
+        /// </summary>
+        /// <param name="notification"></param>
+        public void LeaveNotificationHandler(LeaveNotification notification)
+        {
+            Debug.Log("LeaveNotificationHandler : " + notification.LeaveUserId);
+            
+            _matchmakingModel.JoinedPlayerIds.Remove(notification.LeaveUserId);
+            _leaveUserId = notification.LeaveUserId;
+            _hasReceivedJoinNotification = true;
+        }
+        
+        /// <summary>
+        /// 任意のタイミングで届く通知
+        /// ※メインスレッド外
+        /// Notifications delivered at any given time
+        /// *Outside the main thread
+        /// </summary>
+        /// <param name="notification"></param>
+        public void CompleteNotificationHandler(CompleteNotification notification)
+        {
+            Debug.Log("CompleteNotificationHandler : " + notification.GatheringName);
+            
+            _gatheringName = notification.GatheringName;
+            _hasReceivedCompleteNotification = true;
         }
         
         private void Update()
         {
-            if (_recievedNotification)
+            if (_hasReceivedJoinNotification)
             {
-                if (_issuer.EndsWith(":Join"))
+                if (_matchmakingModel.Gathering != null)
                 {
-                    if (_matchmakingModel.Gathering != null)
-                    {
-                        _matchmakingSetting.onJoinPlayer.Invoke(_matchmakingModel.Gathering, _userId);
-                        _matchmakingSetting.onUpdateJoinedPlayerIds.Invoke(_matchmakingModel.Gathering, _matchmakingModel.JoinedPlayerIds);
-                        
-                        _issuer = String.Empty;
-                        _userId = String.Empty;
-                        _recievedNotification = false;
-                    }
+                    _matchmakingSetting.onJoinPlayer.Invoke(_matchmakingModel.Gathering, _joinUserId);
+                    _matchmakingSetting.onUpdateJoinedPlayerIds.Invoke(_matchmakingModel.Gathering, _matchmakingModel.JoinedPlayerIds);
+
+                    _joinUserId = String.Empty;
+                    _hasReceivedJoinNotification = false;
                 }
-                else if (_issuer.EndsWith(":Leave"))
+            }
+
+            if (_hasReceivedLeaveNotification)
+            {
+                if (_matchmakingModel.Gathering != null)
                 {
-                    if (_matchmakingModel.Gathering != null)
-                    {
-                        _matchmakingSetting.onLeavePlayer.Invoke(_matchmakingModel.Gathering, _userId);
-                        _matchmakingSetting.onUpdateJoinedPlayerIds.Invoke(_matchmakingModel.Gathering, _matchmakingModel.JoinedPlayerIds);
-                        
-                        _issuer = String.Empty;
-                        _userId = String.Empty;
-                        _recievedNotification = false;
-                    }
+                    _matchmakingSetting.onLeavePlayer.Invoke(_matchmakingModel.Gathering, _leaveUserId);
+                    _matchmakingSetting.onUpdateJoinedPlayerIds.Invoke(_matchmakingModel.Gathering, _matchmakingModel.JoinedPlayerIds);
+                    
+                    _leaveUserId = String.Empty;
+                    _hasReceivedLeaveNotification = false;
                 }
-                else if (_issuer.EndsWith(":Complete"))
+            }
+
+            if (_hasReceivedCompleteNotification)
+            {
+                if (_matchmakingModel.Gathering != null)
                 {
-                    if (_matchmakingModel.Gathering != null)
-                    {
-                        // Joinと同時にマッチメイキングが成立する場合
-                        // DoMatchmaking の応答より先にマッチメイキング完了通知が届くことがある
-                        SetState(State.Complete);
-                        _matchmakingSetting.onMatchmakingComplete.Invoke(_gatheringName);
+                    // Joinと同時にマッチメイキングが成立する場合
+                    // DoMatchmaking の応答より先にマッチメイキング完了通知が届くことがある
+                    SetState(State.Complete);
+                    _matchmakingSetting.onMatchmakingComplete.Invoke(_gatheringName);
                         
-                        _issuer = String.Empty;
-                        _userId = String.Empty;
-                        _recievedNotification = false;
-                    }
+                    _gatheringName = String.Empty;
+                    _hasReceivedCompleteNotification = false;
                 }
             }
         }
@@ -466,13 +488,13 @@ namespace Gs2.Sample.Matchmaking
                                     if (!_matchmakingModel.JoinedPlayerIds.Contains(player.UserId))
                                     {
                                         _matchmakingModel.JoinedPlayerIds.Add(player.UserId);
-                                        _matchmakingSetting.onJoinPlayer.Invoke(_matchmakingModel.Gathering, _userId);
+                                        _matchmakingSetting.onJoinPlayer.Invoke(_matchmakingModel.Gathering, _joinUserId);
                                     }
                                 }
                             }
                         }
                     }
-                    _matchmakingSetting.onJoinPlayer.Invoke(_matchmakingModel.Gathering, _userId);
+                    _matchmakingSetting.onJoinPlayer.Invoke(_matchmakingModel.Gathering, _joinUserId);
                     _matchmakingSetting.onUpdateJoinedPlayerIds.Invoke(_matchmakingModel.Gathering,
                         _matchmakingModel.JoinedPlayerIds);
 

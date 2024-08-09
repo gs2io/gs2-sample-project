@@ -125,7 +125,7 @@ var domain = gs2.Account.Namespace(
 ).TakeOver(
     type: type
 );
-var future = domain.AddTakeOverSetting(
+var future = domain.AddTakeOverSettingFuture(
     userIdentifier: userIdentifier,
     password: password
 );
@@ -137,7 +137,7 @@ if (future.Error != null)
     yield break;
 }
 
-var future2 = future.Result.Model();
+var future2 = future.Result.ModelFuture();
 yield return future2;
 if (future2.Error != null)
 {
@@ -184,7 +184,7 @@ var domain = gs2.Account.Namespace(
 ).TakeOver(
     type: type
 );
-var future = domain.DeleteTakeOverSetting();
+var future = domain.DeleteTakeOverSettingFuture();
 yield return future;
 if (future.Error != null)
 {
@@ -233,7 +233,7 @@ return null;
 var domain = gs2.Account.Namespace(
     namespaceName: accountNamespaceName
 );
-var future = domain.DoTakeOver(
+var future = domain.DoTakeOverFuture(
     type: type,
     userIdentifier: userIdentifier,
     password: password
@@ -246,7 +246,7 @@ if (future.Error != null)
     yield break;
 }
 
-var future2 = future.Result.Model();
+var future2 = future.Result.ModelFuture();
 yield return future2;
 if (future2.Error != null)
 {

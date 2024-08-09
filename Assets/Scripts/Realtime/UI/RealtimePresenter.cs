@@ -100,9 +100,9 @@ namespace Gs2.Sample.Realtime
         private State _realtimeState = State.Initialize;
 
         /// <summary>
-        /// 通知の種別
+        /// 作成されたルーム名
         /// </summary>
-        private string _issuer;
+        private string _roomName;
         
         private void Start()
         {
@@ -161,12 +161,12 @@ namespace Gs2.Sample.Realtime
         {
             UIManager.Instance.AddLog("Initialize");
             
-            GameManager.Instance.Domain.Connection.WebSocketSession.OnNotificationMessage += PushNotificationHandler;
+            GameManager.Instance.Domain.Realtime.OnCreateNotification += CreateNotificationHandler;
         }
         
         public void Finish()
         {
-            GameManager.Instance.Domain.Connection.WebSocketSession.OnNotificationMessage -= PushNotificationHandler;
+            GameManager.Instance.Domain.Realtime.OnCreateNotification -= CreateNotificationHandler;
         }
         
         /// <summary>
@@ -175,18 +175,11 @@ namespace Gs2.Sample.Realtime
         /// Notification delivered at any given time
         /// *Outside the main thread
         /// </summary>
-        public void PushNotificationHandler(NotificationMessage message)
+        public void CreateNotificationHandler(CreateNotification notification)
         {
-            Debug.Log("PushNotificationHandler :" + message.issuer);
+            Debug.Log("CreateNotificationHandler : " + notification.RoomName);
             
-            if (!message.issuer.StartsWith("Gs2Realtime:")) return;
-
-            _issuer = message.issuer;
-            if (message.issuer.EndsWith(":Create"))
-            {
-                var notification = CreateNotification.FromJson(JsonMapper.ToObject(message.payload));
-                Debug.Log("RoomName :" + notification.RoomName);
-            }
+            _roomName = notification.RoomName;
         }
 
         private void Update()

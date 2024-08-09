@@ -64,7 +64,7 @@ namespace Gs2.Sample.Money
             ).Wallet(
                 slot: Slot
             );
-            var future = domain.Model();
+            var future = domain.ModelFuture();
             yield return future;
             if (future.Error != null)
             {
@@ -126,7 +126,7 @@ namespace Gs2.Sample.Money
             ).Showcase(
                 showcaseName: showcaseName
             );
-            var future = domain.Model();
+            var future = domain.ModelFuture();
             yield return future;
             if (future.Error != null)
             {
@@ -165,7 +165,7 @@ namespace Gs2.Sample.Money
                         limitName: countUpRequest.LimitName,
                         counterName: countUpRequest.CounterName
                     );
-                    var future2 = domain2.Model();
+                    var future2 = domain2.ModelFuture();
                     yield return future2;
                     if (future2.Error == null)
                     {
@@ -365,7 +365,7 @@ namespace Gs2.Sample.Money
                 ).DisplayItem(
                     displayItemId: selectedProduct.Id
                 );
-                var future = domain.Buy(
+                var future = domain.BuyFuture(
                     quantity: 1,
                     config: new []
                     {

@@ -75,7 +75,7 @@ var domain = gs2.Friend.Namespace(
 ).Me(
     gameSession: gameSession
 ).Profile();
-var future = domain.Model();
+var future = domain.ModelFuture();
 yield return future;
 if (future.Error != null)
 {
@@ -121,7 +121,7 @@ var domain = gs2.Friend.Namespace(
     gameSession: gameSession
 ).Profile(
 );
-var future = domain.UpdateProfile(
+var future = domain.UpdateProfileFuture(
     publicProfile: publicProfile,
     followerProfile: followerProfile,
     friendProfile: friendProfile
@@ -232,7 +232,7 @@ var domain = gs2.Friend.Namespace(
 ).FriendUser(
     targetUserId: targetUserId
 );
-var future = domain.DeleteFriend();
+var future = domain.DeleteFriendFuture();
 yield return future;
 if (future.Error != null)
 {
@@ -287,7 +287,7 @@ var domain = gs2.Friend.Namespace(
 ).Me(
     gameSession: gameSession
 );
-var future = domain.SendRequest(
+var future = domain.SendRequestFuture(
     targetUserId: targetUserId
 );
 yield return future;
@@ -385,7 +385,7 @@ var domain = gs2.Friend.Namespace(
 ).SendFriendRequest(
     targetUserId: targetUserId
 );
-var future = domain.DeleteRequest();
+var future = domain.DeleteRequestFuture();
 yield return future;
 if (future.Error != null)
 {
@@ -480,7 +480,7 @@ var domain = gs2.Friend.Namespace(
 ).ReceiveFriendRequest(
     fromUserId: fromUserId
 );
-var future = domain.Accept();
+var future = domain.AcceptFuture();
 yield return future;
 if (future.Error != null)
 {
@@ -526,7 +526,7 @@ var domain = gs2.Friend.Namespace(
 ).ReceiveFriendRequest(
     fromUserId: fromUserId
 );
-var future = domain.Reject();
+var future = domain.RejectFuture();
 yield return future;
 if (future.Error != null)
 {
@@ -577,7 +577,7 @@ var domain = gs2.Friend.Namespace(
 ).ReceiveFriendRequest(
     fromUserId: fromUserId
 );
-var future = domain.Reject();
+var future = domain.RejectFuture();
 yield return future;
 if (future.Error != null)
 {
@@ -623,7 +623,7 @@ var domain = gs2.Friend.Namespace(
 ).Me(
     gameSession: gameSession
 ).BlackList();
-var future = domain.UnregisterBlackList(
+var future = domain.UnregisterBlackListFuture(
     targetUserId: targetUserId
 );
 yield return future;
@@ -721,7 +721,7 @@ var domain = gs2.Friend.Namespace(
 ).Me(
     gameSession: gameSession
 ).BlackList();
-var future = domain.RegisterBlackList(
+var future = domain.RegisterBlackListFuture(
     targetUserId: targetUserId
 );
 yield return future;
@@ -754,7 +754,9 @@ var domain = gs2.Friend.Namespace(
 );
 try
 {
-    var result = await domain.FollowAsync();
+var result = await domain.FollowAsync(
+    targetUserId: targetUserId
+    );
     var item = await result.ModelAsync();
     onFollow.Invoke(item);
 }
@@ -769,12 +771,10 @@ var domain = gs2.Friend.Namespace(
     namespaceName: friendNamespaceName
 ).Me(
     gameSession: gameSession
-).Follow(
-    withProfile: false
-).FollowUser(
+);
+var future = domain.FollowFuture(
     targetUserId: targetUserId
 );
-var future = domain.Follow();
 yield return future;
 if (future.Error != null)
 {
@@ -870,7 +870,7 @@ var domain = gs2.Friend.Namespace(
 ).FollowUser(
     targetUserId: targetUserId
 );
-var future = domain.Unfollow();
+var future = domain.UnfollowFuture();
 yield return future;
 if (future.Error != null)
 {

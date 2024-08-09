@@ -47,7 +47,7 @@ namespace Gs2.Sample.Version
             ).Me(
                 gameSession: gameSession
             ).Checker();
-            var future = domain.CheckVersion(
+            var future = domain.CheckVersionFuture(
                 targetVersions: targetVersions.ToArray()
             );
             yield return future;

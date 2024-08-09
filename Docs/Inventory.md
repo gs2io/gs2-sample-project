@@ -91,7 +91,7 @@ onGetInventoryModel.Invoke(inventoryModelName, Model, ItemModels);
     ).InventoryModel(
         inventoryName: inventoryModelName
     );
-    var future = domain.Model();
+    var future = domain.ModelFuture();
     yield return future;
     if (future.Error != null)
     {
@@ -160,7 +160,7 @@ var domain = gs2.Inventory.Namespace(
 ).Inventory(
     inventoryName: inventoryName
 );
-var future = domain.Model();
+var future = domain.ModelFuture();
 yield return future;
 if (future.Error != null)
 {
@@ -213,7 +213,7 @@ var domain = gs2.Inventory.Namespace(
 ).Inventory(
     inventoryName: inventoryName
 );
-var future = domain.ItemSet(
+var future = domain.ItemSetFuture(
     itemName: itemName,
     itemSetName: null
 ).Consume(

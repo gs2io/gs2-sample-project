@@ -57,7 +57,7 @@ namespace Gs2.Sample.Inventory
                 ).InventoryModel(
                     inventoryName: inventoryModelName
                 );
-                var future = domain.Model();
+                var future = domain.ModelFuture();
                 yield return future;
                 if (future.Error != null)
                 {
@@ -163,7 +163,7 @@ namespace Gs2.Sample.Inventory
                 ).Inventory(
                     inventoryName: inventoryName
                 );
-                var future = domain.Model();
+                var future = domain.ModelFuture();
                 yield return future;
                 if (future.Error != null)
                 {
@@ -280,7 +280,7 @@ namespace Gs2.Sample.Inventory
                 ).Me(
                     gameSession: gameSession
                 ).Exchange();
-                var future = domain.Exchange(
+                var future = domain.ExchangeFuture(
                     rateName: exchangeRateName,
                     count: value,
                     config: null
@@ -304,7 +304,7 @@ namespace Gs2.Sample.Inventory
                 ).Inventory(
                     inventoryName: inventoryName
                 );
-                var future = domain.Model();
+                var future = domain.ModelFuture();
                 yield return future;
                 if (future.Error != null)
                 {
@@ -448,7 +448,7 @@ namespace Gs2.Sample.Inventory
             var future = domain.ItemSet(
                 itemName: itemName,
                 itemSetName: null
-            ).Consume(
+            ).ConsumeFuture(
                 consumeCount: consumeValue
             );
             yield return future;
@@ -459,7 +459,7 @@ namespace Gs2.Sample.Inventory
             }
 
             var result = future.Result;
-            var future2 = result.Model();
+            var future2 = result.ModelFuture();
             yield return future2;
             if (future2.Error != null)
             {
@@ -469,7 +469,7 @@ namespace Gs2.Sample.Inventory
 
             var itemSets = future2.Result;
             
-            var future3 = domain.Model();
+            var future3 = domain.ModelFuture();
             yield return future3;
             if (future3.Error != null)
             {

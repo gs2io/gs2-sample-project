@@ -64,7 +64,7 @@ var domain = gs2.Chat.Namespace(
     roomName: roomName,
     password: null
 );
-var future = domain.Post(
+var future = domain.PostFuture(
     metadata: message,
     category: null
 );
@@ -76,7 +76,7 @@ if (future.Error != null)
 }
 
 var result = future.Result;
-var future2 = result.Model();
+var future2 = result.ModelFuture();
 yield return future2;
 if (future2.Error != null)
 {

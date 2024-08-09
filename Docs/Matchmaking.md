@@ -80,7 +80,7 @@
             ).Me(
                 gameSession: gameSession
             );
-            var future = domain.CreateGathering(
+            var future = domain.CreateGatheringFuture(
                 player: new EzPlayer
                 {
                     RoleName = "default"
@@ -106,7 +106,7 @@
                 yield break;
             }
 
-            var future2 = future.Result.Model();
+            var future2 = future.Result.ModelFuture();
             yield return future2;
             if (future2.Error != null)
             {

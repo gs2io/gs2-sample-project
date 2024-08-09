@@ -53,7 +53,7 @@ namespace Gs2.Sample.Matchmaking
             ).Me(
                 gameSession: gameSession
             );
-            var future = domain.CreateGathering(
+            var future = domain.CreateGatheringFuture(
                 player: new EzPlayer
                 {
                     RoleName = "default"
@@ -81,7 +81,7 @@ namespace Gs2.Sample.Matchmaking
                 yield break;
             }
 
-            var future2 = future.Result.Model();
+            var future2 = future.Result.ModelFuture();
             yield return future2;
             if (future2.Error != null)
             {
@@ -244,7 +244,7 @@ namespace Gs2.Sample.Matchmaking
             ).Gathering(
                 gatheringName: Gathering.Name
             );
-            var future = domain.CancelMatchmaking();
+            var future = domain.CancelMatchmakingFuture();
             yield return future;
             if (future.Error != null)
             {
@@ -253,7 +253,7 @@ namespace Gs2.Sample.Matchmaking
             }
  
             var domain2 = future.Result;
-            var future2 = domain2.Model();
+            var future2 = domain2.ModelFuture();
             yield return future2;
             if (future.Error != null)
             {

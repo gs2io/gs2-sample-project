@@ -58,7 +58,7 @@ var domain = gs2.Realtime.Namespace(
 ).Room(
     roomName: gatheringName
 );
-var future = domain.Model();
+var future = domain.ModelFuture();
 yield return future;
 if (future.Error != null)
 {

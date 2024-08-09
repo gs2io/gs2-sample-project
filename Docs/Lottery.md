@@ -9,7 +9,7 @@
 
 ## Unity IAPの有効化、インポート
 
-GS2-Moneyを使用したサンプルの動作には、Unity IAPの有効化が必要になります。  
+GS2-Money2を使用したサンプルの動作には、Unity IAPの有効化が必要になります。  
 ( https://docs.unity3d.com/ja/2019.4/Manual/UnityIAPSettingUp.html )  
 サービスウィンドウでのIn-App Purchasingの有効化、  
 IAP パッケージのインポートを行います。
@@ -68,7 +68,7 @@ var domain = gs2.Showcase.Namespace(
 ).Showcase(
     showcaseName: showcaseName
 );
-var future = domain.Model();
+var future = domain.ModelFuture();
 yield return future;
 if (future.Error != null)
 {
@@ -128,7 +128,7 @@ var domain = gs2.Showcase.Namespace(
 ).Showcase(
     showcaseName: showcaseName
 );
-var future = domain.Buy(
+var future = domain.BuyFuture(
     displayItemId: displayItemId,
     config: tempConfig.ToArray()
 );
@@ -208,7 +208,7 @@ IEnumerator Impl()
 {
     while (true)
     {
-        var future = _domain.Dispatch(_session);
+        var future = _domain.DispatchFuture(_session);
         yield return future;
         if (future != null)
         {

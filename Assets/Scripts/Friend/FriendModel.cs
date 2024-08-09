@@ -27,10 +27,16 @@ namespace Gs2.Sample.Friend
 	    public List<EzFriendUser> Friends;
 	    
 	    /// <summary>
-	    /// 送信済みフレンドリクエスト
+	    /// 送信中フレンドリクエスト
 	    /// Friend Requests Sent
 	    /// </summary>
-	    public List<EzFriendRequest> Requests;
+	    public List<EzFriendRequest> SendRequests;
+	    
+	    /// <summary>
+	    /// 受信中フレンドリクエスト
+	    /// Friend Requests Sent
+	    /// </summary>
+	    public List<EzFriendRequest> ReceiveRequests;
 	    
 	    /// <summary>
 	    /// ブラックリスト
@@ -61,7 +67,7 @@ namespace Gs2.Sample.Friend
 		    ).Me(
 			    gameSession: gameSession
 		    ).Profile();
-		    var future = domain.Model();
+		    var future = domain.ModelFuture();
 		    yield return future;
 		    if (future.Error != null)
 		    {
@@ -121,7 +127,7 @@ namespace Gs2.Sample.Friend
 			    gameSession: gameSession
 		    ).Profile(
 		    );
-		    var future = domain.UpdateProfile(
+		    var future = domain.UpdateProfileFuture(
 			    publicProfile: publicProfile,
 			    followerProfile: followerProfile,
 			    friendProfile: friendProfile
@@ -134,7 +140,7 @@ namespace Gs2.Sample.Friend
 		    }
 		    
 		    var result = future.Result;
-		    var future2 = result.Model();
+		    var future2 = result.ModelFuture();
 		    yield return future2;
 		    if (future2.Error != null)
 		    {
@@ -256,7 +262,7 @@ namespace Gs2.Sample.Friend
 		    ErrorEvent onError
 	    )
 	    {
-		    Requests.Clear();
+		    SendRequests.Clear();
 		    var domain = gs2.Friend.Namespace(
 			    namespaceName: friendNamespaceName
 		    ).Me(
@@ -274,11 +280,11 @@ namespace Gs2.Sample.Friend
 
 			    if (it.Current != null)
 			    {
-				    Requests.Add(it.Current);
+				    SendRequests.Add(it.Current);
 			    }
 		    }
 		    
-		    onDescribeSendRequests.Invoke(Requests);
+		    onDescribeSendRequests.Invoke(SendRequests);
 	    }
 #if GS2_ENABLE_UNITASK
 	    public async UniTask DescribeSendRequestsAsync(
@@ -296,9 +302,9 @@ namespace Gs2.Sample.Friend
 		    );
 		    try
 		    {
-			    Requests = await domain.SendRequestsAsync().ToListAsync();
+			    SendRequests = await domain.SendRequestsAsync().ToListAsync();
 			    
-			    onDescribeSendRequests.Invoke(Requests);
+			    onDescribeSendRequests.Invoke(SendRequests);
 		    }
 		    catch (Gs2Exception e)
 		    {
@@ -319,6 +325,7 @@ namespace Gs2.Sample.Friend
 		    ErrorEvent onError
 	    )
 	    {
+		    ReceiveRequests.Clear();
 		    var domain = gs2.Friend.Namespace(
 			    namespaceName: friendNamespaceName
 		    ).Me(
@@ -336,11 +343,11 @@ namespace Gs2.Sample.Friend
 
 			    if (it.Current != null)
 			    {
-				    Requests.Add(it.Current);
+				    ReceiveRequests.Add(it.Current);
 			    }
 		    }
 		    
-		    onDescribeReceiveRequests.Invoke(Requests);
+		    onDescribeReceiveRequests.Invoke(ReceiveRequests);
 	    }
 #if GS2_ENABLE_UNITASK
 	    public async UniTask DescribeReceiveRequestsAsync(
@@ -358,9 +365,9 @@ namespace Gs2.Sample.Friend
 		    );
 		    try
 		    {
-			    Requests = await domain.ReceiveRequestsAsync().ToListAsync();
+			    ReceiveRequests = await domain.ReceiveRequestsAsync().ToListAsync();
 			    
-			    onDescribeReceiveRequests.Invoke(Requests);
+			    onDescribeReceiveRequests.Invoke(ReceiveRequests);
 		    }
 		    catch (Gs2Exception e)
 		    {
@@ -391,7 +398,7 @@ namespace Gs2.Sample.Friend
 		    ).FriendUser(
 			    targetUserId: targetUserId
 		    );
-		    var future = domain.Model();
+		    var future = domain.ModelFuture();
 		    yield return future;
 		    if (future.Error != null)
 		    {
@@ -457,7 +464,7 @@ namespace Gs2.Sample.Friend
 		    ).FriendUser(
 			    targetUserId: targetUserId
 		    );
-		    var future = domain.DeleteFriend();
+		    var future = domain.DeleteFriendFuture();
 		    yield return future;
 		    if (future.Error != null)
 		    {
@@ -466,7 +473,7 @@ namespace Gs2.Sample.Friend
 		    }
  
 		    var result = future.Result;
-		    var future2 = result.Model();
+		    var future2 = result.ModelFuture();
 		    yield return future2;
 		    if (future2.Error != null)
 		    {
@@ -528,7 +535,7 @@ namespace Gs2.Sample.Friend
 			    userId: targetUserId
 		    ).PublicProfile(
 		    );
-		    var future = domain.Model();
+		    var future = domain.ModelFuture();
 		    yield return future;
 		    if (future.Error != null)
 		    {
@@ -585,7 +592,7 @@ namespace Gs2.Sample.Friend
 	        ).Me(
 		        gameSession: gameSession
 	        );
-	        var future = domain.SendRequest(
+	        var future = domain.SendRequestFuture(
 		        targetUserId: targetUserId
 	        );
 	        yield return future;
@@ -651,7 +658,7 @@ namespace Gs2.Sample.Friend
 	        ).ReceiveFriendRequest(
 		        fromUserId: fromUserId
 	        );
-	        var future = domain.Accept();
+	        var future = domain.AcceptFuture();
 	        yield return future;
 	        if (future.Error != null)
 	        {
@@ -716,7 +723,7 @@ namespace Gs2.Sample.Friend
 	        ).ReceiveFriendRequest(
 		        fromUserId: fromUserId
 	        );
-	        var future = domain.Reject();
+	        var future = domain.RejectFuture();
 	        yield return future;
 	        if (future.Error != null)
 	        {
@@ -780,7 +787,7 @@ namespace Gs2.Sample.Friend
 	        ).SendFriendRequest(
 		        targetUserId: targetUserId
 	        );
-	        var future = domain.DeleteRequest();
+	        var future = domain.DeleteRequestFuture();
 	        yield return future;
 	        if (future.Error != null)
 	        {
@@ -903,7 +910,7 @@ namespace Gs2.Sample.Friend
 	        ).Me(
 		        gameSession: gameSession
 	        ).BlackList();
-	        var future = domain.RegisterBlackList(
+	        var future = domain.RegisterBlackListFuture(
 		        targetUserId: targetUserId
 	        );
 	        yield return future;
@@ -913,7 +920,7 @@ namespace Gs2.Sample.Friend
 		        yield break;
 	        }
 	        var result = future.Result;
-	        var future2 = result.Model();
+	        var future2 = result.ModelFuture();
 	        yield return future2;
 	        var item = future2.Result;
 	        onRegisterBlackList.Invoke(item);
@@ -966,7 +973,7 @@ namespace Gs2.Sample.Friend
 	        ).Me(
 		        gameSession: gameSession
 	        ).BlackList();
-	        var future = domain.UnregisterBlackList(
+	        var future = domain.UnregisterBlackListFuture(
 		        targetUserId: targetUserId
 	        );
 	        yield return future;
@@ -977,7 +984,7 @@ namespace Gs2.Sample.Friend
 	        }
 	        
 	        var result = future.Result;
-	        var future2 = result.Model();
+	        var future2 = result.ModelFuture();
 	        yield return future2;
 	        if (future2.Error != null)
 	        {
@@ -1037,10 +1044,10 @@ namespace Gs2.Sample.Friend
 		        gameSession: gameSession
 	        ).Follow(
 		        withProfile: false
-	        ).FollowUser(
+	        );
+	        var future = domain.FollowFuture(
 		        targetUserId: targetUserId
 	        );
-	        var future = domain.Follow();
 	        yield return future;
 	        if (future.Error != null)
 	        {
@@ -1049,7 +1056,7 @@ namespace Gs2.Sample.Friend
 	        }
 	        
 	        var result = future.Result;
-	        var future2 = result.Model();
+	        var future2 = result.ModelFuture();
 	        yield return future2;
 	        var item = future2.Result;
 	        onFollow.Invoke(item);
@@ -1069,13 +1076,13 @@ namespace Gs2.Sample.Friend
 		    ).Me(
 			    gameSession: gameSession
 			).Follow(
-				    withProfile: false
-		    ).FollowUser(
-			    targetUserId: targetUserId
+			    withProfile: false
 		    );
 		    try
 		    {
-			    var result = await domain.FollowAsync();
+			    var result = await domain.FollowAsync(
+				    targetUserId: targetUserId
+			    );
 			    var item = await result.ModelAsync();
 			    onFollow.Invoke(item);
 		    }
@@ -1108,7 +1115,7 @@ namespace Gs2.Sample.Friend
 	        ).FollowUser(
 		        targetUserId: targetUserId
 	        );
-	        var future = domain.Unfollow();
+	        var future = domain.UnfollowFuture();
 	        yield return future;
 	        if (future.Error != null)
 	        {

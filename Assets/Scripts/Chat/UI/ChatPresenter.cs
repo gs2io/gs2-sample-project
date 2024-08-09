@@ -34,12 +34,7 @@ namespace Gs2.Sample.Chat
         /// <summary>
         /// 通知が届いたか
         /// </summary>
-        private bool _recievedNotification;
-        
-        /// <summary>
-        /// 通知の種別
-        /// </summary>
-        private string _issuer;
+        private bool _hasRecievedPostNotification;
         
         /// <summary>
         /// 通知で対象になっているUserId
@@ -52,11 +47,13 @@ namespace Gs2.Sample.Chat
             Assert.IsNotNull(_chatSetting);
             Assert.IsNotNull(_chatModel);
             Assert.IsNotNull(_chatView);
+            
+            _hasRecievedPostNotification = false;
         }
 
         private void Update()
         {
-            if (_recievedNotification)
+            if (_hasRecievedPostNotification)
             {
 #if GS2_ENABLE_UNITASK
                 ListMessagesAsync().Forget();
@@ -64,7 +61,7 @@ namespace Gs2.Sample.Chat
                 StartCoroutine(ListMessages());
 #endif
                 
-                _recievedNotification = false;
+                _hasRecievedPostNotification = false;
             }
         }
         
@@ -72,11 +69,12 @@ namespace Gs2.Sample.Chat
         
         /// <summary>
         /// 初期化処理
+        /// initialization process
         /// </summary>
         /// <returns></returns>
         public IEnumerator Initialize()
         {
-            GameManager.Instance.Domain.Connection.WebSocketSession.OnNotificationMessage += PushNotificationHandler;
+            GameManager.Instance.Domain.Chat.OnPostNotification += PostNotificationHandler;
 
             bool roomNotFound = false;
             void OnError(Gs2Exception e, Func<IEnumerator> retry)
@@ -107,7 +105,7 @@ namespace Gs2.Sample.Chat
 #if GS2_ENABLE_UNITASK
         public async UniTask InitializeAsync()
         {
-            GameManager.Instance.Domain.Connection.WebSocketSession.OnNotificationMessage += PushNotificationHandler;
+            GameManager.Instance.Domain.Chat.OnPostNotification += PostNotificationHandler;
 
             bool roomNotFound = false;
             void OnError(Gs2Exception e, Func<IEnumerator> retry)
@@ -139,25 +137,21 @@ namespace Gs2.Sample.Chat
         
         public void Finish()
         {
-            GameManager.Instance.Domain.Connection.WebSocketSession.OnNotificationMessage -= PushNotificationHandler;
+            GameManager.Instance.Domain.Chat.OnPostNotification -= PostNotificationHandler;
         }
         
         /// <summary>
         /// 任意のタイミングで届く通知
         /// ※メインスレッド外
+        /// Notifications delivered at any given time
+        /// *Outside the main thread
         /// </summary>
-        public void PushNotificationHandler(NotificationMessage message)
+        public void PostNotificationHandler(PostNotification notification)
         {
-            Debug.Log("PushNotificationHandler :" + message.issuer);
+            Debug.Log("PostNotificationHandler : " + notification.UserId);
             
-            if (!message.issuer.StartsWith("Gs2Chat")) return;
-
-            if (message.issuer.EndsWith(":Post"))
-            {
-                var notification = PostNotification.FromJson(JsonMapper.ToObject(message.payload));
-                _userId = notification.UserId;
-                _recievedNotification = true;
-            }
+            _userId = notification.UserId;
+            _hasRecievedPostNotification = true;
         }
 
         void ClearMessages()

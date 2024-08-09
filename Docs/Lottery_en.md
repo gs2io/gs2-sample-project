@@ -9,7 +9,7 @@ This sample shows the payout of items to a dedicated inventory.
 
 ## Enable and import Unity IAPs
 
-Unity IAP must be enabled for the sample to work with GS2-Money.  
+Unity IAP must be enabled for the sample to work with GS2-Money2.  
 ( https://docs.unity3d.com/ja/2019.4/Manual/UnityIAPSettingUp.html )  
 Enable In-App Purchasing in the Services window, and  
 Import the IAP package.
@@ -68,7 +68,7 @@ var domain = gs2.Showcase.Namespace(
 ).Showcase(
     showcaseName: showcaseName
 );
-var future = domain.Model();
+var future = domain.ModelFuture();
 yield return future;
 if (future.Error != null)
 {
@@ -126,7 +126,7 @@ var domain = gs2.Showcase.Namespace(
 ).Showcase(
     showcaseName: showcaseName
 );
-var future = domain.Buy(
+var future = domain.BuyFuture(
     displayItemId: displayItemId,
     config: tempConfig.ToArray()
 );
@@ -144,9 +144,10 @@ In implementations using the GS2Domain class ("gs2" in the source), stamp sheet 
 In the initialize_lottery_template.yaml template, stamp sheet execution is set to client execution.
 
 ```yaml
-      TransactionSetting: false
+      TransactionSetting:
         EnableAutoRun: false
 ```
+
 The list of products resulting from the lottery can be retrieved with the following callback.
 
 ```c#
@@ -176,8 +177,47 @@ void LotteryResult(
 Gs2Lottery.Domain.Gs2Lottery.DrawByUserIdComplete.AddListener( LotteryResult );
 ```
 
-At the time the lottery results are retrieved, the client will perform the lottery production, list the items retrieved, etc., if necessary in the actual game.  
+At the time the lottery results are obtained, the client performs the lottery production, displays the list of items obtained, etc., if necessary in the actual game.  
 After the stamp sheet is executed, [GS2-JobQueue](https://app.gs2.io/docs/index.html#gs2-jobqueue) in turn executes the process of acquiring items to the inventory.
+When the client executes the job queue, the process of actually receiving the reward is executed.
+
+The job queue can be continued automatically by running Gs2Domain.Dispatch, a process that advances the job queue.
+
+When UniTask is enabled
+```c#
+async UniTask Impl()
+{
+    while (true)
+    {
+        await _domain.DispatchAsync(_session);
+
+        await UniTask.Yield();
+    }
+}
+
+_stampSheetDispatchCoroutine = StartCoroutine(Impl().ToCoroutine());
+```
+When coroutine is used
+```c#
+IEnumerator Impl()
+{
+    while (true)
+    {
+        var future = _domain.DispatchFuture(_session);
+        yield return future;
+        if (future != null)
+        {
+            yield break;
+        }
+        if (future.Result)
+        {
+            break;
+        }
+        yield return null;
+    }
+}
+_stampSheetDispatchCoroutine = StartCoroutine(Impl());
+```
 
 The purchase stamp sheet process for raffle items is as follows
 

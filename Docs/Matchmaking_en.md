@@ -80,7 +80,7 @@ When coroutine is used
             ).Me(
                 gameSession: gameSession
             );
-            var future = domain.CreateGathering(
+            var future = domain.CreateGatheringFuture(
                 player: new EzPlayer
                 {
                     RoleName = "default"

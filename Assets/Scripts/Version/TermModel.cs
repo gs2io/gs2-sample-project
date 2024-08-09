@@ -50,7 +50,7 @@ namespace Gs2.Sample.Version
             ).Me(
                 gameSession: gameSession
             ).Checker();
-            var future = domain.CheckVersion(
+            var future = domain.CheckVersionFuture(
                 targetVersions: targetVersions.ToArray()
             );
             yield return future;
@@ -130,7 +130,7 @@ namespace Gs2.Sample.Version
             ).AcceptVersion(
                 versionName: versionName
             );
-            var future = domain.Accept();
+            var future = domain.AcceptFuture();
             yield return future;
             if (future.Error != null)
             {
@@ -141,7 +141,7 @@ namespace Gs2.Sample.Version
                 yield break;
             }
 
-            var future2 = future.Result.Model();
+            var future2 = future.Result.ModelFuture();
             yield return future2;
             if (future2.Error != null)
             {

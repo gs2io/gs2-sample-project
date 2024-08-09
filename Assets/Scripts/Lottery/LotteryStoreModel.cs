@@ -55,7 +55,7 @@ namespace Gs2.Sample.Lottery
             ).Showcase(
                 showcaseName: showcaseName
             );
-            var future = domain.Model();
+            var future = domain.ModelFuture();
             yield return future;
             if (future.Error != null)
             {
@@ -161,7 +161,7 @@ namespace Gs2.Sample.Lottery
             ).DisplayItem(
                 displayItemId: displayItemId
             );
-            var future = domain.Buy(
+            var future = domain.BuyFuture(
                 config: tempConfig.ToArray()
             );
             yield return future;
@@ -238,6 +238,7 @@ namespace Gs2.Sample.Lottery
                     quantity: null,
                     config: tempConfig.ToArray()
                 );
+                await result.WaitAsync();
             }
             catch (Gs2Exception e)
             {

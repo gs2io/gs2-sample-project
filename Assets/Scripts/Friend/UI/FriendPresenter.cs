@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using Gs2.Core.Model;
+using Gs2.Gs2Friend.Model;
 using Gs2.Unity.Gs2Friend.Model;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -32,48 +33,130 @@ namespace Gs2.Sample.Friend
         
         [SerializeField] private FriendFollowListView _friendFollowListView;
         [SerializeField] private FollowerProfileView _followerProfileView;
+
+        /// <summary>
+        /// フォローされた通知が届いたか
+        /// </summary>
+        private bool _hasReceivedFollowNotification;
+
+        /// <summary>
+        /// フォローしてきたユーザーのID
+        /// ID of the user who has been following you
+        /// </summary>
+        private string _followFromUserId;
+
+        /// <summary>
+        /// フレンドリクエストを承認された通知が届いたか
+        /// </summary>
+        private bool _hasReceivedAcceptRequestNotification;
+
+        /// <summary>
+        /// フレンドリクエストを承認した対象のユーザーのID
+        /// ID of the target user who approved the friend request
+        /// </summary>
+        private string _acceptRequestTargetUserId;
+
+        /// <summary>
+        /// フレンドリクエストを拒否された通知が届いたか
+        /// </summary>
+        private bool _hasReceivedRejectRequestNotification;
+
+        /// <summary>
+        /// フレンドリクエストを拒否した対象のユーザーのID
+        /// ID of the target user who rejected the friend request
+        /// </summary>
+        private string _rejectRequestTargetUserId;
         
         /// <summary>
-        /// 通知の種別
+        /// フレンドリクエストが届いたか
         /// </summary>
-        private string _issuer;
+        private bool _hasReceivedReceiveRequestNotification;
+
+        /// <summary>
+        /// フレンドリクエストを送信したユーザーのID
+        /// ID of the user who sent the friend request
+        /// <summary>
+        private string _receiveRequestFromUserId;
         
         // Start is called before the first frame update
         void Start()
         {
             Assert.IsNotNull(_friendModel);
+
+            _hasReceivedFollowNotification = false;
+            _hasReceivedAcceptRequestNotification = false;
+            _hasReceivedRejectRequestNotification = false;
+            _hasReceivedReceiveRequestNotification = false;
         }
 
+        private void Update()
+        {
+            if (_hasReceivedFollowNotification)
+            {
+                UIManager.Instance.AddLog("FollowNotificationHandler : " + _followFromUserId);
+                
+                _hasReceivedFollowNotification = false;
+            }
+            if (_hasReceivedAcceptRequestNotification)
+            {
+                UIManager.Instance.AddLog("AcceptNotificationHandler : " + _acceptRequestTargetUserId);
+                
+                _hasReceivedAcceptRequestNotification = false;
+            }
+            if (_hasReceivedReceiveRequestNotification)
+            {
+                UIManager.Instance.AddLog("ReceiveRequestNotification : " + _receiveRequestFromUserId);
+                
+                _hasReceivedReceiveRequestNotification = false;
+            }
+        }
+        
         /// <summary>
         /// 初期化処理
         /// </summary>
         /// <returns></returns>
         public void Initialize()
         {
-            GameManager.Instance.Domain.Connection.WebSocketSession.OnNotificationMessage += PushNotificationHandler;
+            GameManager.Instance.Domain.Friend.OnFollowNotification += FollowNotificationHandler;
+            GameManager.Instance.Domain.Friend.OnAcceptRequestNotification += AcceptRequestNotificationHandler;
+            GameManager.Instance.Domain.Friend.OnReceiveRequestNotification += ReceiveRequestNotificationHandler;
         }
         
         public void Finish()
         {
-            GameManager.Instance.Domain.Connection.WebSocketSession.OnNotificationMessage -= PushNotificationHandler;
+            GameManager.Instance.Domain.Friend.OnFollowNotification -= FollowNotificationHandler;
+            GameManager.Instance.Domain.Friend.OnAcceptRequestNotification -= AcceptRequestNotificationHandler;
+            GameManager.Instance.Domain.Friend.OnReceiveRequestNotification -= ReceiveRequestNotificationHandler;
         }
 
         /// <summary>
         /// 任意のタイミングで届く通知
         /// ※メインスレッド外
+        /// Notifications delivered at any given time
+        /// *Outside the main thread
         /// </summary>
-        public void PushNotificationHandler(NotificationMessage message)
+        public void FollowNotificationHandler(FollowNotification notification)
         {
-            Debug.Log("PushNotificationHandler :" + message.issuer);
+            Debug.Log("FollowNotificationHandler : " + notification.FromUserId);
             
-            if (!message.issuer.StartsWith("Gs2Friend")) return;
+            _followFromUserId = notification.FromUserId;
+            _hasReceivedFollowNotification = false;
+        }
+        
+        public void AcceptRequestNotificationHandler(AcceptRequestNotification notification)
+        {
+            Debug.Log("AcceptRequestNotificationHandler : " + notification.TargetUserId);
+            
+            _acceptRequestTargetUserId = notification.TargetUserId;
+            _hasReceivedAcceptRequestNotification = true;
+        }
+        
+        public void ReceiveRequestNotificationHandler(ReceiveRequestNotification notification)
+        {
+            Debug.Log("ReceiveRequestNotificationHandler :" + notification.FromUserId);
 
-            _issuer = message.issuer;
-
-            if (message.issuer.EndsWith(":Post"))
-            {
-
-            }
+            _receiveRequestFromUserId = notification.FromUserId;
+            _hasReceivedReceiveRequestNotification = true;
         }
         
         public void OnClickProfile()
@@ -89,8 +172,8 @@ namespace Gs2.Sample.Friend
         
         /// <summary>
         /// 自分のプロフィールを取得
+        /// Get own profile
         /// </summary>
-        /// <returns></returns>
         public IEnumerator GetProfile()
         {
             void OnGetProfile(
@@ -156,6 +239,10 @@ namespace Gs2.Sample.Friend
             _friendProfileEditView.OnCloseEvent();
         }
         
+        /// <summary>
+        /// 自分のプロフィールを更新
+        /// Update own profile
+        /// </summary>
         public IEnumerator UpdateProfile()
         {
             void OnUpdateProfile(
@@ -216,6 +303,7 @@ namespace Gs2.Sample.Friend
         
         /// <summary>
         /// フレンドリクエストを送信
+        /// Send a friend request
         /// </summary>
         public IEnumerator SendRequest(string targetUserId)
         {
@@ -275,6 +363,10 @@ namespace Gs2.Sample.Friend
 #endif
         }
         
+        /// <summary>
+        /// フレンドリクエストを承認
+        /// Approve Friend Request
+        /// </summary>
         private IEnumerator Accept(string targetUserId)
         {
             void OnAccept(
@@ -337,6 +429,10 @@ namespace Gs2.Sample.Friend
 #endif
         }
         
+        /// <summary>
+        /// フレンドリクエストを拒否
+        /// Deny friend request
+        /// </summary>
         private IEnumerator Reject(string targetUserId)
         {
             void OnReject(
@@ -467,7 +563,8 @@ namespace Gs2.Sample.Friend
         }
         
         /// <summary>
-        /// 
+        /// 送信中のフレンドリクエスト
+        /// Friend request being sent
         /// </summary>
         private IEnumerator OpenSendRequests()
         {
@@ -536,6 +633,10 @@ namespace Gs2.Sample.Friend
 #endif
         }
         
+        /// <summary>
+        /// 受信中のフレンドリクエスト
+        /// Friend request being received
+        /// </summary>
         private IEnumerator OpenReceiveRequests()
         {
             yield return _friendModel.DescribeReceiveRequests(

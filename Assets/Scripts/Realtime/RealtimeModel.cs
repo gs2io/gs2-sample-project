@@ -48,7 +48,7 @@ namespace Gs2.Sample.Realtime
             ).Room(
                 roomName: gatheringName
             );
-            var future = domain.Model();
+            var future = domain.ModelFuture();
             yield return future;
             if (future.Error != null)
             {

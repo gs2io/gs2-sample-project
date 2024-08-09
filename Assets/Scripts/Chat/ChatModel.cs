@@ -38,7 +38,7 @@ namespace Gs2.Sample.Chat
                 roomName: roomName,
                 password: null
             );
-            var future = domain.Model();
+            var future = domain.ModelFuture();
             yield return future;
             if (future.Error != null)
             {
@@ -164,7 +164,7 @@ namespace Gs2.Sample.Chat
             ).Me(
                 gameSession: gameSession
             );
-            var future = domain.CreateRoom(
+            var future = domain.CreateRoomFuture(
                 name: roomName,
                 metadata: null,
                 password: null,
@@ -178,7 +178,7 @@ namespace Gs2.Sample.Chat
             }
 
             var result = future.Result;
-            var future2 = result.Model();
+            var future2 = result.ModelFuture();
             yield return future2;
             if (future2.Error != null)
             {
@@ -245,7 +245,7 @@ namespace Gs2.Sample.Chat
             ).Subscribe(
                 roomName: roomName
             );
-            var future = domain.Subscribe(
+            var future = domain.SubscribeFuture(
                 notificationTypes: new [] {
                     new EzNotificationType()
                 }
@@ -258,7 +258,7 @@ namespace Gs2.Sample.Chat
             }
             
             var result = future.Result;
-            var future2 = result.Model();
+            var future2 = result.ModelFuture();
             yield return future2;
             if (future2.Error != null)
             {
@@ -322,7 +322,7 @@ namespace Gs2.Sample.Chat
             ).Subscribe(
                 roomName: roomName
             );
-            var future = domain.Unsubscribe(
+            var future = domain.UnsubscribeFuture(
             );
             yield return future;
             if (future.Error != null)
@@ -464,7 +464,7 @@ namespace Gs2.Sample.Chat
                 roomName: roomName,
                 password: null
             );
-            var future = domain.Post(
+            var future = domain.PostFuture(
                 metadata: message,
                 category: null
             );
@@ -476,7 +476,7 @@ namespace Gs2.Sample.Chat
             }
             
             var result = future.Result;
-            var future2 = result.Model();
+            var future2 = result.ModelFuture();
             yield return future2;
             if (future2.Error != null)
             {

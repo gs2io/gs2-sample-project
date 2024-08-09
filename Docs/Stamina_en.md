@@ -119,7 +119,7 @@ var domain = gs2.Stamina.Namespace(
 ).Stamina(
     staminaName: staminaName
 );
-var future = domain.Consume(
+var future = domain.ConsumeFuture(
     consumeValue: consumeValue
 );
 yield return future;
@@ -129,7 +129,7 @@ if (future.Error != null)
     yield break;
 }
 
-var future2 = future.Result.Model();
+var future2 = future.Result.ModelFuture();
 yield return future2;
 if (future2.Error != null)
 {
@@ -189,7 +189,7 @@ var domain = gs2.Exchange.Namespace(
 ).Me(
     gameSession: gameSession
 ).Exchange();
-var future = domain.Exchange(
+var future = domain.ExchangeFuture(
     rateName: exchangeRateName,
     count: 1,
     config: new[]

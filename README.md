@@ -7,15 +7,15 @@ This is a sample implementation using various GS2 functions for a rough flow in 
 
 ## Operating Environment
 
-Unity 2021.3.36f1 LTS  
+Unity 2022.3.41f1 LTS  
 
-GS2 C# SDK 2024.3.10  
-GS2 SDK for Unity 2024.3.7  
+GS2 C# SDK 2024.8.1  
+GS2 SDK for Unity 2024.7.14  
 
 ## Notes
 
 - The manifest.json and packages-lock.json files included in the sample contain the  
-In addition to the SDK for GS2, it includes a description of the packages required to run on Unity 2021.3.  
+In addition to the SDK for GS2, it includes a description of the packages required to run on Unity 2022.3.  
 If you open the project with a Unity version other than the above, you will get  
 An error may occur and the package version may need to be changed.  
 In that case, you can install the verified version in the package manager to make it work.  

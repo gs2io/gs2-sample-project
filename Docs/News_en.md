@@ -88,7 +88,7 @@ When coroutine is used
     gameSession: gameSession
 ).News(
 );
-var future = domain.GetContentsUrl();
+var future = domain.GetContentsUrlFuture();
 yield return future;
 if (future.Error != null)
 {

@@ -48,7 +48,7 @@ namespace Gs2.Sample.Unit
                 ).InventoryModel(
                     inventoryName: inventoryModelName
                 );
-                var future = domain.Model();
+                var future = domain.ModelFuture();
                 yield return future;
                 if (future.Error != null)
                 {
@@ -163,7 +163,7 @@ namespace Gs2.Sample.Unit
                 ).Inventory(
                     inventoryName: inventoryName
                 );
-                var future = domain.Model();
+                var future = domain.ModelFuture();
                 yield return future;
                 if (future.Error != null)
                 {
@@ -268,7 +268,7 @@ namespace Gs2.Sample.Unit
             var future = domain.ItemSet(
                 itemName: itemName,
                 itemSetName: null
-            ).Consume(
+            ).ConsumeFuture(
                 consumeCount: consumeValue
             );
             yield return future;
@@ -279,7 +279,7 @@ namespace Gs2.Sample.Unit
             }
             
             var result = future.Result;
-            var future2 = result.Model();
+            var future2 = result.ModelFuture();
             yield return future2;
             if (future2.Error != null)
             {
@@ -288,7 +288,7 @@ namespace Gs2.Sample.Unit
             }
             var itemSets = future2.Result;
             
-            var future3 = domain.Model();
+            var future3 = domain.ModelFuture();
             yield return future3;
             if (future3.Error != null)
             {

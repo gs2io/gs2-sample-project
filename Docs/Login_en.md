@@ -57,7 +57,7 @@ When coroutine is used
 var domain = gs2.Account.Namespace(
     namespaceName: accountNamespaceName
 );
-var future = domain.Create();
+var future = domain.CreateFuture();
 yield return future;
 if (future.Error != null)
 {
@@ -65,7 +65,7 @@ if (future.Error != null)
     yield break;
 }
 
-var future2 = future.Result.Model();
+var future2 = future.Result.ModelFuture();
 yield return future2;
 if (future2.Error != null)
 {

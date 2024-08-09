@@ -7,15 +7,15 @@ Game Server Services (https://gs2.io) の Unity 向けのサンプルプロジ�
 
 ## 動作環境
 
-Unity 2021.3.36f1 LTS  
+Unity 2022.3.41f1 LTS  
 
-GS2 C# SDK 2024.3.10  
-GS2 SDK for Unity 2024.3.7  
+GS2 C# SDK 2024.8.1  
+GS2 SDK for Unity 2024.7.14  
 
 ## 注意事項
 
 - サンプルに含まれるmanifest.json、packages-lock.jsonファイルには、  
-GS2のSDKのほか、Unity.2021.3上での動作に必要なパッケージの記述が含まれます。  
+GS2のSDKのほか、Unity.2022.3上での動作に必要なパッケージの記述が含まれます。  
 上記以外のUnityバージョンでプロジェクトを開くと、  
 エラーが発生しパッケージのバージョン変更が必要になる場合があります。  
 その場合は、パッケージマネージャーで検証済みバージョンをインストールすることで動作可能になります。  

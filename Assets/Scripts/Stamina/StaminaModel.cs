@@ -43,7 +43,7 @@ namespace Gs2.Sample.Stamina
             ).StaminaModel(
                 staminaName: staminaModelName
             );
-            var future = domain.Model();
+            var future = domain.ModelFuture();
             yield return future;
             if (future.Error != null)
             {
@@ -105,7 +105,7 @@ namespace Gs2.Sample.Stamina
                 gameSession: gameSession
             ).Stamina(
                 staminaName: staminaName
-            ).Model();
+            ).ModelFuture();
             yield return future;
             if (future.Error != null)
             {
@@ -178,7 +178,7 @@ namespace Gs2.Sample.Stamina
             ).Stamina(
                 staminaName: staminaName
             );
-            var future = domain.Consume(
+            var future = domain.ConsumeFuture(
                 consumeValue: consumeValue
             );
             yield return future;
@@ -188,7 +188,7 @@ namespace Gs2.Sample.Stamina
                 yield break;
             }
 
-            var future2 = future.Result.Model();
+            var future2 = future.Result.ModelFuture();
             yield return future2;
             if (future2.Error != null)
             {
@@ -259,7 +259,7 @@ namespace Gs2.Sample.Stamina
             ).Me(
                 gameSession: gameSession
             ).Exchange();
-            var future = domain.Exchange(
+            var future = domain.ExchangeFuture(
                 rateName: exchangeRateName,
                 count: 1,
                 config: new[]
@@ -282,6 +282,18 @@ namespace Gs2.Sample.Stamina
                 yield break;
             }
 
+            var result = future.Result;
+            yield return result.WaitFuture();
+            if (future.Error != null)
+            {
+                onError.Invoke(
+                    future.Error,
+                    null
+                );
+                callback.Invoke(future.Error);
+                yield break;
+            }
+            
             // スタミナ購入に成功
             // Successfully purchased stamina
 
@@ -320,11 +332,12 @@ namespace Gs2.Sample.Stamina
             };
             try
             {
-                await domain.ExchangeAsync(
+                var result = await domain.ExchangeAsync(
                     exchangeRateName,
                     1,
                     config
                 );
+                await result.WaitAsync();
             }
             catch (Gs2Exception e)
             {

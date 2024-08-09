@@ -75,7 +75,7 @@ namespace Gs2.Sample.Experience
                 namespaceName: experienceNamespaceName
             ).ExperienceModel(
                 experienceName: experienceModelName
-            ).Model();
+            ).ModelFuture();
             yield return future;
             if (future.Error != null)
             {
@@ -138,7 +138,7 @@ namespace Gs2.Sample.Experience
                 namespaceName: experienceNamespaceName
             ).ExperienceModel(
                 experienceName: experienceModelName
-            ).Model();
+            ).ModelFuture();
             yield return future;
             if (future.Error != null)
             {
@@ -344,7 +344,7 @@ namespace Gs2.Sample.Experience
             ).Me(
                 gameSession: gameSession
             ).Exchange();
-            var future = domain.Exchange(
+            var future = domain.ExchangeFuture(
                 rateName: exchangeRateName,
                 count: value,
                 config: new[]

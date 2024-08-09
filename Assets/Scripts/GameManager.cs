@@ -274,6 +274,7 @@ namespace Gs2.Sample
             UIManager.Instance.AddLog("GameManager::OnFinish");
 
             FinalizeCredential();
+            _domain.ClearCache();
 
             gameState = GameState.START;
             
@@ -694,7 +695,7 @@ namespace Gs2.Sample
             var domain = gs2.Account.Namespace(
                 namespaceName: accountNamespaceName
             );
-            var future = domain.Create();
+            var future = domain.CreateFuture();
             yield return future;
             if (future.Error != null)
             {
@@ -702,7 +703,7 @@ namespace Gs2.Sample
                 yield break;
             }
 
-            var future2 = future.Result.Model();
+            var future2 = future.Result.ModelFuture();
             yield return future2;
             if (future2.Error != null)
             {
@@ -1132,7 +1133,7 @@ namespace Gs2.Sample
             {
                 while (true)
                 {
-                    var future = _domain.Dispatch(_session);
+                    var future = _domain.DispatchFuture(_session);
                     yield return future;
                     if (future.Error != null)
                     {

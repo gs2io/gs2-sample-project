@@ -71,7 +71,7 @@ var domain = gs2.Money.Namespace(
 ).Wallet(
     slot: Slot
 );
-var future = domain.Model();
+var future = domain.ModelFuture();
 yield return future;
 if (future.Error != null)
 {
@@ -121,7 +121,7 @@ var domain = gs2.Showcase.Namespace(
 ).Showcase(
     showcaseName: showcaseName
 );
-var future = domain.Model();
+var future = domain.ModelFuture();
 yield return future;
 if (future.Error != null)
 {
