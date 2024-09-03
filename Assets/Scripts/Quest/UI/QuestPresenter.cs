@@ -769,13 +769,13 @@ namespace Gs2.Sample.Quest
             
 #if GS2_ENABLE_UNITASK
             EndTaskAsync(
-                _questModel.progress.Rewards,
+                _questModel.progress.FailedRewards,
                 false
             ).Forget();
 #else
             StartCoroutine(
                 EndTask(
-                    _questModel.progress.Rewards,
+                    _questModel.progress.FailedRewards,
                     false
                 )
             );
