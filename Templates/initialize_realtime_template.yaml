@@ -28,9 +28,9 @@ Resources:
     Type: GS2::Matchmaking::Namespace
     Properties:
       Name: ${MatchmakingNamespaceName}
-      CreateGatheringTriggerType: gs2_realtime
-      CreateGatheringTriggerRealtimeNamespaceId: !GetAttr RealtimeNamespace.Item.NamespaceId
-      CompleteMatchmakingTriggerType: none
+      CreateGatheringTriggerType: none
+      CompleteMatchmakingTriggerType: gs2_realtime
+      CompleteMatchmakingTriggerRealtimeNamespaceId: !GetAttr RealtimeNamespace.Item.NamespaceId
       JoinNotification:
         GatewayNamespaceId: !Join
           - ':'
