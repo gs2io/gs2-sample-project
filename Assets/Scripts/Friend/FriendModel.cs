@@ -602,7 +602,7 @@ namespace Gs2.Sample.Friend
 		        yield break;
 	        }
 	        var result = future.Result;
-	        var future2 = result.Model();
+	        var future2 = result.ModelFuture();
 	        yield return future2;
 	        var item = future2.Result;
 		    onSendRequest.Invoke(item);
@@ -667,7 +667,7 @@ namespace Gs2.Sample.Friend
 	        }
 	        
 	        var result = future.Result;
-	        var future2 = result.Model();
+	        var future2 = result.ModelFuture();
 	        yield return future2;
 	        var item = future2.Result;
 	        onAccept.Invoke(item);
@@ -732,7 +732,7 @@ namespace Gs2.Sample.Friend
 	        }
 	        
 	        var result = future.Result;
-	        var future2 = result.Model();
+	        var future2 = result.ModelFuture();
 	        yield return future2;
 	        var item = future2.Result;
 	        onReject.Invoke(item);
@@ -795,7 +795,7 @@ namespace Gs2.Sample.Friend
 		        yield break;
 	        }
 	        var result = future.Result;
-	        var future2 = result.Model();
+	        var future2 = result.ModelFuture();
 	        yield return future2;
 	        var item = future2.Result;
 	        onDeleteRequest.Invoke(item);
