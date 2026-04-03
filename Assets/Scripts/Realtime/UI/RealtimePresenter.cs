@@ -280,7 +280,7 @@ namespace Gs2.Sample.Realtime
                     
                     case State.GetRoom:
                         UIManager.Instance.OpenProcessing();
-#if GS2_ENABLE_UNITASK && !UNITY_WEBGL
+#if GS2_ENABLE_UNITASK
                         GetRoomAsync().Forget();
 #else
                         StartCoroutine(
@@ -291,7 +291,7 @@ namespace Gs2.Sample.Realtime
                         
                     case State.ConnectRoom:
                         UIManager.Instance.OpenProcessing();
-#if GS2_ENABLE_UNITASK && !UNITY_WEBGL
+#if GS2_ENABLE_UNITASK
                         ConnectRoomAsync().Forget();
 #else
                         StartCoroutine(
@@ -317,7 +317,7 @@ namespace Gs2.Sample.Realtime
                     case State.Main:
                         UIManager.Instance.CloseProcessing();
                         _realtimeView.OnEnableEvent();
-#if GS2_ENABLE_UNITASK && !UNITY_WEBGL
+#if GS2_ENABLE_UNITASK
                         myCharacter.UpdateProfileAsync().Forget();
 #else
                         StartCoroutine(
@@ -404,7 +404,7 @@ namespace Gs2.Sample.Realtime
             
             SetState(State.ConnectRoom);
         }
-#if GS2_ENABLE_UNITASK && !UNITY_WEBGL
+#if GS2_ENABLE_UNITASK
         /// <summary>
         /// GS2-Realtime のルーム情報を取得
         /// Get GS2-Realtime room information
@@ -466,7 +466,7 @@ namespace Gs2.Sample.Realtime
                 _realtimeModel.room.EncryptionKey
             );
         }
-#if GS2_ENABLE_UNITASK && !UNITY_WEBGL
+#if GS2_ENABLE_UNITASK
         private async UniTask ConnectRoomAsync()
         {
             var session = await ConnectRoomAsync(
@@ -566,7 +566,7 @@ namespace Gs2.Sample.Realtime
                 }
             }
         }
-#if GS2_ENABLE_UNITASK && !UNITY_WEBGL
+#if GS2_ENABLE_UNITASK
         private async UniTask<RelayRealtimeSession> ConnectRoomAsync(
             string ipAddress,
             int port,
@@ -642,7 +642,7 @@ namespace Gs2.Sample.Realtime
             ClearPlayers();
             players.Clear();
             
-#if GS2_ENABLE_UNITASK && !UNITY_WEBGL
+#if GS2_ENABLE_UNITASK
             _realtimeModel.realtimeSession.CloseAsync().Forget();
 #else
             StartCoroutine(
