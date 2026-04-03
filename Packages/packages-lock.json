@@ -131,7 +131,7 @@
       }
     },
     "io.gs2.csharp.sdk": {
-      "version": "2024.8.1",
+      "version": "2026.3.2",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -140,7 +140,7 @@
       "url": "https://upm.gs2.io/npm"
     },
     "io.gs2.unity.sdk": {
-      "version": "2024.7.14",
+      "version": "2026.3.3",
       "depth": 0,
       "source": "registry",
       "dependencies": {
