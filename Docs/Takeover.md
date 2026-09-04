@@ -1,12 +1,12 @@
 ﻿# アカウント引継ぎ　解説
 
-[GS2-Account](https://app.gs2.io/docs/index.html#gs2-account) で作成された匿名アカウントにメールアドレスや、  
+[GS2-Account](https://docs.gs2.io/ja/api_reference/account/) で作成された匿名アカウントにメールアドレスや、  
 Game Center/Google Play Game Service のアカウントを関連付けて  
 アカウント引継ぎをするサンプルです。
 
 ## GS2-Deploy テンプレート
 
-- [initialize_account_template.yaml - ログイン/アカウント連携・引継ぎ](../Templates/initialize_account_template.yaml)
+- [initialize_core_template.yaml - ログイン/アカウント連携・引継ぎ](../Templates/initialize_core_template.yaml)
 
 ## アカウント引継ぎ設定 Setting
 

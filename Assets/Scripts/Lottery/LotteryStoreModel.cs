@@ -171,8 +171,24 @@ namespace Gs2.Sample.Lottery
                     future.Error,
                     null
                 );
+                Gs2Lottery.Domain.Gs2Lottery.DrawByUserIdComplete.RemoveListener( LotteryResult );
+                yield break;
             }
-            
+
+            // トランザクションの自動実行の完了を待機（抽選で連鎖するトランザクションも含めて全て待つ）
+            // Wait for automatic transaction execution to complete (including transactions chained by the lottery)
+            var waitFuture = future.Result.WaitFuture(true);
+            yield return waitFuture;
+            if (waitFuture.Error != null)
+            {
+                onError.Invoke(
+                    waitFuture.Error,
+                    null
+                );
+                Gs2Lottery.Domain.Gs2Lottery.DrawByUserIdComplete.RemoveListener( LotteryResult );
+                yield break;
+            }
+
             Gs2Lottery.Domain.Gs2Lottery.DrawByUserIdComplete.RemoveListener( LotteryResult );
         }
 #if GS2_ENABLE_UNITASK
@@ -238,11 +254,22 @@ namespace Gs2.Sample.Lottery
                     quantity: null,
                     config: tempConfig.ToArray()
                 );
-                await result.WaitAsync();
+                // トランザクションの自動実行の完了を待機（抽選で連鎖するトランザクションも含めて全て待つ）
+                // Wait for automatic transaction execution to complete (including transactions chained by the lottery)
+                await result.WaitAsync(true);
             }
             catch (Gs2Exception e)
             {
                 onError.Invoke(e, null);
+                Gs2Lottery.Domain.Gs2Lottery.DrawByUserIdComplete.RemoveListener( LotteryResult );
+                return;
+            }
+            catch (System.Exception e)
+            {
+                // トランザクション結果の取得失敗（TimeoutException など）も失敗として扱う
+                // Treat a failure to obtain the transaction result (TimeoutException, etc.) as a failure
+                onError.Invoke(new UnknownException(e.Message), null);
+                Gs2Lottery.Domain.Gs2Lottery.DrawByUserIdComplete.RemoveListener( LotteryResult );
                 return;
             }
             

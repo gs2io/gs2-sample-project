@@ -1,10 +1,10 @@
 # アカウントの作成・ログイン　解説
 
-[GS2-Account](https://app.gs2.io/docs/index.html#gs2-account) を使用してログインする機能のサンプルです。
+[GS2-Account](https://docs.gs2.io/ja/api_reference/account/) を使用してログインする機能のサンプルです。
 
 ## GS2-Deploy テンプレート
 
-- [initialize_account_template.yaml](../Templates/initialize_account_template.yaml)
+- [initialize_core_template.yaml](../Templates/initialize_core_template.yaml)
 
 ## ログイン設定 LoginSetting
 
@@ -171,7 +171,7 @@ Profile はAPIへのアクセス時、アクセストークンの期限が切れ
 | string password | EzAccount　アカウント情報のパスワード                                |
 
 アクセストークンを保持する GameSessionを受け取ります。  
-[GS2-Gateway](https://app.gs2.io/docs/index.html#gs2-gateway) にログインした自分のユーザーIDを設定し、このユーザークライアントに対するプッシュ通知を受け取れるようにしています。  
+[GS2-Gateway](https://docs.gs2.io/ja/api_reference/gateway/) にログインした自分のユーザーIDを設定し、このユーザークライアントに対するプッシュ通知を受け取れるようにしています。  
 チャット([GS2-Chat](Chat.md))のメッセージ投稿の通知、フレンド申請([GS2-Friend](Friend.md))等の通知、マッチメイキング([GS2-Matchmaking](Matchmaking.md))の遷移の通知を受け取るために使用します。
 
 

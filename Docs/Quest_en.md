@@ -1,6 +1,6 @@
 ﻿# Quest Explanation
 
-This is a sample of using [GS2-Quest](https://app.gs2.io/docs/en/index.html#gs2-quest) to manage quests.
+This is a sample of using [GS2-Quest](https://docs.gs2.io/api_reference/quest/) to manage quests.
 
 There are two types (two groups) of quests: main scenario quests and character scenario quests.  
 Quests can have a cost to attempt the quest and a reward for completing the quest, but  
@@ -9,7 +9,7 @@ If the quest fails, the reward is set to return the stamina spent as cost.
 
 ## GS2-Deploy template
 
-- [initialize_quest_template.yaml - Quest](../Templates/initialize_quest_template.yaml)
+- [initialize_gamecycle_template.yaml - Quest](../Templates/initialize_gamecycle_template.yaml)
 
 ## QuestSetting QuestSetting
 
@@ -240,8 +240,8 @@ callback.Invoke(quests);
 
 Starts a quest.
 GS2-Quest's CurrentQuestMaster has consumeActions set to consume actions required to start the quest.
-In implementations using the GS2Domain class ("gs2" in the source), the processing of the stamp sheet on the client side is __auto-executed__.  
-The amount of stamina set as the cost to start the quest in the stamp sheet is consumed, and the quest is placed in the start state.
+In implementations using the GS2Domain class ("gs2" in the source), the transaction processing on the client side is __auto-executed__.  
+The amount of stamina set as the cost to start the quest is consumed by the transaction processing, and the quest is placed in the start state.
 
 When UniTask is enabled
 ```c#
@@ -288,7 +288,7 @@ var future = domain.StartFuture(
         new EzConfig
         {
             Key = "slot",
-            Value = MoneyModel.Slot.ToString()
+            Value = Money2Model.Slot.ToString()
         }
     }
 );
@@ -301,7 +301,7 @@ if (future.Error != null)
 }
 ```
 
-The flow of the starting stamp sheet for the quest is as follows
+The flow of the transaction that starts the quest is as follows
 
 ![Quest Start](QuestStart_en.png)
 
@@ -312,8 +312,8 @@ rewards is the value of Rewards in EzProgress, the return value of Start.
 Set the reward actually obtained.
 
 The action to obtain the reward upon completion of the quest is set in completeAcquireActions of CurrentQuestMaster in GS2-Quest.
-In implementations using the GS2Domain class ("gs2" in the source), the client-side stamp sheet process is __auto-executed__.  
-The quest reward is obtained from the stamp sheet, and the quest remains unclaimed.
+In implementations using the GS2Domain class ("gs2" in the source), the client-side transaction processing is __auto-executed__.  
+The quest reward is obtained by the transaction processing, and the quest remains unclaimed.
 
 When UniTask is enabled
 ```c#
@@ -377,7 +377,7 @@ if (future.Error != null)
 onEnd.Invoke(progress, rewards, isComplete);
 callback.Invoke(progress);
 ```
-Config is passed the wallet slot number __slot__ of [GS2-Money](https://app.gs2.io/docs/en/index.html#gs2-money).
+Config is passed the wallet slot number __slot__ of [GS2-Money2](https://docs.gs2.io/api_reference/money2/).
 The wallet slot number is the type of billing currency assigned by platform for this sample and is defined as follows
 
 | Platform | Number |
@@ -387,36 +387,39 @@ The wallet slot number is the type of billing currency assigned by platform for 
 | Android | 2 |
 
 Config is a mechanism for passing dynamic parameters to the stamp sheet.  
-[⇒Stamp Sheet Variables](https://app.gs2.io/docs/en/index.html#d7e97677c7)  
+[⇒Stamp Sheet Variables](https://docs.gs2.io/articles/tech/stamp_sheet/)  
 Config(EzConfig) is a key-value format that allows you to replace the placeholder string for #{key value specified in Config} with the parameters you pass.
 In the following stamp sheet definition #{slot} will be replaced by the wallet slot number.
 
 ```yaml
 completeAcquireActions:
-  - action: Gs2Money:DepositByUserId
+  - action: Gs2Money2:DepositByUserId
     request:
       namespaceName: ${MoneyNamespaceName}
       userId: "#{userId}"
       slot: "#{slot}"
-      price: 0
-      count: 10
+      depositTransactions:
+        - price: 0
+          count: 10
 ```
 
-The flow of the quest completion stamp sheet is as follows
+The flow of the transaction that completes the quest is as follows
 
 ![Quest Completed](QuestEnd_en.png)
 
-The flow of the quest failure stamp sheet is as follows
+The flow of the transaction that fails the quest is as follows
 
 ![Quest Failure](QuestEnd2_en.png)
 
 #### Delayed execution of reward distribution process
 
-If you set up multiple resource acquisitions as rewards for completing a quest, you can use the  
-The job queue ([GS2-JobQueue](https://app.gs2.io/docs/en/index.html#gs2-jobqueue)) is registered by the stamp sheet for the job to obtain the reward.  
-When the client executes the job queue, the process of actually receiving the reward is executed.
+The GS2-Quest namespace in this sample sets `TransactionSetting.EnableAtomicCommit: true`,  
+so the rewards are granted by the server within the quest completion request (the job queue is not used).
 
-The job queue can be continued automatically by running Gs2Domain.Dispatch, a process that advances the job queue.
+If you set `TransactionSetting.QueueNamespaceId`, the jobs that grant the rewards are registered  
+in the job queue ([GS2-JobQueue](https://docs.gs2.io/api_reference/job_queue/)), and the rewards are  
+granted when the client runs the job queue.  
+In that case, the job queue can be advanced automatically by running Gs2Domain.Dispatch.
 
 When UniTask is enabled
 ```c#

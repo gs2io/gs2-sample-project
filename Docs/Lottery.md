@@ -1,16 +1,16 @@
 # 抽選機能　解説
 
-[GS2-Showcase](https://app.gs2.io/docs/index.html#gs2-showcase) で商品を販売、[GS2-Lottery](https://app.gs2.io/docs/index.html#gs2-lottery) による抽選を行い、  
+[GS2-Showcase](https://docs.gs2.io/ja/api_reference/showcase/) で商品を販売、[GS2-Lottery](https://docs.gs2.io/ja/api_reference/lottery/) による抽選を行い、  
 専用のインベントリーにアイテムの払い出しを行うサンプルです。
 
 ## GS2-Deploy テンプレート
 
-- [initialize_lottery_template.yaml - 抽選機能](../Templates/initialize_lottery_template.yaml)
+- [initialize_gamecycle_template.yaml - 抽選機能](../Templates/initialize_gamecycle_template.yaml)
 
 ## Unity IAPの有効化、インポート
 
 GS2-Money2を使用したサンプルの動作には、Unity IAPの有効化が必要になります。  
-( https://docs.unity3d.com/ja/2019.4/Manual/UnityIAPSettingUp.html )  
+[Unity IAP の設定](https://docs.unity3d.com/ja/current/Manual/UnityIAPSettingUp.html)  
 サービスウィンドウでのIn-App Purchasingの有効化、  
 IAP パッケージのインポートを行います。
 
@@ -141,14 +141,16 @@ if (future.Error != null)
 }
 ```
 
-GS2-Showcaseで抽選商品購入スタンプシートが発行されます。  
-GS2Domainクラス（ソース内で "gs2" ）を使用した実装ではクライアント側でのスタンプシートの処理は __自動実行__ されます。  
-initialize_lottery_template.yaml テンプレートでは、スタンプシートの実行はクライアント実行に設定されています。
+GS2-Showcaseで抽選商品購入のトランザクションが発行されます。  
+initialize_gamecycle_template.yaml テンプレートでは、トランザクションの実行は __自動実行__ に設定されており、  
+発行されたトランザクションはサーバー側で自動的に実行されます。  
 
 ```yaml
       TransactionSetting:
-        EnableAutoRun: false
+        EnableAutoRun: true
 ```
+
+クライアントは購入トランザクションの完了を `WaitAsync(true)` / `WaitFuture(true)` で待機します（連鎖する抽選・報酬入手のトランザクションも含めて全て待ちます）。
 
 抽選結果の商品リストは以下のコールバックで取得できます。
 
@@ -183,10 +185,13 @@ Gs2Lottery.Domain.Gs2Lottery.DrawByUserIdComplete.AddListener( LotteryResult );
 ```
 
 抽選結果が取得できたタイミングで、実際のゲーム内では必要であればクライアントは抽選演出、取得したアイテムの一覧表示等を行います。  
-スタンプシートの実行後、[GS2-JobQueue](https://app.gs2.io/docs/index.html#gs2-jobqueue) が順にインベントリーへのアイテム入手処理を実行します。
-クライアントがジョブキューを実行することで、実際に報酬を受け取る処理が実行されます。
+本サンプルの GS2-Lottery / GS2-Showcase ネームスペースは `TransactionSetting.EnableAtomicCommit: true` を設定しているため、  
+インベントリーへのアイテム入手はトランザクションの中でサーバー側が一括実行します（ジョブキューは経由しません）。
 
-ジョブキューを進行させる処理、Gs2Domain.Dispatch を実行しておくことで、ジョブキューを自動で継続進行できます。
+`TransactionSetting.QueueNamespaceId` を設定した場合は、入手処理が  
+[GS2-JobQueue](https://docs.gs2.io/ja/api_reference/job_queue/) のジョブとして登録され、  
+クライアントがジョブキューを実行することで配布されます。  
+その場合は、ジョブキューを進行させる処理 Gs2Domain.Dispatch を実行しておくことで、自動で継続進行できます。
 
 ・UniTask有効時
 ```c#
@@ -224,6 +229,6 @@ IEnumerator Impl()
 _stampSheetDispatchCoroutine = StartCoroutine(Impl());
 ```
 
-抽選商品の購入スタンプシートの流れは以下のようになります。
+抽選商品の購入トランザクション処理の流れは以下のようになります。
 
 ![LotteryStore](LotteryStore.png)

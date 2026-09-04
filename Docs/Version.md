@@ -1,10 +1,10 @@
 ﻿# バージョンチェック　解説
 
-[GS2-Version](https://app.gs2.io/docs/index.html#gs2-version) を使ってアプリ起動時のバージョンチェック、利用規約のユーザー承諾確認をおこなうサンプルです。  
+[GS2-Version](https://docs.gs2.io/ja/api_reference/version/) を使ってアプリ起動時のバージョンチェック、利用規約のユーザー承諾確認をおこなうサンプルです。  
 
 ## GS2-Deploy テンプレート
 
-- [initialize_version_template.yaml - アプリバージョンチェック/利用規約チェック](../Templates/initialize_version_template.yaml)
+- [initialize_option_template.yaml - アプリバージョンチェック/利用規約チェック](../Templates/initialize_option_template.yaml)
 
 ## バージョン設定 VersionSetting
 

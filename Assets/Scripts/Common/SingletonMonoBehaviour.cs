@@ -14,7 +14,7 @@ namespace Gs2.Sample
                 if (!instance)
                 {
                     Type t = typeof(T);
-                    instance = (T) FindObjectOfType(t);
+                    instance = (T) FindFirstObjectByType(t);
                     if (!instance)
                     {
                         Debug.LogError(t + " is nothing.");

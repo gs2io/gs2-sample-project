@@ -1,12 +1,11 @@
 ﻿# Gold/Inventory Explanation
 
-Inventory by [GS2-Inventory](https://app.gs2.io/docs/en/index.html#gs2-inventory), implementation of a bag to store items and  
+Inventory by [GS2-Inventory](https://docs.gs2.io/api_reference/inventory/), implementation of a bag to store items and  
 This sample is used to manage gold (in-game currency).
 
 ## GS2-Deploy template
 
-- [initialize_gold_template.yaml - gold](../Templates/initialize_gold_template.yaml)
-- [initialize_inventory_template.yaml - inventory](../Templates/initialize_inventory_template.yaml)
+- [initialize_player_template.yaml - gold/inventory](../Templates/initialize_player_template.yaml)
 
 ## GoldSetting
 
@@ -246,11 +245,13 @@ This is a sample of use for debugging purposes.
     ).Exchange();
     try
     {
-        await domain.ExchangeAsync(
+        var result = await domain.ExchangeAsync(
             rateName: exchangeRateName,
             count: value,
             config: null
         );
+        // Wait for automatic transaction execution to complete (including all chained transactions)
+        await result.WaitAsync(true);
     }
     catch (Gs2Exception e)
     {

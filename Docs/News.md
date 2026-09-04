@@ -1,10 +1,10 @@
 # お知らせ　解説
 
-[GS2-News](https://app.gs2.io/docs/index.html#gs2-news) でお知らせをWebView(アプリ内ブラウザ)に表示するサンプルです。
+[GS2-News](https://docs.gs2.io/ja/api_reference/news/) でお知らせをWebView(アプリ内ブラウザ)に表示するサンプルです。
 
 ## GS2-Deploy テンプレート
 
-- [initialize_news_template.yaml - ガチャ機能](../Templates/initialize_news_template.yaml)
+- [initialize_option_template.yaml - お知らせ](../Templates/initialize_option_template.yaml)
 
 ## お知らせ設定 NewsSetting
 

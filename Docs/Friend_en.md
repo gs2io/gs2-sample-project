@@ -1,6 +1,6 @@
 # Friend Explanation
 
-This is a sample implementation of a friend function using [GS2-Friend](https://app.gs2.io/docs/en/index.html#gs2-friend).  
+This is a sample implementation of a friend function using [GS2-Friend](https://docs.gs2.io/api_reference/friend/).  
 The following sample applications are available: setting up a player's profile, displaying a friend list, displaying a list of sent friend registration requests, and displaying a list of friends who are registered with the site.  
 It displays a list of received friend requests, a blacklist, a list of users you are following, etc.
 
@@ -13,7 +13,7 @@ The UserId of other players is obtained by sending and receiving chat messages.
 
 ## GS2-Deploy template
 
-- [initialize_friend_template.yaml - friend feature](../Templates/initialize_friend_template.yaml)
+- [initialize_community_template.yaml - friend feature](../Templates/initialize_community_template.yaml)
 
 ## FriendSetting FriendSetting
 

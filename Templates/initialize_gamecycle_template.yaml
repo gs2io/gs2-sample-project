@@ -1,0 +1,883 @@
+GS2TemplateFormatVersion: "2019-05-01"
+Description: GS2 sample - GameCycle tab (Quest / Lottery / Unit / Enhance) initialize template Version 2026-09-03
+
+# ============================================================================
+# 「ゲームサイクル」タブの機能を作成します。
+# Creates the features of the "GameCycle" tab.
+#
+#   - GS2-Quest                       クエスト
+#                                     Quest
+#   - GS2-Lottery / GS2-Showcase      抽選 (ガチャ) とその購入
+#                                     Lottery (gacha) and its purchase
+#   - GS2-Inventory                   抽選で入手するユニット (unit-0001)
+#                                     Units obtained by the lottery (unit-0001)
+#   - GS2-Enhance                     強化
+#                                     Enhancement
+#
+# 依存 / Depends on:
+#   initialize_core_template.yaml
+#     - クエストの報酬と抽選の対価が GS2-Money2 の課金通貨 (money2-0001) を使用します
+#       Quest rewards and the lottery price use the billing currency (money2-0001) of GS2-Money2
+#   initialize_player_template.yaml
+#     - クエストの対価が GS2-Stamina のスタミナ (stamina-0001) を消費します
+#       Quests consume stamina (stamina-0001) of GS2-Stamina
+#     - クエストの報酬が GS2-Experience の経験値 (experience-0001) を付与します
+#       Quest rewards add experience (experience-0001) of GS2-Experience
+# ============================================================================
+
+Globals:
+  Alias:
+    # --- GS2-Quest ---------------------------------------------------------
+    QuestNamespaceName: quest-0001                        # GS2-Quest ネームスペース名 / Namespace name
+    QuestKeyNamespaceName: quest-key                      # GS2-Key ネームスペース名 / Namespace name
+    QuestKeyName: quest-key                               # GS2-Key 報酬処理のスタンプシートの署名計算に使用する暗号鍵 / Cryptographic key used to calculate signatures on stamp sheets for reward processing
+
+    # --- GS2-Inventory (抽選アイテム / lottery items) -----------------------
+    UnitNamespaceName: unit-0001                          # GS2-Inventory ネームスペース名 / Namespace name
+    UnitInventoryModelName: unit                          # GS2-Inventory インベントリモデル名 / Inventory model name
+
+    # --- GS2-Lottery / GS2-Showcase ----------------------------------------
+    LotteryNamespaceName: lottery-store                   # GS2-Lottery ネームスペース名 / Namespace name
+    LotteryName: lottery                                  # GS2-Lottery 抽選マスターデータの種類名, GS2-Showcase 商品棚名 / GS2-Lottery lottery model name, GS2-Showcase showcase name
+    LotteryShowcaseNamespaceName: lottery-showcase        # GS2-Showcase ネームスペース名 / Namespace name
+    LotteryKeyNamespaceName: lottery-showcase-key         # GS2-Key ネームスペース名 / Namespace name
+    LotteryShowcaseKeyName: lottery-showcase-key          # GS2-Key 購入処理のスタンプシートの署名計算に使用する暗号鍵 / Cryptographic key used to calculate signatures on stamp sheets for purchase processing
+    LotteryKeyName: lottery-key                           # GS2-Key 抽選処理のスタンプシートの署名計算に使用する暗号鍵 / Cryptographic key used to calculate signatures on stamp sheets for lottery processing
+
+    # --- GS2-Enhance -------------------------------------------------------
+    EnhanceNamespaceName: enhance                         # GS2-Enhance ネームスペース名 / Namespace name
+    EnhanceRateName: level                                # GS2-Enhance 強化レート名 / Enhancement rate name
+    EnhanceKeyNamespaceName: enhance-key-namespace        # GS2-Key ネームスペース名 / Namespace name
+    EnhanceKeyName: enhance-key                           # GS2-Key 強化処理のスタンプシートの署名計算に使用する暗号鍵 / Cryptographic key used to calculate signatures on stamp sheets for the enhancement process
+    EnhanceInventoryNamespaceName: enhance-inventory      # GS2-Inventory ネームスペース名 強化対象と強化素材 / Namespace name for the enhancement target and materials
+    EnhanceExperienceNamespaceName: enhance-experience    # GS2-Experience ネームスペース名 強化対象のランク / Namespace name for the rank of the enhancement target
+    EnhanceExchangeKeyName: enhance-exchange-key          # GS2-Key 交換処理のスタンプシートの署名計算に使用する暗号鍵 / Cryptographic key used to calculate signatures on stamp sheets for the exchange process
+    EnhanceExchangeNamespaceName: enhance-exchange        # GS2-Exchange ネームスペース名 / Namespace name
+    EnhanceGetCharacterRateName: get-character            # GS2-Exchange 強化対象のキャラクターを入手する交換レート名 / Exchange rate name that grants the character to enhance
+    EnhanceGetMaterialRateName: get-material              # GS2-Exchange 強化素材を入手する交換レート名 / Exchange rate name that grants the enhancement materials
+
+    # --- 他テンプレートのリソース / Resources of other templates ------------
+    MoneyNamespaceName: money2-0001                       # GS2-Money2 ネームスペース名 (core) / Namespace name (core)
+    StaminaNamespaceName: stamina-0001                    # GS2-Stamina ネームスペース名 (player) / Namespace name (player)
+    StaminaName: main                                     # GS2-Stamina クエストの対価に設定するスタミナモデル名 (player) / Stamina model name set as the price of a quest (player)
+    ExperienceNamespaceName: experience-0001              # GS2-Experience ネームスペース名 (player) / Namespace name (player)
+    PlayerExperienceModelName: player                     # GS2-Experience プレイヤーの経験値モデル名 (player) / Player experience model name (player)
+    DistributorNamespaceName: default                     # GS2-Distributor ネームスペース名 トランザクションの自動実行に使用 / Namespace name used for automatic transaction execution
+
+Resources:
+
+  # ==========================================================================
+  # GS2-Quest : クエスト
+  # GS2-Quest : quest
+  # ==========================================================================
+
+  QuestKeyNamespace:
+    Type: GS2::Key::Namespace
+    Properties:
+      Name: ${QuestKeyNamespaceName}
+
+  QuestKey:
+    Type: GS2::Key::Key
+    Properties:
+      NamespaceName: ${QuestKeyNamespaceName}
+      Name: ${QuestKeyName}
+    DependsOn:
+      - QuestKeyNamespace
+
+  QuestNamespace:
+    Type: GS2::Quest::Namespace
+    Properties:
+      Name: ${QuestNamespaceName}
+      # トランザクションの自動実行設定 / Automatic transaction execution settings
+      TransactionSetting:
+        EnableAutoRun: true
+        # トランザクションを一括実行し、結果をその場で返す / Execute the transaction atomically and return the result immediately
+        EnableAtomicCommit: true
+        DistributorNamespaceId: !Join
+          - ':'
+          - - 'grn'
+            - 'gs2'
+            - !GetAttr Gs2::Region
+            - !GetAttr Gs2::OwnerId
+            - 'distributor'
+            - ${DistributorNamespaceName}
+        KeyId: !GetAttr QuestKey.Item.KeyId
+    DependsOn:
+      - QuestKey
+
+  # クエストのマスターデータ。
+  # 対価と報酬は core / player テンプレートのネームスペースを参照するため、
+  # それらのスタックを先に作成しておく必要があります。
+  # Master data of the quests. The price and the rewards refer to namespaces of the
+  # core / player templates, so create those stacks first.
+  QuestSettings:
+    Type: GS2::Quest::CurrentQuestMaster
+    Properties:
+      NamespaceName: ${QuestNamespaceName}
+      Settings:
+        version: 2019-05-14
+        groups:
+          - name: main
+            metadata: Main Scenario
+            quests:
+              - name: chapter-0001
+                metadata: Chapter 1. The beginning of the adventure
+                contents:
+                  - metadata: NORMAL
+                    completeAcquireActions:
+                      - action: Gs2Money2:DepositByUserId
+                        request:
+                          namespaceName: ${MoneyNamespaceName}
+                          userId: "#{userId}"
+                          slot: "#{slot}"
+                          depositTransactions:
+                            - price: 0
+                              currency: JPY
+                              count: 10
+                      - action: Gs2Experience:AddExperienceByUserId
+                        request:
+                          namespaceName: ${ExperienceNamespaceName}
+                          experienceName: ${PlayerExperienceModelName}
+                          userId: "#{userId}"
+                          propertyId: "#{propertyId}"
+                          experienceValue: 5
+                    weight: 95
+                  - metadata: RARE
+                    completeAcquireActions:
+                      - action: Gs2Money2:DepositByUserId
+                        request:
+                          namespaceName: ${MoneyNamespaceName}
+                          userId: "#{userId}"
+                          slot: "#{slot}"
+                          depositTransactions:
+                            - price: 0
+                              currency: JPY
+                              count: 20
+                      - action: Gs2Money2:DepositByUserId
+                        request:
+                          namespaceName: ${MoneyNamespaceName}
+                          userId: "#{userId}"
+                          slot: "#{slot}"
+                          depositTransactions:
+                            - price: 0
+                              currency: JPY
+                              count: 10
+                    weight: 5
+                consumeActions:
+                  - action: Gs2Stamina:ConsumeStaminaByUserId
+                    request:
+                      namespaceName: ${StaminaNamespaceName}
+                      staminaName: ${StaminaName}
+                      userId: "#{userId}"
+                      consumeValue: 10
+                failedAcquireActions:
+                  - action: Gs2Stamina:RecoverStaminaByUserId
+                    request:
+                      namespaceName: ${StaminaNamespaceName}
+                      staminaName: ${StaminaName}
+                      userId: "#{userId}"
+                      recoverValue: 10
+              - name: chapter-0002
+                metadata: Chapter 2. Boy meets girl
+                contents:
+                  - metadata: NORMAL
+                    completeAcquireActions:
+                      - action: Gs2Money2:DepositByUserId
+                        request:
+                          namespaceName: ${MoneyNamespaceName}
+                          userId: "#{userId}"
+                          slot: "#{slot}"
+                          depositTransactions:
+                            - price: 0
+                              currency: JPY
+                              count: 15
+                      - action: Gs2Money2:DepositByUserId
+                        request:
+                          namespaceName: ${MoneyNamespaceName}
+                          userId: "#{userId}"
+                          slot: "#{slot}"
+                          depositTransactions:
+                            - price: 0
+                              currency: JPY
+                              count: 10
+                    weight: 95
+                  - metadata: RARE
+                    completeAcquireActions:
+                      - action: Gs2Money2:DepositByUserId
+                        request:
+                          namespaceName: ${MoneyNamespaceName}
+                          userId: "#{userId}"
+                          slot: "#{slot}"
+                          depositTransactions:
+                            - price: 0
+                              currency: JPY
+                              count: 25
+                      - action: Gs2Money2:DepositByUserId
+                        request:
+                          namespaceName: ${MoneyNamespaceName}
+                          userId: "#{userId}"
+                          slot: "#{slot}"
+                          depositTransactions:
+                            - price: 0
+                              currency: JPY
+                              count: 15
+                    weight: 5
+                consumeActions:
+                  - action: Gs2Stamina:ConsumeStaminaByUserId
+                    request:
+                      namespaceName: ${StaminaNamespaceName}
+                      staminaName: ${StaminaName}
+                      userId: "#{userId}"
+                      consumeValue: 15
+                failedAcquireActions:
+                  - action: Gs2Stamina:RecoverStaminaByUserId
+                    request:
+                      namespaceName: ${StaminaNamespaceName}
+                      staminaName: ${StaminaName}
+                      userId: "#{userId}"
+                      recoverValue: 15
+                premiseQuestNames:
+                  - chapter-0001
+          - name: character
+            metadata: Character Scenario
+            quests:
+              - name: character-0001
+                metadata: Character-0001
+                contents:
+                  - metadata: NORMAL
+                    completeAcquireActions:
+                      - action: Gs2Money2:DepositByUserId
+                        request:
+                          namespaceName: ${MoneyNamespaceName}
+                          userId: "#{userId}"
+                          slot: "#{slot}"
+                          depositTransactions:
+                            - price: 0
+                              currency: JPY
+                              count: 50
+                    weight: 1
+    DependsOn:
+      - QuestNamespace
+
+  # ==========================================================================
+  # GS2-Inventory : 抽選で入手するユニット
+  # GS2-Inventory : units obtained by the lottery
+  # ==========================================================================
+
+  UnitNamespace:
+    Type: GS2::Inventory::Namespace
+    Properties:
+      Name: ${UnitNamespaceName}
+
+  UnitSettings:
+    Type: GS2::Inventory::CurrentItemModelMaster
+    Properties:
+      NamespaceName: ${UnitNamespaceName}
+      Settings:
+        version: 2019-02-05
+        inventoryModels:
+          - name: ${UnitInventoryModelName}
+            initialCapacity: 50
+            maxCapacity: 50
+            itemModels:
+              - name: 'normal_0001'
+                metadata: "{\"displayName\":\"[N] 0001\",\"rarity\":0}"
+                stackingLimit: 1
+                allowMultipleStacks: true
+                sortValue: 10000
+              - name: 'normal_0002'
+                metadata: "{\"displayName\":\"[N] 0002\",\"rarity\":0}"
+                stackingLimit: 1
+                allowMultipleStacks: true
+                sortValue: 10100
+              - name: 'normal_0003'
+                metadata: "{\"displayName\":\"[N] 0003\",\"rarity\":0}"
+                stackingLimit: 1
+                allowMultipleStacks: true
+                sortValue: 10200
+              - name: 'rare_0001'
+                metadata: "{\"displayName\":\"[R] 0001\",\"rarity\":1}"
+                stackingLimit: 1
+                allowMultipleStacks: true
+                sortValue: 20000
+              - name: 'rare_0002'
+                metadata: "{\"displayName\":\"[R] 0002\",\"rarity\":1}"
+                stackingLimit: 1
+                allowMultipleStacks: true
+                sortValue: 20100
+              - name: 'rare_0003'
+                metadata: "{\"displayName\":\"[R] 0003\",\"rarity\":1}"
+                stackingLimit: 1
+                allowMultipleStacks: true
+                sortValue: 20200
+              - name: 'srare_0001'
+                metadata: "{\"displayName\":\"[SR] 0001\",\"rarity\":2}"
+                stackingLimit: 1
+                allowMultipleStacks: true
+                sortValue: 30000
+              - name: 'srare_0002'
+                metadata: "{\"displayName\":\"[SR] 0002\",\"rarity\":2}"
+                stackingLimit: 1
+                allowMultipleStacks: true
+                sortValue: 30100
+              - name: 'srare_0003'
+                metadata: "{\"displayName\":\"[SR] 0003\",\"rarity\":2}"
+                stackingLimit: 1
+                allowMultipleStacks: true
+                sortValue: 30200
+              - name: 'ssrare_0001'
+                metadata: "{\"displayName\":\"[SSR] 0001\",\"rarity\":3}"
+                stackingLimit: 1
+                allowMultipleStacks: true
+                sortValue: 40000
+              - name: 'ssrare_0002'
+                metadata: "{\"displayName\":\"[SSR] 0002\",\"rarity\":3}"
+                stackingLimit: 1
+                allowMultipleStacks: true
+                sortValue: 40100
+              - name: 'ssrare_0003'
+                metadata: "{\"displayName\":\"[SSR] 0003\",\"rarity\":3}"
+                stackingLimit: 1
+                allowMultipleStacks: true
+                sortValue: 40200
+    DependsOn:
+      - UnitNamespace
+
+  # ==========================================================================
+  # GS2-Lottery / GS2-Showcase : 抽選 (ガチャ)
+  # GS2-Lottery / GS2-Showcase : lottery (gacha)
+  # ==========================================================================
+
+  LotteryKeyNamespace:
+    Type: GS2::Key::Namespace
+    Properties:
+      Name: ${LotteryKeyNamespaceName}
+
+  LotteryShowcaseKey:
+    Type: GS2::Key::Key
+    Properties:
+      NamespaceName: ${LotteryKeyNamespaceName}
+      Name: ${LotteryShowcaseKeyName}
+    DependsOn:
+      - LotteryKeyNamespace
+
+  LotteryKey:
+    Type: GS2::Key::Key
+    Properties:
+      NamespaceName: ${LotteryKeyNamespaceName}
+      Name: ${LotteryKeyName}
+    DependsOn:
+      - LotteryKeyNamespace
+
+  LotteryNamespace:
+    Type: GS2::Lottery::Namespace
+    Properties:
+      Name: ${LotteryNamespaceName}
+      # トランザクションの自動実行設定 / Automatic transaction execution settings
+      TransactionSetting:
+        EnableAutoRun: true
+        # トランザクションを一括実行し、結果をその場で返す / Execute the transaction atomically and return the result immediately
+        EnableAtomicCommit: true
+        DistributorNamespaceId: !Join
+          - ':'
+          - - 'grn'
+            - 'gs2'
+            - !GetAttr Gs2::Region
+            - !GetAttr Gs2::OwnerId
+            - 'distributor'
+            - ${DistributorNamespaceName}
+        KeyId: !GetAttr LotteryKey.Item.KeyId
+    DependsOn:
+      - LotteryKey
+
+  # 抽選のマスターデータ。景品として unit-0001 のアイテムを付与するため、
+  # UnitSettings の作成完了を待ってから作成する。
+  # Master data of the lottery. The prizes grant items of unit-0001,
+  # so wait for UnitSettings to be created.
+  LotterySettings:
+    Type: GS2::Lottery::CurrentLotteryMaster
+    Properties:
+      NamespaceName: ${LotteryNamespaceName}
+      Settings:
+        version: 2019-02-21
+        lotteryModels:
+          - name: ${LotteryName}
+            prizeTableName: rarity
+            mode: normal
+            method: prize_table
+            metadata: ''
+        prizeTables:
+          - name: rarity
+            metadata: ''
+            prizes:
+              - prizeTableName: 'ssr'
+                weight: 3
+                type: prize_table
+              - prizeTableName: 'sr'
+                weight: 10
+                type: prize_table
+              - prizeTableName: 'r'
+                weight: 27
+                type: prize_table
+              - prizeTableName: 'n'
+                weight: 60
+                type: prize_table
+          - name: 'ssr'
+            prizes:
+              - type: action
+                acquireActions:
+                  - action: Gs2Inventory:AcquireItemSetByUserId
+                    request:
+                      namespaceName: ${UnitNamespaceName}
+                      inventoryName: ${UnitInventoryModelName}
+                      itemName: "ssrare_0001"
+                      userId: "#{userId}"
+                      acquireCount: 1
+                weight: 1
+              - type: action
+                acquireActions:
+                  - action: Gs2Inventory:AcquireItemSetByUserId
+                    request:
+                      namespaceName: ${UnitNamespaceName}
+                      inventoryName: ${UnitInventoryModelName}
+                      itemName: "ssrare_0002"
+                      userId: "#{userId}"
+                      acquireCount: 1
+                weight: 2
+              - type: action
+                acquireActions:
+                  - action: Gs2Inventory:AcquireItemSetByUserId
+                    request:
+                      namespaceName: ${UnitNamespaceName}
+                      inventoryName: ${UnitInventoryModelName}
+                      itemName: "ssrare_0003"
+                      userId: "#{userId}"
+                      acquireCount: 1
+                weight: 3
+          - name: 'sr'
+            prizes:
+              - type: action
+                acquireActions:
+                  - action: Gs2Inventory:AcquireItemSetByUserId
+                    request:
+                      namespaceName: ${UnitNamespaceName}
+                      inventoryName: ${UnitInventoryModelName}
+                      itemName: "srare_0001"
+                      userId: "#{userId}"
+                      acquireCount: 1
+                weight: 1
+              - type: action
+                acquireActions:
+                  - action: Gs2Inventory:AcquireItemSetByUserId
+                    request:
+                      namespaceName: ${UnitNamespaceName}
+                      inventoryName: ${UnitInventoryModelName}
+                      itemName: "srare_0002"
+                      userId: "#{userId}"
+                      acquireCount: 1
+                weight: 2
+              - type: action
+                acquireActions:
+                  - action: Gs2Inventory:AcquireItemSetByUserId
+                    request:
+                      namespaceName: ${UnitNamespaceName}
+                      inventoryName: ${UnitInventoryModelName}
+                      itemName: "srare_0003"
+                      userId: "#{userId}"
+                      acquireCount: 1
+                weight: 2
+          - name: 'r'
+            prizes:
+              - type: action
+                acquireActions:
+                  - action: Gs2Inventory:AcquireItemSetByUserId
+                    request:
+                      namespaceName: ${UnitNamespaceName}
+                      inventoryName: ${UnitInventoryModelName}
+                      itemName: "rare_0001"
+                      userId: "#{userId}"
+                      acquireCount: 1
+                weight: 1
+              - type: action
+                acquireActions:
+                  - action: Gs2Inventory:AcquireItemSetByUserId
+                    request:
+                      namespaceName: ${UnitNamespaceName}
+                      inventoryName: ${UnitInventoryModelName}
+                      itemName: "rare_0002"
+                      userId: "#{userId}"
+                      acquireCount: 1
+                weight: 1
+              - type: action
+                acquireActions:
+                  - action: Gs2Inventory:AcquireItemSetByUserId
+                    request:
+                      namespaceName: ${UnitNamespaceName}
+                      inventoryName: ${UnitInventoryModelName}
+                      itemName: "rare_0003"
+                      userId: "#{userId}"
+                      acquireCount: 1
+                weight: 1
+          - name: 'n'
+            prizes:
+              - type: action
+                acquireActions:
+                  - action: Gs2Inventory:AcquireItemSetByUserId
+                    request:
+                      namespaceName: ${UnitNamespaceName}
+                      inventoryName: ${UnitInventoryModelName}
+                      itemName: "normal_0001"
+                      userId: "#{userId}"
+                      acquireCount: 1
+                weight: 1
+              - type: action
+                acquireActions:
+                  - action: Gs2Inventory:AcquireItemSetByUserId
+                    request:
+                      namespaceName: ${UnitNamespaceName}
+                      inventoryName: ${UnitInventoryModelName}
+                      itemName: "normal_0002"
+                      userId: "#{userId}"
+                      acquireCount: 1
+                weight: 1
+              - type: action
+                acquireActions:
+                  - action: Gs2Inventory:AcquireItemSetByUserId
+                    request:
+                      namespaceName: ${UnitNamespaceName}
+                      inventoryName: ${UnitInventoryModelName}
+                      itemName: "normal_0003"
+                      userId: "#{userId}"
+                      acquireCount: 1
+                weight: 1
+    DependsOn:
+      - LotteryNamespace
+      - UnitSettings
+
+  LotteryShowcaseNamespace:
+    Type: GS2::Showcase::Namespace
+    Properties:
+      Name: ${LotteryShowcaseNamespaceName}
+      # トランザクションの自動実行設定 / Automatic transaction execution settings
+      TransactionSetting:
+        EnableAutoRun: true
+        # トランザクションを一括実行し、結果をその場で返す / Execute the transaction atomically and return the result immediately
+        EnableAtomicCommit: true
+        DistributorNamespaceId: !Join
+          - ':'
+          - - 'grn'
+            - 'gs2'
+            - !GetAttr Gs2::Region
+            - !GetAttr Gs2::OwnerId
+            - 'distributor'
+            - ${DistributorNamespaceName}
+        KeyId: !GetAttr LotteryShowcaseKey.Item.KeyId
+    DependsOn:
+      - LotteryShowcaseKey
+
+  # 商品棚のマスターデータ。入手アクションが抽選モデルを参照するため、
+  # LotterySettings の作成完了を待ってから作成する。
+  # Master data of the showcase. The acquire actions refer to the lottery model,
+  # so wait for LotterySettings to be created.
+  LotteryShowcaseSettings:
+    Type: GS2::Showcase::CurrentShowcaseMaster
+    Properties:
+      NamespaceName: ${LotteryShowcaseNamespaceName}
+      Settings:
+        version: 2019-04-04
+        showcases:
+          - name: ${LotteryName}
+            displayItems:
+              - type: salesItem
+                salesItem:
+                  name: lottery_10
+                  metadata: ''
+                  acquireActions:
+                    - action: Gs2Lottery:DrawByUserId
+                      request:
+                        namespaceName: ${LotteryNamespaceName}
+                        lotteryName: ${LotteryName}
+                        userId: "#{userId}"
+                        count: 10
+                  consumeActions:
+                    - action: Gs2Money2:WithdrawByUserId
+                      request:
+                        namespaceName: ${MoneyNamespaceName}
+                        userId: "#{userId}"
+                        slot: "#{slot}"
+                        withdrawCount: 50
+                        paidOnly: false
+              - type: salesItem
+                salesItem:
+                  name: lottery_1
+                  metadata: ''
+                  acquireActions:
+                    - action: Gs2Lottery:DrawByUserId
+                      request:
+                        namespaceName: ${LotteryNamespaceName}
+                        lotteryName: ${LotteryName}
+                        userId: "#{userId}"
+                        count: 1
+                  consumeActions:
+                    - action: Gs2Money2:WithdrawByUserId
+                      request:
+                        namespaceName: ${MoneyNamespaceName}
+                        userId: "#{userId}"
+                        slot: "#{slot}"
+                        withdrawCount: 5
+                        paidOnly: false
+    DependsOn:
+      - LotteryShowcaseNamespace
+      - LotterySettings
+
+  # ==========================================================================
+  # GS2-Enhance : 強化
+  # GS2-Enhance : enhancement
+  # ==========================================================================
+
+  EnhanceKeyNamespace:
+    Type: GS2::Key::Namespace
+    Properties:
+      Name: ${EnhanceKeyNamespaceName}
+
+  EnhanceKey:
+    Type: GS2::Key::Key
+    Properties:
+      NamespaceName: ${EnhanceKeyNamespaceName}
+      Name: ${EnhanceKeyName}
+    DependsOn:
+      - EnhanceKeyNamespace
+
+  EnhanceExchangeKey:
+    Type: GS2::Key::Key
+    Properties:
+      NamespaceName: ${EnhanceKeyNamespaceName}
+      Name: ${EnhanceExchangeKeyName}
+    DependsOn:
+      - EnhanceKeyNamespace
+
+  # 強化対象のキャラクターと強化素材を保持するインベントリ
+  # The inventory that holds the character to enhance and the enhancement materials
+  EnhanceInventoryNamespace:
+    Type: GS2::Inventory::Namespace
+    Properties:
+      Name: ${EnhanceInventoryNamespaceName}
+
+  # 強化素材の獲得経験値はアイテムモデルの metadata に JSON 文字列で持たせる
+  # The experience gained from a material is stored as a JSON string in the item model metadata
+  EnhanceInventorySettings:
+    Type: GS2::Inventory::CurrentItemModelMaster
+    Properties:
+      NamespaceName: ${EnhanceInventoryNamespaceName}
+      Settings:
+        version: 2019-02-05
+        inventoryModels:
+          - name: material
+            metadata: MATERIAL
+            initialCapacity: 1
+            maxCapacity: 1
+            protectReferencedItem: false
+            itemModels:
+              - name: material-0001
+                metadata: "{\"experience\": 50}"
+                stackingLimit: 99
+                allowMultipleStacks: false
+                sortValue: 1
+          - name: character
+            metadata: CHARACTER
+            initialCapacity: 1
+            maxCapacity: 1
+            itemModels:
+              - name: character-0001
+                metadata: "{\"experience\": 50}"
+                stackingLimit: 1
+                allowMultipleStacks: false
+                sortValue: 1
+    DependsOn:
+      - EnhanceInventoryNamespace
+
+  # 強化対象のランク（経験値）
+  # The rank (experience) of the enhancement target
+  EnhanceExperienceNamespace:
+    Type: GS2::Experience::Namespace
+    Properties:
+      Name: ${EnhanceExperienceNamespaceName}
+
+  EnhanceExperienceSettings:
+    Type: GS2::Experience::CurrentExperienceMaster
+    Properties:
+      NamespaceName: ${EnhanceExperienceNamespaceName}
+      Settings:
+        version: 2019-01-11
+        experienceModels:
+          - name: character
+            metadata: CHARACTER
+            defaultExperience: 0
+            # ランク上限。rankThreshold.values が4つ = ランクは1〜5なので、上限も5に揃えます。
+            # Rank cap. rankThreshold.values has four entries, so the rank ranges from 1 to 5
+            # and the cap is set to 5 accordingly.
+            defaultRankCap: 5
+            maxRankCap: 5
+            # ランクが上がる累計経験値。素材1個あたり50なので、2個でランク2、
+            # 合計20個でランク5（最大）になります。
+            # Cumulative experience at which the rank goes up. A material grants 50 experience,
+            # so two materials reach rank 2 and twenty materials reach rank 5 (the maximum).
+            rankThreshold:
+              metadata: RANK_THRESHOLD
+              values:
+                - 100
+                - 300
+                - 500
+                - 1000
+    DependsOn:
+      - EnhanceExperienceNamespace
+
+  EnhanceExchangeNamespace:
+    Type: GS2::Exchange::Namespace
+    Properties:
+      Name: ${EnhanceExchangeNamespaceName}
+      # トランザクションの自動実行設定 / Automatic transaction execution settings
+      TransactionSetting:
+        EnableAutoRun: true
+        # トランザクションを一括実行し、結果をその場で返す / Execute the transaction atomically and return the result immediately
+        EnableAtomicCommit: true
+        DistributorNamespaceId: !Join
+          - ':'
+          - - 'grn'
+            - 'gs2'
+            - !GetAttr Gs2::Region
+            - !GetAttr Gs2::OwnerId
+            - 'distributor'
+            - ${DistributorNamespaceName}
+        KeyId: !GetAttr EnhanceExchangeKey.Item.KeyId
+    DependsOn:
+      - EnhanceExchangeKey
+
+  # 強化対象のキャラクターと強化素材を入手するための交換レート（動作確認用）
+  # Exchange rates to obtain the character to enhance and the enhancement materials (for verification purposes)
+  EnhanceExchangeSettings:
+    Type: GS2::Exchange::CurrentRateMaster
+    Properties:
+      NamespaceName: ${EnhanceExchangeNamespaceName}
+      Settings:
+        version: 2019-08-19
+        rateModels:
+          # 強化対象のキャラクターを1体入手する / Grants one character to enhance
+          # character インベントリはスタック数・容量ともに 1 のため、
+          # すでに所持している場合はエラーになります
+          # The character inventory has a capacity and stacking limit of 1,
+          # so this fails if the character is already owned
+          - name: ${EnhanceGetCharacterRateName}
+            consumeActions: []
+            acquireActions:
+              - action: Gs2Inventory:AcquireItemSetByUserId
+                request:
+                  namespaceName: ${EnhanceInventoryNamespaceName}
+                  inventoryName: character
+                  itemName: character-0001
+                  userId: "#{userId}"
+                  acquireCount: 1
+          # 強化素材を5個入手する / Grants five enhancement materials
+          - name: ${EnhanceGetMaterialRateName}
+            consumeActions: []
+            acquireActions:
+              - action: Gs2Inventory:AcquireItemSetByUserId
+                request:
+                  namespaceName: ${EnhanceInventoryNamespaceName}
+                  inventoryName: material
+                  itemName: material-0001
+                  userId: "#{userId}"
+                  acquireCount: 5
+    DependsOn:
+      - EnhanceExchangeNamespace
+      - EnhanceInventorySettings
+
+  EnhanceNamespace:
+    Type: GS2::Enhance::Namespace
+    Properties:
+      Name: ${EnhanceNamespaceName}
+      # トランザクションの自動実行設定 / Automatic transaction execution settings
+      TransactionSetting:
+        EnableAutoRun: true
+        # トランザクションを一括実行し、結果をその場で返す / Execute the transaction atomically and return the result immediately
+        EnableAtomicCommit: true
+        DistributorNamespaceId: !Join
+          - ':'
+          - - 'grn'
+            - 'gs2'
+            - !GetAttr Gs2::Region
+            - !GetAttr Gs2::OwnerId
+            - 'distributor'
+            - ${DistributorNamespaceName}
+        KeyId: !GetAttr EnhanceKey.Item.KeyId
+    DependsOn:
+      - EnhanceKey
+
+  # 強化レートのマスターデータ。強化対象・素材のインベントリモデルと
+  # ランクの経験値モデルを参照するため、それらの作成完了を待ってから作成する。
+  # Master data of the enhancement rates. It refers to the inventory models of the
+  # target and the materials and to the experience model of the rank, so wait for them.
+  EnhanceSettings:
+    Type: GS2::Enhance::CurrentRateMaster
+    Properties:
+      NamespaceName: ${EnhanceNamespaceName}
+      Settings:
+        version: 2020-08-22
+        rateModels:
+          - name: ${EnhanceRateName}
+            metadata: LEVEL
+            targetInventoryModelId: !Join
+              - ':'
+              - - 'grn'
+                - 'gs2'
+                - !GetAttr Gs2::Region
+                - !GetAttr Gs2::OwnerId
+                - 'inventory'
+                - ${EnhanceInventoryNamespaceName}
+                - model
+                - character
+            acquireExperienceSuffix: :level
+            materialInventoryModelId: !Join
+              - ':'
+              - - 'grn'
+                - 'gs2'
+                - !GetAttr Gs2::Region
+                - !GetAttr Gs2::OwnerId
+                - 'inventory'
+                - ${EnhanceInventoryNamespaceName}
+                - model
+                - material
+            acquireExperienceHierarchy:
+              - experience
+            experienceModelId: !Join
+              - ':'
+              - - 'grn'
+                - 'gs2'
+                - !GetAttr Gs2::Region
+                - !GetAttr Gs2::OwnerId
+                - 'experience'
+                - ${EnhanceExperienceNamespaceName}
+                - model
+                - character
+            bonusRates:
+              - rate: 1.0
+                weight: 1
+    DependsOn:
+      - EnhanceNamespace
+      - EnhanceInventorySettings
+      - EnhanceExperienceSettings
+
+Outputs:
+  QuestNamespaceName: !GetAttr QuestNamespace.Item.Name
+  UnitNamespaceName: !GetAttr UnitNamespace.Item.Name
+  UnitInventoryModelName: ${UnitInventoryModelName}
+  LotteryNamespaceName: !GetAttr LotteryNamespace.Item.Name
+  LotteryName: ${LotteryName}
+  LotteryShowcaseNamespaceName: !GetAttr LotteryShowcaseNamespace.Item.Name
+  EnhanceNamespaceName: !GetAttr EnhanceNamespace.Item.Name
+  EnhanceRateName: ${EnhanceRateName}
+  EnhanceInventoryNamespaceName: !GetAttr EnhanceInventoryNamespace.Item.Name
+  EnhanceExperienceNamespaceName: !GetAttr EnhanceExperienceNamespace.Item.Name
+  EnhanceExchangeNamespaceName: !GetAttr EnhanceExchangeNamespace.Item.Name
+  EnhanceGetCharacterRateName: ${EnhanceGetCharacterRateName}
+  EnhanceGetMaterialRateName: ${EnhanceGetMaterialRateName}

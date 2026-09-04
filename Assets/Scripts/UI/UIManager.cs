@@ -59,13 +59,143 @@ namespace Gs2.Sample
         public enum Language
         {
             ja = 0,
-            en = 1
+            en = 1,
+            ko = 2,
         }
-        
+
+        /// <summary>
+        /// 言語ごとに使用するフォント
+        /// 日本語フォントにはハングルの字形が含まれないため、言語ごとに差し替える
+        ///
+        /// Font asset used for each language.
+        /// A Japanese font asset does not contain Hangul glyphs, so it is swapped per language.
+        /// </summary>
+        [Serializable]
+        public class LocaleFont
+        {
+            public Language lang;
+            public TMP_FontAsset font;
+        }
+
+        private const string LanguagePrefsKey = "Gs2.Sample.Language";
+
         [SerializeField] private Language lang = Language.ja;
         public Language Lang
         {
             get { return lang; }
+        }
+
+        /// <summary>
+        /// 端末の言語設定と保存された設定から言語を決定する
+        ///
+        /// 有効な場合、Awake で lang が上書きされる。保存された設定（PlayerPrefs）が
+        /// あればそれが優先されるため、実行時に言語を変えるときは SetLanguage を使う。
+        /// Inspector の lang を切り替えて確認したい場合は一時的に false にする。
+        ///
+        /// Determine the language from the device setting and the saved preference.
+        /// When enabled, lang is overwritten in Awake and a saved preference takes priority,
+        /// so use SetLanguage to change the language at runtime.
+        /// </summary>
+        [SerializeField] private bool autoDetectLanguage = true;
+
+        [SerializeField] private LocaleFont[] localeFonts = null;
+
+        /// <summary>
+        /// 言語が切り替わったときに呼ばれる
+        /// Raised when the language has been changed
+        /// </summary>
+        public static event Action OnLanguageChanged;
+
+        private LocalizationTable _localizationTable;
+
+        private LocalizationTable Localization
+        {
+            get
+            {
+                if (_localizationTable == null)
+                {
+                    _localizationTable = new LocalizationTable();
+                    _localizationTable.Load(lang);
+                }
+
+                return _localizationTable;
+            }
+        }
+
+        protected override void Awake()
+        {
+            base.Awake();
+
+            if (this != Instance)
+                return;
+
+            if (autoDetectLanguage)
+                lang = DetectLanguage();
+        }
+
+        /// <summary>
+        /// 保存された設定を優先し、無ければ端末の言語設定から決定する
+        /// </summary>
+        private static Language DetectLanguage()
+        {
+            if (PlayerPrefs.HasKey(LanguagePrefsKey))
+            {
+                var saved = PlayerPrefs.GetInt(LanguagePrefsKey);
+                if (Enum.IsDefined(typeof(Language), saved))
+                    return (Language)saved;
+            }
+
+            switch (Application.systemLanguage)
+            {
+                case SystemLanguage.Japanese:
+                    return Language.ja;
+                case SystemLanguage.Korean:
+                    return Language.ko;
+                default:
+                    return Language.en;
+            }
+        }
+
+        /// <summary>
+        /// 言語を切り替える
+        /// 表示中の LocalizedText はイベント経由で自動的に更新される
+        ///
+        /// Switch the language.
+        /// Every visible LocalizedText updates itself through the event.
+        /// </summary>
+        public void SetLanguage(Language next, bool save = true)
+        {
+            if (lang == next)
+                return;
+
+            lang = next;
+            Localization.Load(lang);
+
+            if (save)
+            {
+                PlayerPrefs.SetInt(LanguagePrefsKey, (int)next);
+                PlayerPrefs.Save();
+            }
+
+            OnLanguageChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// 言語に対応するフォントを取得する
+        /// 対応が登録されていない場合は null（元のフォントのまま）
+        /// </summary>
+        public TMP_FontAsset GetLocaleFont(Language target)
+        {
+            if (localeFonts == null)
+                return null;
+
+            foreach (var localeFont in localeFonts)
+            {
+                if (localeFont != null && localeFont.lang == target)
+                    return localeFont.font;
+            }
+
+            return null;
         }
         
         // Start is called before the first frame update
@@ -119,47 +249,37 @@ namespace Gs2.Sample
             logWindow.gameObject.SetActive(!logWindow.gameObject.activeSelf);
         }
 
-        public string GetLocalizationText(string text)
+        /// <summary>
+        /// キーに対応する文言を取得する
+        /// テーブルに存在しないキーはそのまま返るため、リテラルを渡しても動作する
+        ///
+        /// Get the localized text for the key.
+        /// A key that is not in the table is returned as-is, so passing a literal also works.
+        /// </summary>
+        public string GetLocalizationText(string key)
         {
-            var EnglishDic = new Dictionary<string, List<string>>
-            { 
-                {"LinkAdd", new List<string>{"アカウントを連携しました。","Linked accounts."}},
-                {"LinkRemove", new List<string>{"アカウント連携を解除しました。","Account linkage has been removed."}},
-                {"TakeOver", new List<string>{"アカウント引継ぎを実行しました。","Account transfer has been executed."}},
-                {"FriendRequestSend", new List<string>{"フレンドリクエストを送信しました。","Friend request sent."}},
-                {"FriendRequestAccept", new List<string>{"フレンドリクエストを承認しました。","Friend request approved."}},
-                {"FriendRequestReject", new List<string>{"フレンドリクエストを拒否しました。","Friend request denied."}},
-                {"FriendRemove", new List<string>{"フレンドから削除しました。","Removed from Friends."}},
-                {"FriendRequestDelete", new List<string>{"フレンドリクエストを削除しました。","Friend request deleted."}},
-                {"FriendRemoveBlacklist", new List<string>{"ブラックリストから削除しました。","Removed from blacklist."}},
-                {"FriendAddBlacklist", new List<string>{"ブラックリストに追加しました。","Added to blacklist."}},
-                {"Follow", new List<string>{"フォローしました。","Followed."}},
-                {"Unfollow", new List<string>{"フォローを解除しました。","Unfollowed."}},
-                {"ProductPurchase", new List<string>{"商品を購入しました。","Products purchased."}},
-                {"QuestStart", new List<string>{"クエストを開始","Start Quest."}},
-                {"QuestComp", new List<string>{"クエスト完了","Quest Completed."}},
-                {"QuestFailed", new List<string>{"クエスト失敗","Quest Failure."}},
-                {"QuestNotFound", new List<string>{"進行しているクエストはありません。","There are no quests in progress."}},
-                {"StaminaPurchase", new List<string>{"スタミナ回復を購入しました。","Stamina recovery was purchased."}},
-                {"UnitObtain", new List<string>{"入手しました。", "obtained."}},
-                {"Fire", new List<string>{"炎", "Fire"}},
-                {"Water", new List<string>{"水", "Water"}},
-            };
-
-            if (EnglishDic.ContainsKey(text))
-            {
-                var list = EnglishDic[text];
-                return list[(int)Lang];
-            }
-
-            return text;
+            return Localization.Get(key, lang);
         }
-        
+
+        /// <summary>
+        /// キーに対応する文言を取得し、{0} {1} ... を埋める
+        /// 言語によって語順が変わるため、文字列連結ではなくこちらを使用する
+        ///
+        /// Get the localized text and fill in the {0} {1} ... placeholders.
+        /// Use this instead of string concatenation because word order differs per language.
+        /// </summary>
+        public string GetLocalizationText(string key, params object[] args)
+        {
+            return Localization.Get(key, lang, args);
+        }
+
         public void OpenDialog1(string title, string text, string buttonText = "OK")
         {
-            var localizedtext = GetLocalizationText(text);
-
-            dialog1.Initialize(title, localizedtext, buttonText);
+            dialog1.Initialize(
+                GetLocalizationText(title),
+                GetLocalizationText(text),
+                GetLocalizationText(buttonText)
+            );
             dialog1.gameObject.SetActive(true);
         }
 
@@ -176,7 +296,12 @@ namespace Gs2.Sample
         
         public void OpenDialog2(string title, string text, string yesText = "Yes",  string noText = "No")
         {
-            dialog2.Initialize(title, text, yesText, noText);
+            dialog2.Initialize(
+                GetLocalizationText(title),
+                GetLocalizationText(text),
+                GetLocalizationText(yesText),
+                GetLocalizationText(noText)
+            );
             dialog2.gameObject.SetActive(true);
         }
         
@@ -354,15 +479,10 @@ namespace Gs2.Sample
         {
             if (url.Contains("GS2-"))
                 url = url.Replace("GS2-","");
-            switch (Lang)
-            {
-                case  Language.ja:
-                    Application.OpenURL("https://docs.gs2.io/ja/api_reference/"+url.ToLower()+"/game_engine/");
-                    break;
-                case  Language.en:
-                    Application.OpenURL("https://docs.gs2.io/en/api_reference/"+url.ToLower()+"/game_engine/");
-                    break;
-            }
+            // ドキュメントは ja / en のみ提供されているため、それ以外の言語は en を開く
+            // The documentation is provided only in ja / en, so other languages open en
+            var documentLang = Lang == Language.ja ? "ja" : "en";
+            Application.OpenURL($"https://docs.gs2.io/{documentLang}/api_reference/{url.ToLower()}/game_engine/");
         }
     }
 }

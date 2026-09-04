@@ -367,7 +367,18 @@ namespace Gs2.Sample.Experience
             }
 
             var item = future.Result;
-
+            // トランザクションの自動実行の完了を待機（連鎖するトランザクションも含めて全て待つ）
+            // Wait for automatic transaction execution to complete (including all chained transactions)
+            var waitFuture = item.WaitFuture(true);
+            yield return waitFuture;
+            if (waitFuture.Error != null)
+            {
+                onError.Invoke(
+                    waitFuture.Error,
+                    null
+                );
+                yield break;
+            }
         }
 #if GS2_ENABLE_UNITASK
         public async UniTask IncreaseExperienceAsync(
@@ -405,11 +416,19 @@ namespace Gs2.Sample.Experience
                     }
                 );
 
-                var result = await TransactionDomain.WaitAsync();
+                // トランザクションの自動実行の完了を待機（連鎖するトランザクションも含めて全て待つ）
+                // Wait for automatic transaction execution to complete (including all chained transactions)
+                var result = await TransactionDomain.WaitAsync(true);
             }
             catch (Gs2Exception e)
             {
                 onError.Invoke(e, null);
+            }
+            catch (System.Exception e)
+            {
+                // トランザクション結果の取得失敗（TimeoutException など）も失敗として扱う
+                // Treat a failure to obtain the transaction result (TimeoutException, etc.) as a failure
+                onError.Invoke(new UnknownException(e.Message), null);
             }
         }
 #endif

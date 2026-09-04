@@ -294,6 +294,19 @@ namespace Gs2.Sample.Gold
                     );
                     yield break;
                 }
+
+                // トランザクションの自動実行の完了を待機（連鎖するトランザクションも含めて全て待つ）
+                // Wait for automatic transaction execution to complete (including all chained transactions)
+                var waitFuture = future.Result.WaitFuture(true);
+                yield return waitFuture;
+                if (waitFuture.Error != null)
+                {
+                    onError.Invoke(
+                        waitFuture.Error,
+                        null
+                    );
+                    yield break;
+                }
             }
             {
                 var domain = gs2.Inventory.Namespace(
@@ -370,15 +383,25 @@ namespace Gs2.Sample.Gold
                 ).Exchange();
                 try
                 {
-                    await domain.ExchangeAsync(
+                    var result = await domain.ExchangeAsync(
                         rateName: exchangeRateName,
                         count: value,
                         config: null
                     );
+                    // トランザクションの自動実行の完了を待機（連鎖するトランザクションも含めて全て待つ）
+                    // Wait for automatic transaction execution to complete (including all chained transactions)
+                    await result.WaitAsync(true);
                 }
                 catch (Gs2Exception e)
                 {
                     onError.Invoke(e, null);
+                    return;
+                }
+                catch (System.Exception e)
+                {
+                    // トランザクション結果の取得失敗（TimeoutException など）も失敗として扱う
+                    // Treat a failure to obtain the transaction result (TimeoutException, etc.) as a failure
+                    onError.Invoke(new UnknownException(e.Message), null);
                     return;
                 }
             }

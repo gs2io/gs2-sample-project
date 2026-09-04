@@ -5,7 +5,7 @@ using System.Linq;
 using Gs2.Core.Exception;
 using Gs2.Gs2Inventory.Request;
 using Gs2.Sample.Core;
-using Gs2.Sample.Money;
+using Gs2.Sample.Money2;
 using Gs2.Sample.Unit;
 using Gs2.Unity.Gs2Lottery.Model;
 using Gs2.Unity.Gs2Showcase.Model;
@@ -36,7 +36,7 @@ namespace Gs2.Sample.Lottery
         public UnitModel _unitModel;
         
         [SerializeField]
-        private MoneyPresenter _moneyPresenter;
+        private Money2Presenter _moneyPresenter;
         [SerializeField]
         private UnitPresenter _unitPresenter;
         
@@ -145,7 +145,7 @@ namespace Gs2.Sample.Lottery
             _lotterySetting.onError.RemoveListener(OnError);
         }
 
-        public void OnError(Gs2Exception e, Func<IEnumerator> retry)
+        public void OnError(Exception e, Func<IEnumerator> retry)
         {
             SetState(State.BuyFailed);
         }
@@ -259,7 +259,7 @@ namespace Gs2.Sample.Lottery
             
             var config = new Dictionary<string, string>
             {
-                ["slot"] = MoneyModel.Slot.ToString()
+                ["slot"] = Money2Model.Slot.ToString()
             };
             
 #if GS2_ENABLE_UNITASK
@@ -319,8 +319,11 @@ namespace Gs2.Sample.Lottery
                             if (item != null)
                             {
                                 var itemModel = _unitModel.ItemModels.First(model => model.Name == item.ItemName);
-                                var obtainText = UIManager.Instance.GetLocalizationText("UnitObtain");
-                                text += $"{itemModel.Name} x {item.AcquireCount} {obtainText}\n";
+                                // 言語によって語順が変わるため連結せずプレースホルダで組み立てる
+                                // Build with placeholders instead of concatenation, because word order differs per language
+                                text += UIManager.Instance.GetLocalizationText(
+                                    "UnitObtain", itemModel.Name, item.AcquireCount
+                                ) + "\n";
                             }
                         }
                     }

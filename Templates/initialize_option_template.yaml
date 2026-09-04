@@ -1,0 +1,140 @@
+GS2TemplateFormatVersion: "2019-05-01"
+Description: GS2 sample - option (News / Version) initialize template Version 2026-09-03
+
+# ============================================================================
+# タブに属さない任意機能を作成します。使用しない場合は作成不要です。
+# Creates the optional features that do not belong to a tab.
+# You do not need this stack if you do not use them.
+#
+#   - GS2-News     お知らせ
+#                  News
+#   - GS2-Version  アプリバージョンチェック / 利用規約の同意
+#                  Application version check / agreement to the terms of use
+#
+# GS2-Version はネームスペースが権限を借用するための GS2-Identifier ユーザーを
+# 併せて作成します。
+# GS2-Version also creates a GS2-Identifier user whose authority the namespace assumes.
+#
+# サンプルではどちらの機能も既定で無効です。有効にするには
+# GameManager コンポーネントのチェックを外してください（README 参照）。
+# Both features are disabled by default in the sample. To enable them,
+# uncheck the corresponding options of the GameManager component (see README).
+#
+# 依存 / Depends on:
+#   initialize_core_template.yaml (ログインが必要なため / login is required)
+# ============================================================================
+
+Globals:
+  Alias:
+    NewsNamespaceName: news-0001                # GS2-News ネームスペース名 / Namespace name
+    VersionNamespaceName: application-0001      # GS2-Version ネームスペース名 アプリバージョン / Namespace name for the application version
+    EulaNamespaceName: eula-0001                # GS2-Version ネームスペース名 利用規約 / Namespace name for the terms of use
+    ElevationUserName: authorized-application   # GS2-Identifier ネームスペースが権限を借用するユーザー名 / User name whose authority the namespace assumes
+
+Resources:
+
+  # ==========================================================================
+  # GS2-News : お知らせ
+  # GS2-News : news
+  # ==========================================================================
+
+  NewsNamespace:
+    Type: GS2::News::Namespace
+    Properties:
+      Name: ${NewsNamespaceName}
+
+  # ==========================================================================
+  # GS2-Identifier : GS2-Version が権限を借用するユーザー
+  # GS2-Identifier : the user whose authority GS2-Version assumes
+  # ==========================================================================
+
+  IdentifierElevationUser:
+    Type: GS2::Identifier::User
+    Properties:
+      Name: ${ElevationUserName}
+
+  IdentifierElevationUserAttachPolicy:
+    Type: GS2::Identifier::AttachSecurityPolicy
+    Properties:
+      UserName: ${ElevationUserName}
+      SecurityPolicyId: grn:gs2::system:identifier:securityPolicy:ApplicationAccess
+    DependsOn:
+      - IdentifierElevationUser
+
+  # ==========================================================================
+  # GS2-Version : アプリバージョンチェック
+  # GS2-Version : application version check
+  # ==========================================================================
+
+  VersionNamespace:
+    Type: GS2::Version::Namespace
+    Properties:
+      Name: ${VersionNamespaceName}
+      AssumeUserId: !GetAttr IdentifierElevationUser.Item.UserId
+    DependsOn:
+      - IdentifierElevationUserAttachPolicy
+
+  VersionSettings:
+    Type: GS2::Version::CurrentVersionMaster
+    Properties:
+      NamespaceName: ${VersionNamespaceName}
+      Settings:
+        version: 2019-10-09
+        versionModels:
+          - name: application
+            metadata: application
+            warningVersion:
+              major: 1
+              minor: 0
+              micro: 0
+            errorVersion:
+              major: 0
+              minor: 9
+              micro: 0
+            scope: passive
+            needSignature: false
+    DependsOn:
+      - VersionNamespace
+
+  # ==========================================================================
+  # GS2-Version : 利用規約の同意
+  # GS2-Version : agreement to the terms of use
+  # ==========================================================================
+
+  EulaNamespace:
+    Type: GS2::Version::Namespace
+    Properties:
+      Name: ${EulaNamespaceName}
+      AssumeUserId: !GetAttr IdentifierElevationUser.Item.UserId
+    DependsOn:
+      - IdentifierElevationUserAttachPolicy
+
+  EulaSettings:
+    Type: GS2::Version::CurrentVersionMaster
+    Properties:
+      NamespaceName: ${EulaNamespaceName}
+      Settings:
+        version: 2019-10-09
+        versionModels:
+          - name: eula
+            metadata: eula
+            warningVersion:
+              major: 0
+              minor: 0
+              micro: 0
+            errorVersion:
+              major: 0
+              minor: 9
+              micro: 0
+            scope: active
+            currentVersion:
+              major: 1
+              minor: 0
+              micro: 0
+    DependsOn:
+      - EulaNamespace
+
+Outputs:
+  NewsNamespaceName: !GetAttr NewsNamespace.Item.Name
+  VersionNamespaceName: !GetAttr VersionNamespace.Item.Name
+  EulaNamespaceName: !GetAttr EulaNamespace.Item.Name

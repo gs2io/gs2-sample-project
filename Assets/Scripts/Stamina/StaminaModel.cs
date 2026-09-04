@@ -283,14 +283,17 @@ namespace Gs2.Sample.Stamina
             }
 
             var result = future.Result;
-            yield return result.WaitFuture();
-            if (future.Error != null)
+            // トランザクションの自動実行の完了を待機（連鎖するトランザクションも含めて全て待つ）
+            // Wait for automatic transaction execution to complete (including all chained transactions)
+            var waitFuture = result.WaitFuture(true);
+            yield return waitFuture;
+            if (waitFuture.Error != null)
             {
                 onError.Invoke(
-                    future.Error,
+                    waitFuture.Error,
                     null
                 );
-                callback.Invoke(future.Error);
+                callback.Invoke(waitFuture.Error);
                 yield break;
             }
             
@@ -337,12 +340,22 @@ namespace Gs2.Sample.Stamina
                     1,
                     config
                 );
-                await result.WaitAsync();
+                // トランザクションの自動実行の完了を待機（連鎖するトランザクションも含めて全て待つ）
+                // Wait for automatic transaction execution to complete (including all chained transactions)
+                await result.WaitAsync(true);
             }
             catch (Gs2Exception e)
             {
                 onError.Invoke(e, null);
                 return e;
+            }
+            catch (System.Exception e)
+            {
+                // トランザクション結果の取得失敗（TimeoutException など）も失敗として扱う
+                // Treat a failure to obtain the transaction result (TimeoutException, etc.) as a failure
+                var error = new UnknownException(e.Message);
+                onError.Invoke(error, null);
+                return error;
             }
 
             // スタミナ購入に成功

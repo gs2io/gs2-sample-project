@@ -1,12 +1,12 @@
 # チャット　解説
 
-[GS2-Chat](https://app.gs2.io/docs/index.html#gs2-chat) を使ってチャット、メッセージの送受信を行うサンプルです。　　
+[GS2-Chat](https://docs.gs2.io/ja/api_reference/chat/) を使ってチャット、メッセージの送受信を行うサンプルです。　　
 
 ![Chat](Chat.png)
 
 ## GS2-Deploy テンプレート
 
-- [initialize_chat_template.yaml - チャット](../Templates/initialize_chat_template.yaml)
+- [initialize_community_template.yaml - チャット](../Templates/initialize_community_template.yaml)
 
 ## チャット設定 ChatSetting
 
@@ -90,7 +90,7 @@ onPost.Invoke(item);
 
 ## メッセージの受信
 
-購読をしているルームにメッセージの投稿があれば [GS2-Gateway](https://app.gs2.io/docs/index.html#gs2-gateway) から通知が届きます。
+購読をしているルームにメッセージの投稿があれば [GS2-Gateway](https://docs.gs2.io/ja/api_reference/gateway/) から通知が届きます。
 ```c#
 Gs2WebSocketSession
     public delegate void NotificationHandler(NotificationMessage message);

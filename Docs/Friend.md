@@ -1,6 +1,6 @@
 # フレンド機能　解説
 
-[GS2-Friend](https://app.gs2.io/docs/index.html#gs2-friend) をつかったフレンド機能の実装のサンプルです。  
+[GS2-Friend](https://docs.gs2.io/ja/api_reference/friend/) をつかったフレンド機能の実装のサンプルです。  
 自プレイヤーのプロフィールの設定、フレンドリストの表示、送信したフレンドの登録リクエストの一覧の表示、  
 受信したフレンドリクエストの一覧の表示、ブラックリストの表示、フォローしているユーザーの一覧の表示等を行います。
 
@@ -13,7 +13,7 @@
 
 ## GS2-Deploy テンプレート
 
-- [initialize_friend_template.yaml - フレンド機能](../Templates/initialize_friend_template.yaml)
+- [initialize_community_template.yaml - フレンド機能](../Templates/initialize_community_template.yaml)
 
 ## フレンド設定 FriendSetting
 

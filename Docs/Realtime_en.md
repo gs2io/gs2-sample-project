@@ -1,10 +1,10 @@
 ﻿# Real-Time Game Explanation
 
-This is a sample of a communication match between players using [GS2-Realtime](https://app.gs2.io/docs/en/index.html#gs2-realtime).
+This is a sample of a communication match between players using [GS2-Realtime](https://docs.gs2.io/api_reference/realtime/).
 
 ## GS2-Deploy template
 
-- [initialize_realtime_template.yaml - matchmaking/realtime_competition](../Templates/initialize_realtime_template.yaml)
+- [initialize_match_template.yaml - matchmaking/realtime_competition](../Templates/initialize_match_template.yaml)
 
 ## RealtimeSetting
 

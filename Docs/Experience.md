@@ -1,11 +1,11 @@
 # 経験値　解説
 
-[GS2-Experience](https://app.gs2.io/docs/index.html#gs2-experience) を使ってプレイヤーの経験値、アイテムの成長を経験値で表現するサンプルです。
+[GS2-Experience](https://docs.gs2.io/ja/api_reference/experience/) を使ってプレイヤーの経験値、アイテムの成長を経験値で表現するサンプルです。
 
 
 ## GS2-Deploy テンプレート
 
-- [initialize_experience_template.yaml - 経験値](../Templates/initialize_experience_template.yaml)
+- [initialize_player_template.yaml - 経験値](../Templates/initialize_player_template.yaml)
 
 ## 経験値機能設定 ExperienceSetting
 
@@ -109,6 +109,8 @@ try
             }
         }
     );
+    // トランザクションの自動実行の完了を待機（連鎖するトランザクションも含めて全て待つ）
+    await result.WaitAsync(true);
 }
 catch (Gs2Exception e)
 {

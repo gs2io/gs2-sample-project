@@ -18,11 +18,6 @@ namespace Gs2.Sample.StaminaStore
     }
 
     [Serializable]
-    public class IssueExchangeStampSheetEvent : UnityEvent<string>
-    {
-    }
-    
-    [Serializable]
     public class StaminaStoreSetting : MonoBehaviour
     {
         [SerializeField]
@@ -36,9 +31,6 @@ namespace Gs2.Sample.StaminaStore
         
         [SerializeField]
         public ExchangeEvent onBuy = new ExchangeEvent();
-
-        [SerializeField]
-        public IssueExchangeStampSheetEvent onIssueBuyStampSheet = new IssueExchangeStampSheetEvent();
 
         [SerializeField]
         public ErrorEvent onError = new ErrorEvent();

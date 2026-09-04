@@ -77,10 +77,10 @@ namespace Gs2.Sample.Chat
             GameManager.Instance.Domain.Chat.OnPostNotification += PostNotificationHandler;
 
             bool roomNotFound = false;
-            void OnError(Gs2Exception e, Func<IEnumerator> retry)
+            void OnError(Exception e, Func<IEnumerator> retry)
             {
                 _onError.RemoveListener(OnError);
-                if (e.Errors[0].message == "chat.room.room.error.notFound")
+                if (e is Gs2Exception && (e as Gs2Exception).Errors[0].message == "chat.room.room.error.notFound")
                 {
                     roomNotFound = true;
                 }
@@ -108,10 +108,10 @@ namespace Gs2.Sample.Chat
             GameManager.Instance.Domain.Chat.OnPostNotification += PostNotificationHandler;
 
             bool roomNotFound = false;
-            void OnError(Gs2Exception e, Func<IEnumerator> retry)
+            void OnError(Exception e, Func<IEnumerator> retry)
             {
                 _onError.RemoveListener(OnError);
-                if (e.Errors[0].message == "chat.room.room.error.notFound")
+                if (e is Gs2Exception && (e as Gs2Exception).Errors[0].message == "chat.room.room.error.notFound")
                 {
                     roomNotFound = true;
                 }

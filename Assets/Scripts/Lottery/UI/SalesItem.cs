@@ -33,7 +33,7 @@ namespace Gs2.Sample.Lottery
 
         public string Price
         {
-            get { return JsonMapper.ToObject(_item.ConsumeActions.First(action => action.Action == "Gs2Money:WithdrawByUserId").Request)["count"].ToString(); }
+            get { return JsonMapper.ToObject(_item.ConsumeActions.First(action => action.Action == "Gs2Money2:WithdrawByUserId").Request)["withdrawCount"].ToString(); }
         }
     }
 }
