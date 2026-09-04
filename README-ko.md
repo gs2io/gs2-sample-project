@@ -9,8 +9,8 @@ Game Server Services (https://gs2.io) 의 Unity 용 샘플 프로젝트입니다
 
 Unity 6000.5.10f1
 
-GS2 C# SDK 2026.8.2
-GS2 SDK for Unity 2026.7.2 
+GS2 C# SDK 2026.8.3  
+GS2 SDK for Unity 2026.7.2  
 
 ## 주의 사항
 

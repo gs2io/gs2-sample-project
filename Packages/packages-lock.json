@@ -29,7 +29,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ide.visualstudio": {
-      "version": "2.0.27",
+      "version": "2.0.28",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -115,7 +115,7 @@
       }
     },
     "io.gs2.csharp.sdk": {
-      "version": "2026.8.2",
+      "version": "2026.8.3",
       "depth": 0,
       "source": "registry",
       "dependencies": {
