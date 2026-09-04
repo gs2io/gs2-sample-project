@@ -1,11 +1,11 @@
 ﻿# Stamina/Stamina Store Explanation
 
-This is a sample of using [GS2-Stamina](https://app.gs2.io/docs/en/index.html#gs2-stamina) to manage stamina values.  
-It is linked to [GS2-Exchange](https://app.gs2.io/docs/en/index.html#gs2-exchange) and uses the billing currency of [GS2-Money](https://app.gs2.io/docs/en/index.html#gs2-money) to manage stamina values. The following is a sample of a store function that consumes and recovers stamina values.
+This is a sample of using [GS2-Stamina](https://docs.gs2.io/api_reference/stamina/) to manage stamina values.  
+It is linked to [GS2-Exchange](https://docs.gs2.io/api_reference/exchange/) and uses the billing currency of [GS2-Money2](https://docs.gs2.io/api_reference/money2/) to manage stamina values. The following is a sample of a store function that consumes and recovers stamina values.
 
 ## GS2-Deploy template
 
-- [initialize_stamina_template.yaml - Stamina/Stamina Store](../Templates/initialize_stamina_template.yaml)
+- [initialize_player_template.yaml - Stamina/Stamina Store](../Templates/initialize_player_template.yaml)
 
 ## StaminaSetting StaminaSetting
 
@@ -18,8 +18,6 @@ It is linked to [GS2-Exchange](https://app.gs2.io/docs/en/index.html#gs2-exchang
 | staminaName | Name of the type of stamina in GS2-Stamina |
 | exchangeNamespaceName | Namespace name of GS2-Exchange used to recover stamina
 | exchangeRateName | Name of the GS2-Exchange exchange rate used to recover stamina
-| exchangeKeyId | cryptographic key used to calculate the signature on the stamp sheet issued for the exchange process by GS2-Exchange
-| distributorNamespaceName | namespace name of the GS2-Distributor delivering the exchanged stamina recovery process
 
 | Event | Description |
 -----------------------------------------------------------------------------|-------------------------
@@ -165,11 +163,13 @@ Gs2.Unity.Gs2Exchange.Model.EzConfig[] config =
 };
 try
 {
-    await domain.ExchangeAsync(
+    var result = await domain.ExchangeAsync(
         exchangeRateName,
         1,
         config
     );
+    // Wait for automatic transaction execution to complete (including all chained transactions)
+    await result.WaitAsync(true);
 }
 catch (Gs2Exception e)
 {
@@ -211,13 +211,16 @@ if (future.Error != null)
     yield break;
 }
 
+// Wait for automatic transaction execution to complete (including all chained transactions)
+yield return future.Result.WaitFuture(true);
+
 // Successfully purchased stamina
 
 onBuy.Invoke();
 
 callback.Invoke(null);
 ```
-Config is passed the wallet slot number __slot__ of [GS2-Money](https://app.gs2.io/docs/index.html#gs2-money).
+Config is passed the wallet slot number __slot__ of [GS2-Money2](https://docs.gs2.io/api_reference/money2/).
 The wallet slot number is the type of billing currency assigned by platform for this sample and is defined as follows  
 
 | Platform | Number |
@@ -227,10 +230,10 @@ The wallet slot number is the type of billing currency assigned by platform for 
 | Android | 2 |
 
 Config is a mechanism for passing dynamic parameters to the stamp sheet.  
-[⇒Stamp sheet variables](https://app.gs2.io/docs/en/index.html#d7e97677c7)  
+[⇒Setting Parameters when Issuing Stamp Sheets]( https://docs.gs2.io/articles/tech/stamp_sheet/#setting-parameters-when-issuing-stamp-sheets )  
 Config(EzConfig) is a key-value format that allows you to substitute a placeholder string of #{key value specified in Config} with the parameters you pass.
 In the following stamp sheet definition #{slot} will be replaced by the wallet slot number.
 
-By executing the stamp sheet in this manner, the actual exchange of charged currency for stamina values is performed.
+The flow of the transaction that exchanges the charged currency for stamina is as follows
 
 ![Exchange](Exchange_en.png)

@@ -1,5 +1,5 @@
 ﻿using System.Collections;
-using Gs2.Sample.Money;
+using Gs2.Sample.Money2;
 using Gs2.Unity.Gs2Stamina.Model;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -23,7 +23,7 @@ namespace Gs2.Sample.Stamina
         [SerializeField]
         private StaminaPresenter _staminaPresenter;
         [SerializeField]
-        private MoneyPresenter _moneyPresenter;
+        private Money2Presenter _money2Presenter;
 
         public enum State
         {
@@ -69,7 +69,7 @@ namespace Gs2.Sample.Stamina
             Assert.IsNotNull(_staminaModel);
             Assert.IsNotNull(_staminaStoreView);
             Assert.IsNotNull(_staminaPresenter);
-            Assert.IsNotNull(_moneyPresenter);
+            Assert.IsNotNull(_money2Presenter);
             
             _staminaStoreView.OnCloseEvent();
         }
@@ -100,7 +100,7 @@ namespace Gs2.Sample.Stamina
                         UIManager.Instance.CloseProcessing();
                         _staminaStoreView.OnCloseEvent();
                         
-                        _moneyPresenter.OnUpdateWallet();
+                        _money2Presenter.OnUpdateWallet();
                         
                         UIManager.Instance.OpenDialog1("Notice","StaminaPurchase");
                         _staminaPresenter.OnUpdateStamina();
@@ -124,7 +124,7 @@ namespace Gs2.Sample.Stamina
                 stamina,
                 10,
                 5,
-                _moneyPresenter.GetWalletBalance()
+                _money2Presenter.GetWalletBalance()
             );
         }
 
@@ -231,7 +231,7 @@ namespace Gs2.Sample.Stamina
                 GameManager.Instance.Session,
                 _staminaSetting.exchangeNamespaceName,
                 _staminaSetting.exchangeRateName,
-                MoneyModel.Slot,
+                Money2Model.Slot,
                 _staminaSetting.onBuy,
                 _staminaSetting.onError
             );
@@ -244,7 +244,7 @@ namespace Gs2.Sample.Stamina
                 GameManager.Instance.Session,
                 _staminaSetting.exchangeNamespaceName,
                 _staminaSetting.exchangeRateName,
-                MoneyModel.Slot,
+                Money2Model.Slot,
                 _staminaSetting.onBuy,
                 _staminaSetting.onError
             );

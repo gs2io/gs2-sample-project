@@ -1,0 +1,449 @@
+GS2TemplateFormatVersion: "2019-05-01"
+Description: GS2 sample - core (Account / Key / Money2) initialize template Version 2026-09-03
+
+# ============================================================================
+# サンプル全体の土台となるリソースを作成します。最初にデプロイしてください。
+# Creates the foundation resources for the whole sample. Deploy this stack first.
+#
+#   - GS2-Account / GS2-Key                  ログイン・アカウント引継ぎ
+#                                            Login and account take over
+#   - GS2-Money2 / GS2-Showcase / GS2-Limit  課金通貨とその購入ストア
+#                                            Billing currency and its store
+#
+# 課金通貨のウォレットはタブに属さない常時表示のステータスバーに表示され、
+# スタミナストア(Player タブ)と抽選(GameCycle タブ)の双方が消費するため、
+# タブ単位のテンプレートではなくこの core に含めています。
+# The billing currency wallet is shown in the always-visible status bar and is
+# consumed by both the stamina store (Player tab) and the lottery (GameCycle tab),
+# so it lives here in core rather than in a per-tab template.
+#
+# 依存 / Depends on: なし / none
+# ============================================================================
+
+Globals:
+  Alias:
+    # --- GS2-Account -------------------------------------------------------
+    AccountNamespaceName: account-0001                 # GS2-Account ネームスペース名 / Namespace name
+    AccountKeyNamespaceName: account-key               # GS2-Key ネームスペース名 / Namespace name
+    AccountKeyName: account-key                        # GS2-Key 認証処理の署名計算に使用する暗号鍵 / Cryptographic key used to calculate signatures for the authentication process
+
+    # --- GS2-Money2 --------------------------------------------------------
+    MoneyNamespaceName: money2-0001                    # GS2-Money2 ネームスペース名 / Namespace name
+    MoneyShowcaseNamespaceName: money-showcase         # GS2-Showcase ネームスペース名 / Namespace name
+    MoneyShowcaseName: money-showcase                  # GS2-Showcase 商品棚名 / Showcase name
+    MoneyShowcaseKeyNamespaceName: money-showcase-key  # GS2-Key ネームスペース名 / Namespace name
+    MoneyShowcaseKeyName: money-showcase-key           # GS2-Key 購入処理のスタンプシートの署名計算に使用する暗号鍵 / Cryptographic key used to calculate signatures on stamp sheets for purchase processing
+    MoneyLimitNamespaceName: money-showcase-limit      # GS2-Limit ネームスペース名 購入回数の制限 / Namespace name, Limit on number of purchases
+
+    # --- 共通 / Common -----------------------------------------------------
+    # プロジェクト作成時に自動作成される Default スタックのネームスペースを使用します
+    # Uses the namespace created automatically by the Default stack at project creation
+    DistributorNamespaceName: default                  # GS2-Distributor ネームスペース名 トランザクションの自動実行に使用 / Namespace name used for automatic transaction execution
+
+Resources:
+
+  # ==========================================================================
+  # GS2-Account : ログイン / アカウント引継ぎ
+  # GS2-Account : login / account take over
+  # ==========================================================================
+
+  AccountNamespace:
+    Type: GS2::Account::Namespace
+    Properties:
+      Name: ${AccountNamespaceName}
+
+  AccountKeyNamespace:
+    Type: GS2::Key::Namespace
+    Properties:
+      Name: ${AccountKeyNamespaceName}
+
+  # アカウント情報の暗号化に使用する暗号鍵 / Cryptographic key used to encrypt account information
+  AccountKey:
+    Type: GS2::Key::Key
+    Properties:
+      NamespaceName: ${AccountKeyNamespaceName}
+      Name: ${AccountKeyName}
+    DependsOn:
+      - AccountKeyNamespace
+
+  # ==========================================================================
+  # GS2-Money2 : 課金通貨
+  # GS2-Money2 : billing currency
+  # ==========================================================================
+
+  MoneyNamespace:
+    Type: GS2::Money2::Namespace
+    Properties:
+      Name: ${MoneyNamespaceName}
+      # 無償の課金通貨を優先して消費する / Consume free currency preferentially
+      CurrencyUsagePriority: PrioritizeFree
+      # 無償の課金通貨をスロット間で共有する / Share free currency across slots
+      SharedFreeCurrency: true
+      # ストアプラットフォーム設定。サンプルではフェイクレシートを受け入れる
+      # Store platform settings. The sample accepts fake receipts.
+      PlatformSetting:
+        fake:
+          acceptFakeReceipt: Accept
+
+  # 課金通貨のストアコンテンツモデル。レシート検証時の contentName に対応する
+  # Store content models for the billing currency. Correspond to the contentName used at receipt verification.
+  MoneyModelMaster:
+    Type: GS2::Money2::CurrentModelMaster
+    Properties:
+      NamespaceName: ${MoneyNamespaceName}
+      Settings:
+        version: 2024-06-20
+        storeContentModels:
+          - name: currency-120
+            appleAppStore:
+              productId: io.gs2.sample.currency120
+            googlePlay:
+              productId: io.gs2.sample.currency120
+          - name: currency-490
+            appleAppStore:
+              productId: io.gs2.sample.currency490
+            googlePlay:
+              productId: io.gs2.sample.currency490
+          - name: currency-1220
+            appleAppStore:
+              productId: io.gs2.sample.currency1220
+            googlePlay:
+              productId: io.gs2.sample.currency1220
+          - name: currency-2440
+            appleAppStore:
+              productId: io.gs2.sample.currency2440
+            googlePlay:
+              productId: io.gs2.sample.currency2440
+          - name: currency-3060
+            appleAppStore:
+              productId: io.gs2.sample.currency3060
+            googlePlay:
+              productId: io.gs2.sample.currency3060
+          - name: currency-3920
+            appleAppStore:
+              productId: io.gs2.sample.currency3920
+            googlePlay:
+              productId: io.gs2.sample.currency3920
+          - name: currency-4900
+            appleAppStore:
+              productId: io.gs2.sample.currency4900
+            googlePlay:
+              productId: io.gs2.sample.currency4900
+          - name: currency-10000
+            appleAppStore:
+              productId: io.gs2.sample.currency10000
+            googlePlay:
+              productId: io.gs2.sample.currency10000
+    DependsOn:
+      - MoneyNamespace
+
+  # ==========================================================================
+  # GS2-Showcase / GS2-Limit : 課金通貨ストア
+  # GS2-Showcase / GS2-Limit : billing currency store
+  # ==========================================================================
+
+  MoneyShowcaseKeyNamespace:
+    Type: GS2::Key::Namespace
+    Properties:
+      Name: ${MoneyShowcaseKeyNamespaceName}
+
+  MoneyShowcaseKey:
+    Type: GS2::Key::Key
+    Properties:
+      NamespaceName: ${MoneyShowcaseKeyNamespaceName}
+      Name: ${MoneyShowcaseKeyName}
+    DependsOn:
+      - MoneyShowcaseKeyNamespace
+
+  MoneyLimitNamespace:
+    Type: GS2::Limit::Namespace
+    Properties:
+      Name: ${MoneyLimitNamespaceName}
+
+  MoneyLimitSettings:
+    Type: GS2::Limit::CurrentLimitMaster
+    Properties:
+      NamespaceName: ${MoneyLimitNamespaceName}
+      Settings:
+        version: 2019-04-05
+        limitModels:
+          - name: only-once
+            resetType: notReset
+    DependsOn:
+      - MoneyLimitNamespace
+
+  MoneyShowcaseNamespace:
+    Type: GS2::Showcase::Namespace
+    Properties:
+      Name: ${MoneyShowcaseNamespaceName}
+      # トランザクションの自動実行設定 / Automatic transaction execution settings
+      TransactionSetting:
+        EnableAutoRun: true
+        # トランザクションを一括実行し、結果をその場で返す / Execute the transaction atomically and return the result immediately
+        EnableAtomicCommit: true
+        DistributorNamespaceId: !Join
+          - ':'
+          - - 'grn'
+            - 'gs2'
+            - !GetAttr Gs2::Region
+            - !GetAttr Gs2::OwnerId
+            - 'distributor'
+            - ${DistributorNamespaceName}
+        KeyId: !GetAttr MoneyShowcaseKey.Item.KeyId
+    DependsOn:
+      - MoneyShowcaseKey
+
+  # 商品棚のマスターデータ。
+  # 消費アクションの contentName は MoneyModelMaster を、
+  # limitName / counterName は MoneyLimitSettings のマスターデータを参照するため、
+  # 双方の作成完了を待ってから作成する。
+  # Master data of the showcase. The contentName of the consume actions refers to
+  # MoneyModelMaster and limitName / counterName refer to MoneyLimitSettings,
+  # so wait for both to be created.
+  MoneyShowcaseSettings:
+    Type: GS2::Showcase::CurrentShowcaseMaster
+    Properties:
+      NamespaceName: ${MoneyShowcaseNamespaceName}
+      Settings:
+        version: 2019-04-04
+        showcases:
+          - name: ${MoneyShowcaseName}
+            displayItems:
+              - type: salesItem
+                salesItem:
+                  name: currency-120-jpy
+                  metadata: "price: 120 currencyCount: 50"
+                  consumeActions:
+                    - action: Gs2Money2:VerifyReceiptByUserId
+                      request:
+                        namespaceName: ${MoneyNamespaceName}
+                        userId: "#{userId}"
+                        contentName: currency-120
+                        receipt:
+                          Store: "#{store}"
+                          TransactionID: "#{transactionId}"
+                          Payload: "#{payload}"
+                  acquireActions:
+                    - action: Gs2Money2:DepositByUserId
+                      request:
+                        namespaceName: ${MoneyNamespaceName}
+                        userId: "#{userId}"
+                        slot: "#{slot}"
+                        depositTransactions:
+                          - price: 120
+                            currency: JPY
+                            count: 50
+              - type: salesItem
+                salesItem:
+                  name: currency-490-jpy
+                  metadata: "price: 490 currencyCount: 200"
+                  consumeActions:
+                    - action: Gs2Money2:VerifyReceiptByUserId
+                      request:
+                        namespaceName: ${MoneyNamespaceName}
+                        userId: "#{userId}"
+                        contentName: currency-490
+                        receipt:
+                          Store: "#{store}"
+                          TransactionID: "#{transactionId}"
+                          Payload: "#{payload}"
+                  acquireActions:
+                    - action: Gs2Money2:DepositByUserId
+                      request:
+                        namespaceName: ${MoneyNamespaceName}
+                        userId: "#{userId}"
+                        slot: "#{slot}"
+                        depositTransactions:
+                          - price: 490
+                            currency: JPY
+                            count: 200
+              - type: salesItem
+                salesItem:
+                  name: currency-1220-jpy
+                  metadata: "price: 1220 currencyCount: 490"
+                  consumeActions:
+                    - action: Gs2Money2:VerifyReceiptByUserId
+                      request:
+                        namespaceName: ${MoneyNamespaceName}
+                        userId: "#{userId}"
+                        contentName: currency-1220
+                        receipt:
+                          Store: "#{store}"
+                          TransactionID: "#{transactionId}"
+                          Payload: "#{payload}"
+                  acquireActions:
+                    - action: Gs2Money2:DepositByUserId
+                      request:
+                        namespaceName: ${MoneyNamespaceName}
+                        userId: "#{userId}"
+                        slot: "#{slot}"
+                        depositTransactions:
+                          - price: 1220
+                            currency: JPY
+                            count: 490
+              - type: salesItem
+                salesItem:
+                  name: currency-2440-jpy
+                  metadata: "price: 2440 currencyCount: 1000"
+                  consumeActions:
+                    - action: Gs2Money2:VerifyReceiptByUserId
+                      request:
+                        namespaceName: ${MoneyNamespaceName}
+                        userId: "#{userId}"
+                        contentName: currency-2440
+                        receipt:
+                          Store: "#{store}"
+                          TransactionID: "#{transactionId}"
+                          Payload: "#{payload}"
+                  acquireActions:
+                    - action: Gs2Money2:DepositByUserId
+                      request:
+                        namespaceName: ${MoneyNamespaceName}
+                        userId: "#{userId}"
+                        slot: "#{slot}"
+                        depositTransactions:
+                          - price: 2440
+                            currency: JPY
+                            count: 1000
+              - type: salesItem
+                salesItem:
+                  name: currency-3060-jpy
+                  metadata: "price: 3060 currencyCount: 1250"
+                  consumeActions:
+                    - action: Gs2Money2:VerifyReceiptByUserId
+                      request:
+                        namespaceName: ${MoneyNamespaceName}
+                        userId: "#{userId}"
+                        contentName: currency-3060
+                        receipt:
+                          Store: "#{store}"
+                          TransactionID: "#{transactionId}"
+                          Payload: "#{payload}"
+                  acquireActions:
+                    - action: Gs2Money2:DepositByUserId
+                      request:
+                        namespaceName: ${MoneyNamespaceName}
+                        userId: "#{userId}"
+                        slot: "#{slot}"
+                        depositTransactions:
+                          - price: 3060
+                            currency: JPY
+                            count: 1250
+              - type: salesItem
+                salesItem:
+                  name: currency-3920-jpy
+                  metadata: "price: 3920 currencyCount: 1600"
+                  consumeActions:
+                    - action: Gs2Money2:VerifyReceiptByUserId
+                      request:
+                        namespaceName: ${MoneyNamespaceName}
+                        userId: "#{userId}"
+                        contentName: currency-3920
+                        receipt:
+                          Store: "#{store}"
+                          TransactionID: "#{transactionId}"
+                          Payload: "#{payload}"
+                  acquireActions:
+                    - action: Gs2Money2:DepositByUserId
+                      request:
+                        namespaceName: ${MoneyNamespaceName}
+                        userId: "#{userId}"
+                        slot: "#{slot}"
+                        depositTransactions:
+                          - price: 3920
+                            currency: JPY
+                            count: 1600
+              - type: salesItem
+                salesItem:
+                  name: currency-4900-jpy
+                  metadata: "price: 4900 currencyCount: 2000"
+                  consumeActions:
+                    - action: Gs2Money2:VerifyReceiptByUserId
+                      request:
+                        namespaceName: ${MoneyNamespaceName}
+                        userId: "#{userId}"
+                        contentName: currency-4900
+                        receipt:
+                          Store: "#{store}"
+                          TransactionID: "#{transactionId}"
+                          Payload: "#{payload}"
+                  acquireActions:
+                    - action: Gs2Money2:DepositByUserId
+                      request:
+                        namespaceName: ${MoneyNamespaceName}
+                        userId: "#{userId}"
+                        slot: "#{slot}"
+                        depositTransactions:
+                          - price: 4900
+                            currency: JPY
+                            count: 2000
+              - type: salesItem
+                salesItem:
+                  name: currency-10000-jpy
+                  metadata: "price: 10000 currencyCount: 4300"
+                  consumeActions:
+                    - action: Gs2Money2:VerifyReceiptByUserId
+                      request:
+                        namespaceName: ${MoneyNamespaceName}
+                        userId: "#{userId}"
+                        contentName: currency-10000
+                        receipt:
+                          Store: "#{store}"
+                          TransactionID: "#{transactionId}"
+                          Payload: "#{payload}"
+                  acquireActions:
+                    - action: Gs2Money2:DepositByUserId
+                      request:
+                        namespaceName: ${MoneyNamespaceName}
+                        userId: "#{userId}"
+                        slot: "#{slot}"
+                        depositTransactions:
+                          - price: 10000
+                            currency: JPY
+                            count: 4300
+              # 1回だけ購入できる特別価格の商品 / A special offer that can be bought only once
+              - type: salesItem
+                salesItem:
+                  name: currency-special-offer-120-jpy
+                  metadata: "price: 120 currencyCount: 75 boughtOnlyOnce: true"
+                  consumeActions:
+                    - action: Gs2Money2:VerifyReceiptByUserId
+                      request:
+                        namespaceName: ${MoneyNamespaceName}
+                        userId: "#{userId}"
+                        contentName: currency-120
+                        receipt:
+                          Store: "#{store}"
+                          TransactionID: "#{transactionId}"
+                          Payload: "#{payload}"
+                    - action: Gs2Limit:CountUpByUserId
+                      request:
+                        namespaceName: ${MoneyLimitNamespaceName}
+                        limitName: only-once
+                        counterName: special-offer-0001
+                        userId: "#{userId}"
+                        countUpValue: 1
+                        maxValue: 1
+                  acquireActions:
+                    - action: Gs2Money2:DepositByUserId
+                      request:
+                        namespaceName: ${MoneyNamespaceName}
+                        userId: "#{userId}"
+                        slot: "#{slot}"
+                        depositTransactions:
+                          - price: 120
+                            currency: JPY
+                            count: 75
+    DependsOn:
+      - MoneyShowcaseNamespace
+      - MoneyModelMaster
+      - MoneyLimitSettings
+
+Outputs:
+  AccountNamespaceName: !GetAttr AccountNamespace.Item.Name
+  AccountEncryptionKeyId: !GetAttr AccountKey.Item.KeyId  # -> LoginSetting Account Encryption Key Id
+  MoneyNamespaceName: !GetAttr MoneyNamespace.Item.Name
+  MoneyShowcaseNamespaceName: !GetAttr MoneyShowcaseNamespace.Item.Name
+  MoneyShowcaseName: ${MoneyShowcaseName}
+  MoneyShowcaseKeyId: !GetAttr MoneyShowcaseKey.Item.KeyId
+  MoneyLimitNamespaceName: !GetAttr MoneyLimitNamespace.Item.Name

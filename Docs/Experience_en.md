@@ -1,11 +1,11 @@
 # Experience Explanation
 
-This sample uses [GS2-Experience](https://app.gs2.io/docs/en/index.html#gs2-experience) to represent player experience and item growth in terms of experience.
+This sample uses [GS2-Experience](https://docs.gs2.io/api_reference/experience/) to represent player experience and item growth in terms of experience.
 
 
 ## GS2-Deploy template
 
-- [initialize_experience_template.yaml - experience](../Templates/initialize_experience_template.yaml)
+- [initialize_player_template.yaml - experience](../Templates/initialize_player_template.yaml)
 
 ## ExperienceSetting Experience Features Setting
 
@@ -107,6 +107,8 @@ try
             }
         }
     );
+    // Wait for automatic transaction execution to complete (including all chained transactions)
+    await result.WaitAsync(true);
 }
 catch (Gs2Exception e)
 {

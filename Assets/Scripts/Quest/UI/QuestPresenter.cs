@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using Gs2.Core.Exception;
-using Gs2.Sample.Money;
+using Gs2.Sample.Money2;
 using Gs2.Sample.Stamina;
 using Gs2.Unity.Gs2Quest.Model;
 using UnityEngine;
@@ -29,7 +29,7 @@ namespace Gs2.Sample.Quest
         [SerializeField]
         private StaminaPresenter _staminaPresenter;
         [SerializeField]
-        private MoneyPresenter _moneyPresenter;
+        private Money2Presenter _moneyPresenter;
         
         public enum State
         {
@@ -630,7 +630,7 @@ namespace Gs2.Sample.Quest
                 GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _questSetting.questNamespaceName,
-                MoneyModel.Slot,
+                Money2Model.Slot,
                 _questSetting.onStart,
                 _questSetting.onError
             );
@@ -660,7 +660,7 @@ namespace Gs2.Sample.Quest
                 GameManager.Instance.Domain,
                 GameManager.Instance.Session,
                 _questSetting.questNamespaceName,
-                MoneyModel.Slot,
+                Money2Model.Slot,
                 _questSetting.onStart,
                 _questSetting.onError
             );
@@ -799,7 +799,7 @@ namespace Gs2.Sample.Quest
                 _questSetting.questNamespaceName,
                 isComplete,
                 rewards,
-                MoneyModel.Slot,
+                Money2Model.Slot,
                 _questSetting.onEnd,
                 _questSetting.onError
             );
@@ -843,7 +843,7 @@ namespace Gs2.Sample.Quest
                 _questSetting.questNamespaceName,
                 isComplete,
                 rewards,
-                MoneyModel.Slot,
+                Money2Model.Slot,
                 _questSetting.onEnd,
                 _questSetting.onError
             );

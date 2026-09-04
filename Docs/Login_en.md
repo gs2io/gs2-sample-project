@@ -1,10 +1,10 @@
 # Create and login account Explanation
 
-Sample function to login using [GS2-Account](https://app.gs2.io/docs/en/index.html#gs2-account).
+Sample function to login using [GS2-Account](https://docs.gs2.io/api_reference/account/).
 
 ## GS2-Deploy template
 
-- [initialize_account_template.yaml](../Templates/initialize_account_template.yaml)
+- [initialize_core_template.yaml](../Templates/initialize_core_template.yaml)
 
 ## LoginSetting LoginSetting
 
@@ -170,7 +170,7 @@ When the access token is successfully renewed, access to the API can be continue
 | string password               | Password for EzAccount account information                                                              |
 
 Receive a GameSession that holds an access token.  
-Set your own user ID logged into [GS2-Gateway](https://app.gs2.io/docs/index.html#gs2-gateway) to receive push notifications for this user client.  
+Set your own user ID logged into [GS2-Gateway](https://docs.gs2.io/api_reference/gateway/) to receive push notifications for this user client.  
 To receive notifications of chat ([GS2-Chat](Chat.md)) message posts, friend requests ([GS2-Friend](Friend.md)), etc., and matchmaking ([GS2-Matchmaking](Matchmaking.md)) transitions Use.
 
 

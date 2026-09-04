@@ -1,0 +1,101 @@
+GS2TemplateFormatVersion: "2019-05-01"
+Description: GS2 sample - Match tab (Matchmaking / Realtime) initialize template Version 2026-09-03
+
+# ============================================================================
+# 「対戦」タブの機能を作成します。
+# Creates the features of the "Match" tab.
+#
+#   - GS2-Realtime     リアルタイム対戦
+#                      Realtime match
+#   - GS2-Matchmaking  マッチメイキング
+#                      Matchmaking
+#
+# GS2-Gateway のネームスペース `default` はプロジェクト作成時に
+# 自動作成される Default スタックのものを使用します。
+# The GS2-Gateway namespace `default` is the one created automatically by the
+# Default stack at project creation.
+#
+# 依存 / Depends on:
+#   initialize_core_template.yaml (ログインが必要なため / login is required)
+# ============================================================================
+
+Globals:
+  Alias:
+    RealtimeNamespaceName: realtime-0001        # GS2-Realtime ネームスペース名 / Namespace name
+    MatchmakingNamespaceName: matchmaking-0001  # GS2-Matchmaking ネームスペース名 / Namespace name
+    GatewayNamespaceName: default               # 通知を行う GS2-Gateway ネームスペース名 / GS2-Gateway namespace name for notification
+
+Resources:
+
+  # ==========================================================================
+  # GS2-Realtime : リアルタイム対戦
+  # GS2-Realtime : realtime match
+  # ==========================================================================
+
+  RealtimeNamespace:
+    Type: GS2::Realtime::Namespace
+    Properties:
+      Name: ${RealtimeNamespaceName}
+      ServerType: relay
+      ServerSpec: realtime1.nano
+      # ルームが作成された通知 / Notification of a room being created
+      CreateNotification:
+        GatewayNamespaceId: !Join
+          - ':'
+          - - 'grn'
+            - 'gs2'
+            - !GetAttr Gs2::Region
+            - !GetAttr Gs2::OwnerId
+            - 'gateway'
+            - ${GatewayNamespaceName}
+
+  # ==========================================================================
+  # GS2-Matchmaking : マッチメイキング
+  # GS2-Matchmaking : matchmaking
+  # ==========================================================================
+
+  MatchmakingNamespace:
+    Type: GS2::Matchmaking::Namespace
+    Properties:
+      Name: ${MatchmakingNamespaceName}
+      # ギャザリング成立時に GS2-Realtime のルームを作成する
+      # Creates a GS2-Realtime room when a gathering is formed
+      CreateGatheringTriggerType: gs2_realtime
+      CreateGatheringTriggerRealtimeNamespaceId: !GetAttr RealtimeNamespace.Item.NamespaceId
+      CompleteMatchmakingTriggerType: none
+      # ギャザリングに参加した通知 / Notification of joining a gathering
+      JoinNotification:
+        GatewayNamespaceId: !Join
+          - ':'
+          - - 'grn'
+            - 'gs2'
+            - !GetAttr Gs2::Region
+            - !GetAttr Gs2::OwnerId
+            - 'gateway'
+            - ${GatewayNamespaceName}
+      # ギャザリングから離脱した通知 / Notification of leaving a gathering
+      LeaveNotification:
+        GatewayNamespaceId: !Join
+          - ':'
+          - - 'grn'
+            - 'gs2'
+            - !GetAttr Gs2::Region
+            - !GetAttr Gs2::OwnerId
+            - 'gateway'
+            - ${GatewayNamespaceName}
+      # マッチメイキングが成立した通知 / Notification of matchmaking being completed
+      CompleteNotification:
+        GatewayNamespaceId: !Join
+          - ':'
+          - - 'grn'
+            - 'gs2'
+            - !GetAttr Gs2::Region
+            - !GetAttr Gs2::OwnerId
+            - 'gateway'
+            - ${GatewayNamespaceName}
+    DependsOn:
+      - RealtimeNamespace
+
+Outputs:
+  RealtimeNamespaceName: !GetAttr RealtimeNamespace.Item.Name
+  MatchmakingNamespaceName: !GetAttr MatchmakingNamespace.Item.Name

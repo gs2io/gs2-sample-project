@@ -1,12 +1,11 @@
 ﻿# ゴールド/インベントリ　解説
 
-[GS2-Inventory](https://app.gs2.io/docs/index.html#gs2-inventory) によるインベントリ、アイテムを格納するバッグの実装と、  
+[GS2-Inventory](https://docs.gs2.io/ja/api_reference/inventory/) によるインベントリ、アイテムを格納するバッグの実装と、  
 ゴールド(ゲーム内の通貨)の管理に使用するサンプルです。  
 
 ## GS2-Deploy テンプレート
 
-- [initialize_gold_template.yaml - ゴールド](../Templates/initialize_gold_template.yaml)
-- [initialize_inventory_template.yaml - インベントリ](../Templates/initialize_inventory_template.yaml)
+- [initialize_player_template.yaml - ゴールド/インベントリ](../Templates/initialize_player_template.yaml)
 
 ## ゴールド設定 GoldSetting
 
@@ -248,11 +247,13 @@ if (future.Error != null)
     ).Exchange();
     try
     {
-        await domain.ExchangeAsync(
+        var result = await domain.ExchangeAsync(
             rateName: exchangeRateName,
             count: value,
             config: null
         );
+        // トランザクションの自動実行の完了を待機（連鎖するトランザクションも含めて全て待つ）
+        await result.WaitAsync(true);
     }
     catch (Gs2Exception e)
     {

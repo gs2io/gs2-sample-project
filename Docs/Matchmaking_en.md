@@ -1,10 +1,10 @@
 ﻿# Matchmaking Explanation
 
-This is a sample of using [GS2-Matchmaking](https://app.gs2.io/docs/en/index.html#gs2-matchmaking) to find players for competitive and cooperative play.
+This is a sample of using [GS2-Matchmaking](https://docs.gs2.io/api_reference/matchmaking/) to find players for competitive and cooperative play.
 
 ## GS2-Deploy template
 
-- [initialize_matchmaking_template.yaml](../Templates/initialize_matchmaking_template.yaml)
+- [initialize_match_template.yaml](../Templates/initialize_match_template.yaml)
 
 ## MatchmakingSetting MatchmakingSetting
 
@@ -258,7 +258,7 @@ When coroutine is used
 
 ### Notification of participant increase/decrease/matchmaking completion
 
-Use [GS2-Gateway](https://app.gs2.io/docs/en/index.html#gs2-gateway) to receive notifications from the server.
+Use [GS2-Gateway](https://docs.gs2.io/api_reference/gateway/) to receive notifications from the server.
 The server will send you a message as follows
 
 | Message | Explanation |

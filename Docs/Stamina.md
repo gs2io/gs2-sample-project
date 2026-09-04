@@ -1,11 +1,11 @@
 ﻿# スタミナ/スタミナストア　解説
 
-[GS2-Stamina](https://app.gs2.io/docs/index.html#gs2-stamina) を使ってスタミナ値を管理するサンプルです。  
-[GS2-Exchange](https://app.gs2.io/docs/index.html#gs2-exchange) と連携し [GS2-Money](https://app.gs2.io/docs/index.html#gs2-money) の課金通貨を消費しスタミナ値を回復するストア機能のサンプルです。  
+[GS2-Stamina]( https://docs.gs2.io/ja/api_reference/stamina/ ) を使ってスタミナ値を管理するサンプルです。  
+[GS2-Exchange]( https://docs.gs2.io/ja/api_reference/exchange/ ) と連携し [GS2-Money2]( https://docs.gs2.io/ja/api_reference/money2/ ) の課金通貨を消費しスタミナ値を回復するストア機能のサンプルです。  
 
 ## GS2-Deploy テンプレート
 
-- [initialize_stamina_template.yaml - スタミナ/スタミナストア](../Templates/initialize_stamina_template.yaml)
+- [initialize_player_template.yaml - スタミナ/スタミナストア](../Templates/initialize_player_template.yaml)
 
 ## スタミナ設定 StaminaSetting
 
@@ -163,11 +163,13 @@ Gs2.Unity.Gs2Exchange.Model.EzConfig[] config =
 };
 try
 {
-    await domain.ExchangeAsync(
+    var result = await domain.ExchangeAsync(
         exchangeRateName,
         1,
         config
     );
+    // トランザクションの自動実行の完了を待機（連鎖するトランザクションも含めて全て待つ）
+    await result.WaitAsync(true);
 }
 catch (Gs2Exception e)
 {
@@ -210,6 +212,9 @@ if (future.Error != null)
     yield break;
 }
 
+// トランザクションの自動実行の完了を待機（連鎖するトランザクションも含めて全て待つ）
+yield return future.Result.WaitFuture(true);
+
 // スタミナ購入に成功
 // Successfully purchased stamina
 
@@ -217,7 +222,7 @@ onBuy.Invoke();
 
 callback.Invoke(null);
 ```
-Config には [GS2-Money](https://app.gs2.io/docs/index.html#gs2-money)  のウォレットスロット番号 __slot__ を渡します。
+Config には [GS2-Money2]( https://docs.gs2.io/ja/api_reference/money2/ )  のウォレットスロット番号 __slot__ を渡します。
 ウォレットスロット番号はこのサンプルのためにプラットフォーム別に割り振った課金通貨の種別で、以下のように定義しています。
 
 | プラットフォーム      | 番号 |
@@ -226,12 +231,12 @@ Config には [GS2-Money](https://app.gs2.io/docs/index.html#gs2-money)  のウ�
 | iOS           | 1 |
 | Android       | 2 |
 
-Config はスタンプシートに動的なパラメータを渡すための仕組みです。  
-[⇒スタンプシートの変数](https://app.gs2.io/docs/index.html#d7e97677c7)  
+Config はトランザクション処理に動的なパラメータを渡すための仕組みです。  
+[⇒スタンプシート発行時のパラメータ設定]( https://docs.gs2.io/ja/articles/tech/stamp_sheet/#%e3%82%b9%e3%82%bf%e3%83%b3%e3%83%97%e3%82%b7%e3%83%bc%e3%83%88%e7%99%ba%e8%a1%8c%e6%99%82%e3%81%ae%e3%83%91%e3%83%a9%e3%83%a1%e3%83%bc%e3%82%bf%e8%a8%ad%e5%ae%9a )  
 Config(EzConfig) はキー・バリュー形式で、渡したパラメータで #{Config で指定したキー値} のプレースホルダー文字列を置換することができます。
-以下のスタンプシートの定義中の　#{slot}　はウォレットスロット番号に置換されます。
+以下のトランザクションの定義中の　#{slot}　はウォレットスロット番号に置換されます。
 
 
-課金通貨とスタミナを交換するスタンプシートの流れは以下のようになります。
+課金通貨とスタミナを交換するトランザクション処理の流れは以下のようになります。
 
 ![交換](Exchange.png)

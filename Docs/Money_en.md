@@ -1,23 +1,29 @@
 # Billing Currency/ Billing Currency Store Explanation
 
-The billing currency managed using [GS2-Money](https://app.gs2.io/docs/en/index.html#gs2-money) can be used to  
-This is a sample of selling on [GS2-Showcase](https://app.gs2.io/docs/en/index.html#gs2-showcase).
+The billing currency managed using [GS2-Money2](https://docs.gs2.io/api_reference/money2/) can be used to  
+This is a sample of selling on [GS2-Showcase](https://docs.gs2.io/api_reference/showcase/).
 
-One of the products defined in the sample has a [GS2-Limit](https://app.gs2.io/docs/en/index.html#gs2-limit)  
+One of the products defined in the sample has a [GS2-Limit](https://docs.gs2.io/api_reference/limit/)  
 The number of purchases is limited, allowing only one purchase.
 
 ![Products](Products_en.png)
 
 ## GS2-Deploy template
 
-- [initialize_money_template.yaml - Billing Currency/Billing Currency Store](../Templates/initialize_money_template.yaml)
+- [initialize_core_template.yaml - Billing Currency/Billing Currency Store](../Templates/initialize_core_template.yaml)
+
+The GS2-Money2 namespace defines the store platform settings (`PlatformSetting`) and  
+the store content models (`storeContentModels`) used for receipt verification.  
+Because this sample does not perform real in-app purchases, it sets  
+`PlatformSetting.fake.acceptFakeReceipt: Accept` to accept purchases with fake receipts.
 
 ## Enable and import Unity IAPs
 
-[GS2-Money](https://app.gs2.io/docs/en/index.html#gs2-money) requires Unity IAP to be enabled for the sample to work.  
-( https://docs.unity3d.com/ja/2019.4/Manual/UnityIAPSettingUp.html )  
+To purchase on a real device (AppStore / GooglePlay), Unity IAP must be enabled.  
+[Unity IAP Setup](https://docs.unity3d.com/Manual/UnityIAPSettingUp.html)  
 Enable In-App Purchasing in the Services window, and  
-Import the IAP package.
+Import the IAP package.  
+(Since this sample also works with fake receipts, you can verify the purchase flow even with IAP disabled.)
 
 ## Billing Currency/Billing Currency Store Settings
 
@@ -25,13 +31,13 @@ Import the IAP package.
 
 | Setting Name | Description | 
 |---|---|
-| moneyNamespaceName | GS2-Money namespace name |
+| moneyNamespaceName | GS2-Money2 namespace name |
 | showcaseNamespaceName | GS2-Showcase NamespaceName |
 | showcaseName | GS2-Showcase display shelf name |
 
 | Event | Description |
 |---|---|
-| OnGetWallet(EzWalletDetail wallet) | Called when wallet information is retrieved. |
+| OnGetWallet(EzWallet wallet) | Called when wallet information is retrieved. |
 | OnGetProducts(List<Product> products) | Called when a list of products for sale is retrieved. |
 | OnBuy(Product product) | Called when the purchase of a product is completed. |
 | OnError(Gs2Exception error) | Called when an error occurs. |
@@ -40,11 +46,12 @@ Import the IAP package.
 
 ![Wallet](Wallet_en.png)
 
-After login, the latest wallet status is retrieved below.
+After login, the latest wallet status is retrieved below.  
+In a GS2-Money2 wallet, the balance is obtained from `Wallet.Summary` (`Paid` / `Free` / `Total`).
 
 When UniTask is enabled
 ```c#
-var domain = gs2.Money.Namespace(
+var domain = gs2.Money2.Namespace(
     namespaceName: moneyNamespaceName
 ).Me(
     gameSession: gameSession
@@ -64,7 +71,7 @@ catch (Gs2Exception e)
 ```
 When coroutine is used
 ```c#
-var domain = gs2.Money.Namespace(
+var domain = gs2.Money2.Namespace(
     namespaceName: moneyNamespaceName
 ).Me(
     gameSession: gameSession
@@ -82,6 +89,12 @@ if (future.Error != null)
 Wallet = future.Result;
 
 onGetWallet.Invoke(Wallet);
+```
+
+The retrieved wallet balance is referenced as follows.
+
+```c#
+var balance = Wallet.Summary.Free + Wallet.Summary.Paid;
 ```
 
 ## Retrieve items from the billing currency store
@@ -133,42 +146,50 @@ if (future.Error != null)
 ```
 
 Parses the retrieved product information to obtain the selling price and the quantity of billable currency available.  
-If a purchase limit is set, the status of the purchase counter is also retrieved.
+If a purchase limit is set, the status of the purchase counter is also retrieved.  
+In GS2-Money2, the price and currency amount of the acquire action `Gs2Money2:DepositByUserId` are stored in `depositTransactions`,  
+and the store content is specified by the `contentName` of the receipt verification action `Gs2Money2:VerifyReceiptByUserId`.  
+The `currency` of each `depositTransactions` entry (the currency code, `JPY` in this sample) is required.
 
 ```c#
 var products = new List<Product>();
-foreach (var displayItem in result.Result.Item.DisplayItems)
+foreach (var displayItem in showcase.DisplayItems)
 {
     var depositRequest = GetAcquireAction<DepositByUserIdRequest>(
         displayItem.SalesItem, 
-        "Gs2Money:DepositByUserId"
+        "Gs2Money2:DepositByUserId"
     );
-    var recordReceiptRequest = GetConsumeAction<RecordReceiptRequest>(
+    var verifyReceiptRequest = GetConsumeAction<VerifyReceiptByUserIdRequest>(
         displayItem.SalesItem, 
-        "Gs2Money:RecordReceipt"
+        "Gs2Money2:VerifyReceiptByUserId"
     );
     var countUpRequest = GetConsumeAction<CountUpByUserIdRequest>(
         displayItem.SalesItem, 
         "Gs2Limit:CountUpByUserId"
     );
-    var price = depositRequest.Price;
-    var count = depositRequest.Count;
+    // In Money2, the price and currency amount are stored in depositTransactions
+    var depositTransaction = depositRequest.DepositTransactions != null && depositRequest.DepositTransactions.Length > 0
+        ? depositRequest.DepositTransactions[0]
+        : null;
+    var price = (float?)depositTransaction?.Price;
+    var count = depositTransaction?.Count;
 
     int? boughtCount = null;
     if(countUpRequest != null) {
-        AsyncResult<EzGetCounterResult> result2 = null;
-        yield return client.Limit.GetCounter(
-            r => { result2 = r; },
-            session,
-            countUpRequest.NamespaceName,
-            countUpRequest.LimitName,
-            countUpRequest.CounterName
+        var counterDomain = gs2.Limit.Namespace(
+            namespaceName: countUpRequest.NamespaceName
+        ).Me(
+            gameSession: gameSession
+        ).Counter(
+            limitName: countUpRequest.LimitName,
+            counterName: countUpRequest.CounterName
         );
-        if (result2.Error == null)
+        try
         {
-            boughtCount = result2.Result.Item.Count;
+            var item = await counterDomain.ModelAsync();
+            boughtCount = item.Count;
         }
-        else if (result2.Error is NotFoundException)
+        catch (NotFoundException)
         {
             boughtCount = 0;
         }
@@ -176,7 +197,7 @@ foreach (var displayItem in result.Result.Item.DisplayItems)
     products.Add(new Product
     {
         Id = displayItem.DisplayItemId,
-        ContentsId = recordReceiptRequest.ContentsId,
+        ContentsId = verifyReceiptRequest.ContentName,
         Price = price,
         CurrencyCount = count,
         BoughtCount = boughtCount,
@@ -189,12 +210,17 @@ foreach (var displayItem in result.Result.Item.DisplayItems)
 
 If you are in a mobile environment, use the Unity IAP to purchase content from the AppStore or GooglePlay   
 (The product must be registered and configured).  
-In the editor environment, a Fake Store receipt will be issued.  
-The resulting receipt is retained for reference in subsequent processing.
+When the purchasing feature (`GS2_ENABLE_PURCHASING`) is disabled, or in the editor environment, a fake receipt is used.  
+A GS2-Money2 receipt is an __object__ of the form `{ "Store", "TransactionID", "Payload" }`.  
+The store name and payload are retained so they can be passed via Config to the subsequent  
+stamp sheet process (`Gs2Money2:VerifyReceiptByUserId`).  
+(Because the template sets acceptFakeReceipt: Accept, Store="fake" is accepted.)
 
 When UniTask is enabled
 ```c#
-string receipt;
+// Default is a fake receipt (used when the purchasing feature is disabled)
+string store = "fake";
+string payload = "fake";
 {
 #if GS2_ENABLE_PURCHASING
     try
@@ -202,9 +228,10 @@ string receipt;
         PurchaseParameters result = await new IAPUtil().BuyAsync(
             selectedProduct.ContentsId
         );
-        
-        // Billed Currency Product Purchase Receipt Information
-        receipt = result.receipt;
+
+        // Retain the contents of the real store receipt
+        store = StoreName;
+        payload = result.receipt;
     }
     catch (Gs2Exception e)
     {
@@ -216,7 +243,9 @@ string receipt;
 ```
 When coroutine is used
 ```c#
-string receipt;
+// Default is a fake receipt (used when the purchasing feature is disabled)
+string store = "fake";
+string payload = "fake";
 {
 #if GS2_ENABLE_PURCHASING
     AsyncResult<PurchaseParameters> result = null;
@@ -235,13 +264,15 @@ string receipt;
         yield break;
     }
 
-    // Billed Currency Product Purchase Receipt Information
-    receipt = result.Result.receipt;
+    // Retain the contents of the real store receipt
+    store = StoreName;
+    payload = result.Result.receipt;
 #endif
 }
 ```
 
-Executes a process to purchase an item from [GS2-Showcase](https://app.gs2.io/docs/en/index.html#gs2-showcase) using the purchase receipt.  
+Executes a process to purchase an item from [GS2-Showcase](https://docs.gs2.io/api_reference/showcase/) using the purchase receipt.  
+The transaction (stamp sheet) issued by the purchase is awaited for completion with `WaitAsync(true)` / `WaitFuture(true)`.
 
 When UniTask is enabled
 ```c#
@@ -268,11 +299,23 @@ try
             },
             new EzConfig
             {
-                Key = "receipt",
-                Value = receipt,
+                Key = "store",
+                Value = store,
+            },
+            new EzConfig
+            {
+                Key = "transactionId",
+                Value = System.Guid.NewGuid().ToString(),
+            },
+            new EzConfig
+            {
+                Key = "payload",
+                Value = payload,
             },
         }
     );
+    // Wait for automatic transaction execution to complete (including all chained transactions)
+    await result.WaitAsync(true);
 }
 catch (Gs2Exception e)
 {
@@ -296,7 +339,7 @@ var domain = gs2.Showcase.Namespace(
 ).DisplayItem(
     displayItemId: selectedProduct.Id
 );
-var future = domain.Buy(
+var future = domain.BuyFuture(
     quantity: 1,
     config: new []
     {
@@ -307,8 +350,18 @@ var future = domain.Buy(
         },
         new EzConfig
         {
-            Key = "receipt",
-            Value = receipt,
+            Key = "store",
+            Value = store,
+        },
+        new EzConfig
+        {
+            Key = "transactionId",
+            Value = System.Guid.NewGuid().ToString(),
+        },
+        new EzConfig
+        {
+            Key = "payload",
+            Value = payload,
         },
     }
 );
@@ -324,14 +377,17 @@ if (future.Error != null)
     yield break;
 }
 
+// Wait for automatic transaction execution to complete (including all chained transactions)
+yield return future.Result.WaitFuture(true);
+
 // Successful product purchase
 
 onBuy.Invoke(selectedProduct);
 
 callback.Invoke(null);
 ```
-Config is passed the wallet slot number __slot__ of [GS2-Money](https://app.gs2.io/docs/en/index.html#gs2-money) and the
-and the contents of the receipt __receipt__.
+Config is passed the wallet slot number __slot__ of [GS2-Money2](https://docs.gs2.io/api_reference/money2/) and the
+and the contents of the receipt __store__ / __transactionId__ / __payload__.
 The wallet slot number is the type of billing currency assigned by platform for reference in this sample, and is defined as follows
 
 | Platform | Number |
@@ -341,37 +397,43 @@ The wallet slot number is the type of billing currency assigned by platform for 
 | Android | 2 |
 
 Config is a mechanism for passing dynamic parameters to the stamp sheet.  
-[⇒Stamp Sheet Variables](https://app.gs2.io/docs/en/index.html#d7e97677c7)  
+[⇒Setting Parameters when Issuing Stamp Sheets]( https://docs.gs2.io/articles/tech/stamp_sheet/#setting-parameters-when-issuing-stamp-sheets )  
 Config(EzConfig) is a key-value format that allows you to substitute a placeholder string of #{key value specified in Config} with the parameters you pass.
-In the following stamp sheet definition #{slot} will be replaced by the wallet slot number and #{receipt} by the receipt.
+In the following stamp sheet definition #{slot} will be replaced by the wallet slot number, and #{store} / #{transactionId} / #{payload} by each field of the receipt.  
+The receipt must be passed as an __object__ rather than a string, so a placeholder is placed for each field.
 
 ```yaml
 consumeActions:
-  - action: Gs2Money:RecordReceipt
+  - action: Gs2Money2:VerifyReceiptByUserId
     request:
       namespaceName: ${MoneyNamespaceName}
-      contentsId: io.gs2.sample.currency120
       userId: "#{userId}"
-      receipt: "#{receipt}"
+      contentName: currency-120
+      receipt:
+        Store: "#{store}"
+        TransactionID: "#{transactionId}"
+        Payload: "#{payload}"
 acquireActions:
-  - action: Gs2Money:DepositByUserId
+  - action: Gs2Money2:DepositByUserId
     request:
       namespaceName: ${MoneyNamespaceName}
       userId: "#{userId}"
       slot: "#{slot}"
-      price: 120
-      count: 50
+      depositTransactions:
+        - price: 120
+          currency: JPY
+          count: 50
 ```
 
-The purchase process issues a stamp sheet for the purchase of the charged currency item in GS2-Showcase.  
-In implementations using GS2Domain Class ("gs2" in the source), the stamp sheet process is __automatically executed__ on the client side.  
+The purchase process issues a transaction for the purchase of the charged currency item in GS2-Showcase.  
+The GS2-Showcase namespace is configured for __automatic transaction execution__ (`TransactionSetting.EnableAutoRun: true`),  
+so the issued transaction is executed automatically on the server side. The client waits for completion, including  
+chained transactions, with `WaitAsync(true)` / `WaitFuture(true)`.
 
-The normal process for stamp sheets for the purchase of billed currency items is as follows
+The flow of the transaction for the normal purchase of billed currency items is as follows
 
 ![Billing Currency Purchase](BuyGems_en.png)
 
-The purchase stamp sheet process for restricted purchase billed currency items is as follows
+The flow of the transaction for the purchase of purchase-restricted billed currency items is as follows
 
 ![Purchase Restrictions](BuyGems2_en.png)
-
-

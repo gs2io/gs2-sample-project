@@ -1,16 +1,16 @@
 # Lottery Function Explanation
 
-[GS2-Showcase](https://app.gs2.io/docs/en/index.html#gs2-showcase) sells lottery products, [GS2-Lottery](https://app.gs2.io/docs/en/index.html#gs2-lottery), and then the lottery is drawn by the  
+[GS2-Showcase](https://docs.gs2.io/api_reference/showcase/) sells lottery products, [GS2-Lottery](https://docs.gs2.io/api_reference/lottery/), and then the lottery is drawn by the  
 This sample shows the payout of items to a dedicated inventory.
 
 ## GS2-Deploy template
 
-- [initialize_lottery_template.yaml - lottery function](../Templates/initialize_lottery_template.yaml)
+- [initialize_gamecycle_template.yaml - lottery function](../Templates/initialize_gamecycle_template.yaml)
 
 ## Enable and import Unity IAPs
 
 Unity IAP must be enabled for the sample to work with GS2-Money2.  
-( https://docs.unity3d.com/ja/2019.4/Manual/UnityIAPSettingUp.html )  
+[Unity IAP Setup](https://docs.unity3d.com/Manual/UnityIAPSettingUp.html)  
 Enable In-App Purchasing in the Services window, and  
 Import the IAP package.
 
@@ -139,14 +139,16 @@ if (future.Error != null)
 }
 ```
 
-A stamp sheet for purchasing lottery items is issued by GS2-Showcase.  
-In implementations using the GS2Domain class ("gs2" in the source), stamp sheet processing on the client side is __auto-executed__.  
-In the initialize_lottery_template.yaml template, stamp sheet execution is set to client execution.
+A transaction for purchasing lottery items is issued by GS2-Showcase.  
+In the initialize_gamecycle_template.yaml template, transaction execution is set to __automatic execution__,  
+so the issued transaction is executed automatically on the server side.  
 
 ```yaml
       TransactionSetting:
-        EnableAutoRun: false
+        EnableAutoRun: true
 ```
+
+The client waits for the purchase transaction to complete with `WaitAsync(true)` / `WaitFuture(true)` (including the chained lottery draw and reward acquisition transactions).
 
 The list of products resulting from the lottery can be retrieved with the following callback.
 
@@ -178,10 +180,12 @@ Gs2Lottery.Domain.Gs2Lottery.DrawByUserIdComplete.AddListener( LotteryResult );
 ```
 
 At the time the lottery results are obtained, the client performs the lottery production, displays the list of items obtained, etc., if necessary in the actual game.  
-After the stamp sheet is executed, [GS2-JobQueue](https://app.gs2.io/docs/index.html#gs2-jobqueue) in turn executes the process of acquiring items to the inventory.
-When the client executes the job queue, the process of actually receiving the reward is executed.
+The GS2-Lottery / GS2-Showcase namespaces in this sample set `TransactionSetting.EnableAtomicCommit: true`,  
+so the items are added to the inventory by the server within the transaction (the job queue is not used).
 
-The job queue can be continued automatically by running Gs2Domain.Dispatch, a process that advances the job queue.
+If you set `TransactionSetting.QueueNamespaceId`, the acquisition is registered as a job in  
+[GS2-JobQueue](https://docs.gs2.io/api_reference/job_queue/) and is distributed when the client runs the job queue.  
+In that case, the job queue can be advanced automatically by running Gs2Domain.Dispatch.
 
 When UniTask is enabled
 ```c#
@@ -219,6 +223,6 @@ IEnumerator Impl()
 _stampSheetDispatchCoroutine = StartCoroutine(Impl());
 ```
 
-The purchase stamp sheet process for raffle items is as follows
+The flow of the transaction for purchasing lottery items is as follows
 
 ![LotteryStore](LotteryStore_en.png)

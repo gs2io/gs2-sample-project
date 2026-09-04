@@ -1,6 +1,6 @@
 ﻿# クエスト　解説
 
-[GS2-Quest](https://app.gs2.io/docs/index.html#gs2-quest) を使ってクエストを管理するサンプルです。
+[GS2-Quest](https://docs.gs2.io/ja/api_reference/quest/) を使ってクエストを管理するサンプルです。
 
 クエストには、メインシナリオクエストとキャラクターシナリオクエストの2種類（2グループ）があります。  
 クエストには、クエストに挑戦するために必要なコストと、クリア報酬を設定できますが、  
@@ -9,7 +9,7 @@
 
 ## GS2-Deploy テンプレート
 
-- [initialize_quest_template.yaml - クエスト](../Templates/initialize_quest_template.yaml)
+- [initialize_gamecycle_template.yaml - クエスト](../Templates/initialize_gamecycle_template.yaml)
 
 ## クエスト設定 QuestSetting
 
@@ -240,8 +240,8 @@ callback.Invoke(quests);
 
 クエストを開始します。
 GS2-QuestのCurrentQuestMasterにはconsumeActionsにクエスト開始に必要な消費アクションが設定されています。
-GS2Domainクラス（ソース内で "gs2" ）を使用した実装ではクライアント側でのスタンプシートの処理は __自動実行__ されます。  
-スタンプシートでクエスト開始に必要なコストとして設定された量のスタミナを消費し、クエストが開始状態になります。
+GS2Domainクラス（ソース内で "gs2" ）を使用した実装ではクライアント側でのトランザクション処理は __自動実行__ されます。  
+トランザクション処理でクエスト開始に必要なコストとして設定された量のスタミナを消費し、クエストが開始状態になります。
 
 ・UniTask有効時
 ```c#
@@ -288,7 +288,7 @@ var future = domain.StartFuture(
         new EzConfig
         {
             Key = "slot",
-            Value = MoneyModel.Slot.ToString()
+            Value = Money2Model.Slot.ToString()
         }
     }
 );
@@ -301,7 +301,7 @@ if (future.Error != null)
 }
 ```
 
-クエストの開始スタンプシートの流れは以下のようになります。
+クエストの開始トランザクション処理の流れは以下のようになります。
 
 ![クエスト開始](QuestStart.png)
 
@@ -312,8 +312,8 @@ rewards には Start の戻り値 EzProgress の Rewards のうち、
 実際のゲーム進行上で入手できた報酬を設定します。
 
 GS2-Quest の CurrentQuestMaster の completeAcquireActions にクエスト完了時の報酬の入手アクションが設定されています。
-GS2Domainクラス（ソース内で "gs2" ）を使用した実装ではクライアント側のスタンプシートの処理は __自動実行__ されます。  
-スタンプシートでクエスト報酬を入手し、クエストは未受注の状態になります。
+GS2Domainクラス（ソース内で "gs2" ）を使用した実装ではクライアント側のトランザクション処理は __自動実行__ されます。  
+トランザクション処理でクエスト報酬を入手し、クエストは未受注の状態になります。
 
 ・UniTask有効時
 ```c#
@@ -377,7 +377,7 @@ if (future.Error != null)
 onEnd.Invoke(progress, rewards, isComplete);
 callback.Invoke(progress);
 ```
-Config には [GS2-Money](https://app.gs2.io/docs/index.html#gs2-money)  のウォレットスロット番号 __slot__ を渡します。
+Config には [GS2-Money2](https://docs.gs2.io/ja/api_reference/money2/)  のウォレットスロット番号 __slot__ を渡します。
 ウォレットスロット番号はこのサンプルのためにプラットフォーム別に割り振った課金通貨の種別で、以下のように定義しています。
 
 | プラットフォーム      | 番号 |
@@ -387,36 +387,39 @@ Config には [GS2-Money](https://app.gs2.io/docs/index.html#gs2-money)  のウ�
 | Android       | 2 |
 
 Config はスタンプシートに動的なパラメータを渡すための仕組みです。  
-[⇒スタンプシートの変数](https://app.gs2.io/docs/index.html#d7e97677c7)  
+[⇒スタンプシートの変数](https://docs.gs2.io/ja/articles/tech/stamp_sheet/)  
 Config(EzConfig) はキー・バリュー形式で、渡したパラメータで #{Config で指定したキー値} のプレースホルダー文字列を置換することができます。
 以下のスタンプシートの定義中の　#{slot}　はウォレットスロット番号に置換されます。
 
 ```yaml
 completeAcquireActions:
-  - action: Gs2Money:DepositByUserId
+  - action: Gs2Money2:DepositByUserId
     request:
       namespaceName: ${MoneyNamespaceName}
       userId: "#{userId}"
       slot: "#{slot}"
-      price: 0
-      count: 10
+      depositTransactions:
+        - price: 0
+          count: 10
 ```
 
-クエストの完了スタンプシートの流れは以下になります。
+クエストの完了トランザクション処理の流れは以下になります。
 
 ![クエスト完了](QuestEnd.png)
 
-クエストの失敗スタンプシートの流れは以下になります。
+クエストの失敗トランザクション処理の流れは以下になります。
 
 ![クエスト失敗](QuestEnd2.png)
 
 #### 報酬配布処理の遅延実行
 
-クエスト完了時の報酬に複数のリソース入手を設定した場合、  
-スタンプシートによってジョブキュー( [GS2-JobQueue](https://app.gs2.io/docs/index.html#gs2-jobqueue) )に報酬を入手するジョブが登録されます。  
-クライアントがジョブキューを実行することで、実際に報酬を受け取る処理が実行されます。
+本サンプルの GS2-Quest ネームスペースは `TransactionSetting.EnableAtomicCommit: true` を設定しているため、  
+報酬の入手はクエスト完了リクエストの中でサーバー側が一括実行します（ジョブキューは経由しません）。
 
-ジョブキューを進行させる処理、Gs2Domain.Dispatch を実行しておくことで、ジョブキューを自動で継続進行できます。
+`TransactionSetting.QueueNamespaceId` を設定した場合は、報酬を入手するジョブが  
+ジョブキュー( [GS2-JobQueue](https://docs.gs2.io/ja/api_reference/job_queue/) )に登録され、  
+クライアントがジョブキューを実行することで、実際に報酬を受け取る処理が実行されます。  
+その場合は、ジョブキューを進行させる処理 Gs2Domain.Dispatch を実行しておくことで、自動で継続進行できます。
 
 ・UniTask有効時
 ```c#

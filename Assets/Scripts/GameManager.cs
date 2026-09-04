@@ -1,10 +1,12 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Gs2.Core.Exception;
 using Gs2.Sample.AccountTakeOver;
 using Gs2.Sample.Chat;
 using Gs2.Sample.Credential;
+using Gs2.Sample.Dictionary;
+using Gs2.Sample.Enhance;
 using Gs2.Sample.Experience;
 using Gs2.Sample.Friend;
 using Gs2.Sample.Lottery;
@@ -12,7 +14,7 @@ using Gs2.Sample.Gold;
 using Gs2.Sample.Inventory;
 using Gs2.Sample.Login;
 using Gs2.Sample.Matchmaking;
-using Gs2.Sample.Money;
+using Gs2.Sample.Money2;
 using Gs2.Sample.Quest;
 using Gs2.Sample.Realtime;
 using Gs2.Sample.Stamina;
@@ -53,13 +55,15 @@ namespace Gs2.Sample
         [SerializeField] public AccountTakeOverPresenter takeoverPresenter;
 
         [SerializeField] public StaminaPresenter staminaPresenter;
-        [SerializeField] public MoneyPresenter moneyPresenter;
+        [SerializeField] public Money2Presenter money2Presenter;
         [SerializeField] public GoldPresenter goldPresenter;
         [SerializeField] public InventoryPresenter inventoryPresenter;
 
         [SerializeField] public QuestPresenter questPresenter;
         [SerializeField] public LotteryStorePresenter lotteryStorePresenter;
         [SerializeField] public UnitPresenter unitPresenter;
+        [SerializeField] public DictionaryPresenter dictionaryPresenter;
+        [SerializeField] public EnhancePresenter enhancePresenter;
         [SerializeField] public ExperiencePresenter experiencePresenter;
 
         [SerializeField] public ChatPresenter chatPresenter;
@@ -107,9 +111,9 @@ namespace Gs2.Sample
         [SerializeField] private StaminaSetting _staminaSetting;
         private StaminaModel _staminaModel;
 
-        // Money
-        [SerializeField] private MoneySetting _moneySetting;
-        private MoneyModel _moneyModel;
+        // Money2
+        [SerializeField] private Money2Setting _moneySetting;
+        private Money2Model _moneyModel;
 
         // Gold
         [SerializeField] private GoldSetting _goldSetting;
@@ -133,7 +137,7 @@ namespace Gs2.Sample
             Assert.IsNotNull(_staminaModel);
 
             Assert.IsNotNull(_moneySetting);
-            _moneyModel = GetComponent<MoneyModel>();
+            _moneyModel = GetComponent<Money2Model>();
             Assert.IsNotNull(_moneyModel);
 
             Assert.IsNotNull(_goldSetting);
@@ -378,15 +382,7 @@ namespace Gs2.Sample
         /// </summary>
         public void OnRemoveAccount()
         {
-            switch (UIManager.Instance.Lang)
-            {
-                case  UIManager.Language.ja:
-                    UIManager.Instance.OpenDialog2("確認", "アカウント情報を削除します。よろしいですか？");
-                    break;
-                case  UIManager.Language.en:
-                    UIManager.Instance.OpenDialog2("Confirm", "Delete account information. Are you sure?");
-                    break;
-            }
+            UIManager.Instance.OpenDialog2("Confirm", "RemoveAccountConfirm");
 
             UIManager.Instance.AddPositiveListner(() =>
             {
@@ -461,7 +457,7 @@ namespace Gs2.Sample
         /// ログイン処理
         /// Login
         /// </summary>
-        private async UniTask LoginAsync()
+        private async UniTaskVoid LoginAsync()
         {
             UIManager.Instance.AddLog("Login");
 
@@ -541,7 +537,7 @@ namespace Gs2.Sample
                 );
             }
 
-            void OnError(Gs2Exception e, Func<IEnumerator> retry)
+            void OnError(Exception e, Func<IEnumerator> retry)
             {
                 error = true;
             }
@@ -641,7 +637,7 @@ namespace Gs2.Sample
                 );
             }
 
-            void OnError(Gs2Exception e, Func<IEnumerator> retry)
+            void OnError(Exception e, Func<IEnumerator> retry)
             {
                 error = true;
             }
@@ -865,15 +861,7 @@ namespace Gs2.Sample
             
             if (errors.Count > 0)
             {
-                switch (UIManager.Instance.Lang)
-                {
-                    case UIManager.Language.ja:
-                        UIManager.Instance.OpenDialog1("Notice", "最新のアプリがあります。");
-                        break;
-                    case  UIManager.Language.en:
-                        UIManager.Instance.OpenDialog1("Notice", "New Update is Available");
-                        break;
-                }
+                UIManager.Instance.OpenDialog1("Notice", "NewVersionAvailable");
                 
                 UIManager.Instance.AddAcceptListner(OnRequestVersionCheck);
                 return;
@@ -968,15 +956,7 @@ namespace Gs2.Sample
 
             if (errors.Count > 0)
             {
-                switch (UIManager.Instance.Lang)
-                {
-                    case  UIManager.Language.ja:
-                        UIManager.Instance.OpenDialog2("利用規約", "「利用規約」への同意が必要です。", "同意する", "同意しない");
-                        break;
-                    case  UIManager.Language.en:
-                        UIManager.Instance.OpenDialog2("Terms and Conditions", "You must agree to the Terms and Conditions.", "I Agree", "I Don't Agree ");
-                        break;
-                }
+                UIManager.Instance.OpenDialog2("TermsTitle", "TermsAgreeMessage", "Agree", "Disagree");
                 
                 UIManager.Instance.AddPositiveListner(OnRequestAcceptTerm);
                 UIManager.Instance.AddNegativeListner(OnRequestVersionCheck);
@@ -1020,37 +1000,21 @@ namespace Gs2.Sample
         /// ログイン エラー
         /// Login error
         /// </summary>
-        private void OnLoginError(Gs2Exception e, Func<IEnumerator> retry)
+        private void OnLoginError(Exception e, Func<IEnumerator> retry)
         {
-            if (e.Errors.Length > 0)
+            if (e is Gs2Exception && (e as Gs2Exception).Errors.Length > 0)
             {
-                if (e.Errors[0].message == "account.account.account.error.notAuthorized")
+                if (e is Gs2Exception && (e as Gs2Exception).Errors[0].message == "account.account.account.error.notAuthorized")
                 {
-                    switch (UIManager.Instance.Lang)
-                    {
-                        case UIManager.Language.ja:
-                            Debug.Log("アカウントの認証に失敗したため、アカウントを削除します。");
-                            break;
-                        case UIManager.Language.en:
-                            Debug.Log("Delete account due to account authorization failure.");
-                            break;
-                    }
+                    Debug.Log("Delete account due to account authorization failure.");
 
-                    accountRepository.DeleteAccount();
+                    accountRepository.DeleteAccount(_saveSlot);
                 }
-                else if (e.Errors[0].message == "account.account.account.error.notFound")
+                else if (e is Gs2Exception && (e as Gs2Exception).Errors[0].message == "account.account.account.error.notFound")
                 {
-                    switch (UIManager.Instance.Lang)
-                    {
-                        case UIManager.Language.ja:
-                            Debug.Log("アカウントの認証に失敗したため、アカウントを削除します。");
-                            break;
-                        case UIManager.Language.en:
-                            Debug.Log("Delete account due to account authorization failure.");
-                            break;
-                    }
+                    Debug.Log("Delete account due to account authorization failure.");
 
-                    accountRepository.DeleteAccount();
+                    accountRepository.DeleteAccount(_saveSlot);
                 }
             }
 
@@ -1085,7 +1049,7 @@ namespace Gs2.Sample
 
 #if GS2_ENABLE_UNITASK
             staminaPresenter.InitializeAsync().Forget();
-            moneyPresenter.InitializeAsync().Forget();
+            money2Presenter.InitializeAsync().Forget();
             goldPresenter.InitializeAsync().Forget();
 
             inventoryPresenter.InitializeAsync().Forget();
@@ -1093,11 +1057,13 @@ namespace Gs2.Sample
             
             questPresenter.InitializeAsync().Forget();
             unitPresenter.InitializeAsync().Forget();
+            dictionaryPresenter.InitializeAsync().Forget();
+            enhancePresenter.InitializeAsync().Forget();
 
             chatPresenter.InitializeAsync().Forget();
 #else
             StartCoroutine(staminaPresenter.Initialize());
-            StartCoroutine(moneyPresenter.Initialize());
+            StartCoroutine(money2Presenter.Initialize());
             StartCoroutine(goldPresenter.Initialize());
 
             StartCoroutine(inventoryPresenter.Initialize());
@@ -1105,6 +1071,8 @@ namespace Gs2.Sample
 
             StartCoroutine(questPresenter.Initialize());
             StartCoroutine(unitPresenter.Initialize());
+            StartCoroutine(dictionaryPresenter.Initialize());
+            StartCoroutine(enhancePresenter.Initialize());
 
             StartCoroutine(chatPresenter.Initialize());
 #endif
@@ -1122,7 +1090,15 @@ namespace Gs2.Sample
             {
                 while (true)
                 {
-                    await _domain.DispatchAsync(_session);
+                    try
+                    {
+                        await _domain.DispatchAsync(_session);
+                    }
+                    catch (Gs2Exception e)
+                    {
+                        UIManager.Instance.AddLog("Dispatch Error : " + e.Message);
+                        Debug.LogError(e);
+                    }
 
                     await UniTask.Yield();
                 }
@@ -1137,11 +1113,8 @@ namespace Gs2.Sample
                     yield return future;
                     if (future.Error != null)
                     {
-                        yield break;
-                    }
-                    if (future.Result)
-                    {
-                        break;
+                        UIManager.Instance.AddLog("Dispatch Error : " + future.Error.Message);
+                        Debug.LogError(future.Error);
                     }
                     yield return null;
                 }
@@ -1159,12 +1132,12 @@ namespace Gs2.Sample
         /// エラー表示
         /// Error indication
         /// </summary>
-        public void OnError(Gs2Exception e, Func<IEnumerator> retry)
+        public void OnError(Exception e, Func<IEnumerator> retry)
         {
             string message = String.Empty;
-            if (e.Errors.Length > 0)
+            if (e is Gs2Exception && (e as Gs2Exception).Errors.Length > 0)
             {
-                foreach (var error in e.Errors)
+                foreach (var error in (e as Gs2Exception).Errors)
                 {
                     UIManager.Instance.AddLog("Error : " + error.message);
                     message += error.message + "\n";
@@ -1208,7 +1181,11 @@ namespace Gs2.Sample
             realtimePresenter.Finish();
             _realtimeModel.Clear();
 
-            StopCoroutine(_dispatchCoroutine);
+            if (_dispatchCoroutine != null)
+            {
+                StopCoroutine(_dispatchCoroutine);
+                _dispatchCoroutine = null;
+            }
         }
         
         /// <summary>

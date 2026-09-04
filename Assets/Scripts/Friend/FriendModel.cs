@@ -473,16 +473,7 @@ namespace Gs2.Sample.Friend
 		    }
  
 		    var result = future.Result;
-		    var future2 = result.ModelFuture();
-		    yield return future2;
-		    if (future2.Error != null)
-		    {
-			    onError.Invoke(future2.Error, null);
-			    yield break;
-		    }
-		    
-		    var item = future2.Result;
-		    onDeleteFriend.Invoke(item);
+		    onDeleteFriend.Invoke(null);
 	    }
 #if GS2_ENABLE_UNITASK
 	    public async UniTask DeleteFriendAsync(
@@ -506,9 +497,8 @@ namespace Gs2.Sample.Friend
 		    try
 		    {
 			    var result = await domain.DeleteFriendAsync();
-			    var item = await result.ModelAsync();
 			    
-			    onDeleteFriend.Invoke(item);
+			    onDeleteFriend.Invoke(null);
 		    }
 		    catch (Gs2Exception e)
 		    {
@@ -667,10 +657,7 @@ namespace Gs2.Sample.Friend
 	        }
 	        
 	        var result = future.Result;
-	        var future2 = result.ModelFuture();
-	        yield return future2;
-	        var item = future2.Result;
-	        onAccept.Invoke(item);
+	        onAccept.Invoke(null);
         }
 #if GS2_ENABLE_UNITASK
 	    public async UniTask AcceptAsync(
@@ -692,9 +679,8 @@ namespace Gs2.Sample.Friend
 		    try
 		    {
 			    var result  = await domain.AcceptAsync();
-			    var item = await result.ModelAsync();
 			    
-			    onAccept.Invoke(item);
+			    onAccept.Invoke(null);
 		    }
 		    catch (Gs2Exception e)
 		    {

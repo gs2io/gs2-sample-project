@@ -1,0 +1,93 @@
+GS2TemplateFormatVersion: "2019-05-01"
+Description: GS2 sample - Community tab (Chat / Friend) initialize template Version 2026-09-03
+
+# ============================================================================
+# 「コミュニティ」タブの機能を作成します。
+# Creates the features of the "Community" tab.
+#
+#   - GS2-Chat    チャット
+#                 Chat
+#   - GS2-Friend  フレンド
+#                 Friend
+#
+# どちらも GS2-Gateway 経由でプッシュ通知を受け取ります。
+# GS2-Gateway のネームスペース `default` はプロジェクト作成時に
+# 自動作成される Default スタックのものを使用します。
+# Both receive push notifications through GS2-Gateway. The GS2-Gateway namespace
+# `default` is the one created automatically by the Default stack at project creation.
+#
+# 依存 / Depends on:
+#   initialize_core_template.yaml (ログインが必要なため / login is required)
+# ============================================================================
+
+Globals:
+  Alias:
+    ChatNamespaceName: chat-0001      # GS2-Chat ネームスペース名 / Namespace name
+    FriendNamespaceName: friend-0001  # GS2-Friend ネームスペース名 / Namespace name
+    GatewayNamespaceName: default     # 通知を行う GS2-Gateway ネームスペース名 / GS2-Gateway namespace name for notification
+
+Resources:
+
+  # ==========================================================================
+  # GS2-Chat : チャット
+  # GS2-Chat : chat
+  # ==========================================================================
+
+  ChatNamespace:
+    Type: GS2::Chat::Namespace
+    Properties:
+      Name: ${ChatNamespaceName}
+      # 投稿の通知 / Notification of a post
+      PostNotification:
+        GatewayNamespaceId: !Join
+          - ':'
+          - - 'grn'
+            - 'gs2'
+            - !GetAttr Gs2::Region
+            - !GetAttr Gs2::OwnerId
+            - 'gateway'
+            - ${GatewayNamespaceName}
+
+  # ==========================================================================
+  # GS2-Friend : フレンド
+  # GS2-Friend : friend
+  # ==========================================================================
+
+  FriendNamespace:
+    Type: GS2::Friend::Namespace
+    Properties:
+      Name: ${FriendNamespaceName}
+      # フォローされた通知 / Notification of being followed
+      FollowNotification:
+        GatewayNamespaceId: !Join
+          - ':'
+          - - 'grn'
+            - 'gs2'
+            - !GetAttr Gs2::Region
+            - !GetAttr Gs2::OwnerId
+            - 'gateway'
+            - ${GatewayNamespaceName}
+      # フレンドリクエストを受け取った通知 / Notification of receiving a friend request
+      ReceiveRequestNotification:
+        GatewayNamespaceId: !Join
+          - ':'
+          - - 'grn'
+            - 'gs2'
+            - !GetAttr Gs2::Region
+            - !GetAttr Gs2::OwnerId
+            - 'gateway'
+            - ${GatewayNamespaceName}
+      # フレンドリクエストが承認された通知 / Notification of a friend request being accepted
+      AcceptRequestNotification:
+        GatewayNamespaceId: !Join
+          - ':'
+          - - 'grn'
+            - 'gs2'
+            - !GetAttr Gs2::Region
+            - !GetAttr Gs2::OwnerId
+            - 'gateway'
+            - ${GatewayNamespaceName}
+
+Outputs:
+  ChatNamespaceName: !GetAttr ChatNamespace.Item.Name
+  FriendNamespaceName: !GetAttr FriendNamespace.Item.Name

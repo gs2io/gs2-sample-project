@@ -103,6 +103,12 @@ namespace Gs2.Sample.Friend
                 
                 _hasReceivedAcceptRequestNotification = false;
             }
+            if (_hasReceivedRejectRequestNotification)
+            {
+                UIManager.Instance.AddLog("RejectNotificationHandler : " + _rejectRequestTargetUserId);
+                
+                _hasReceivedRejectRequestNotification = false;
+            }
             if (_hasReceivedReceiveRequestNotification)
             {
                 UIManager.Instance.AddLog("ReceiveRequestNotification : " + _receiveRequestFromUserId);
@@ -119,6 +125,7 @@ namespace Gs2.Sample.Friend
         {
             GameManager.Instance.Domain.Friend.OnFollowNotification += FollowNotificationHandler;
             GameManager.Instance.Domain.Friend.OnAcceptRequestNotification += AcceptRequestNotificationHandler;
+            GameManager.Instance.Domain.Friend.OnRejectRequestNotification += RejectRequestNotificationHandler;
             GameManager.Instance.Domain.Friend.OnReceiveRequestNotification += ReceiveRequestNotificationHandler;
         }
         
@@ -126,6 +133,7 @@ namespace Gs2.Sample.Friend
         {
             GameManager.Instance.Domain.Friend.OnFollowNotification -= FollowNotificationHandler;
             GameManager.Instance.Domain.Friend.OnAcceptRequestNotification -= AcceptRequestNotificationHandler;
+            GameManager.Instance.Domain.Friend.OnRejectRequestNotification -= RejectRequestNotificationHandler;
             GameManager.Instance.Domain.Friend.OnReceiveRequestNotification -= ReceiveRequestNotificationHandler;
         }
 
@@ -149,6 +157,14 @@ namespace Gs2.Sample.Friend
             
             _acceptRequestTargetUserId = notification.TargetUserId;
             _hasReceivedAcceptRequestNotification = true;
+        }
+        
+        public void RejectRequestNotificationHandler(RejectRequestNotification notification)
+        {
+            Debug.Log("RejectRequestNotificationHandler : " + notification.TargetUserId);
+            
+            _rejectRequestTargetUserId = notification.TargetUserId;
+            _hasReceivedRejectRequestNotification = true;
         }
         
         public void ReceiveRequestNotificationHandler(ReceiveRequestNotification notification)

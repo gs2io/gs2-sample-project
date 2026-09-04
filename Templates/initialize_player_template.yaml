@@ -1,0 +1,594 @@
+GS2TemplateFormatVersion: "2019-05-01"
+Description: GS2 sample - Player tab (Stamina / Gold / Inventory / Experience / Dictionary) initialize template Version 2026-09-03
+
+# ============================================================================
+# 「プレイヤー」タブの機能を作成します。
+# Creates the features of the "Player" tab.
+#
+#   - GS2-Stamina    スタミナ / スタミナストア
+#                    Stamina and stamina store
+#   - GS2-Inventory  ゴールド (gold-0001)
+#                    Gold (gold-0001)
+#   - GS2-Inventory  インベントリ (inventory-0001)
+#                    Inventory (inventory-0001)
+#   - GS2-Experience 経験値
+#                    Experience
+#   - GS2-Dictionary 図鑑
+#                    Dictionary
+#
+# サーバー専用 API の動作確認や、対価なしでのアイテム入手には
+# GS2-Exchange の交換レートを経由します。
+# GS2-Exchange rates are used to invoke server-side only APIs and to grant
+# items without any cost, for verification purposes.
+#
+# 依存 / Depends on:
+#   initialize_core_template.yaml
+#     - スタミナストアが GS2-Money2 の課金通貨 (money2-0001) を消費します
+#       The stamina store consumes the billing currency (money2-0001) of GS2-Money2
+# ============================================================================
+
+Globals:
+  Alias:
+    # --- GS2-Stamina -------------------------------------------------------
+    StaminaNamespaceName: stamina-0001                   # GS2-Stamina ネームスペース名 / Namespace name
+    StaminaName: main                                    # GS2-Stamina スタミナモデル名 / Stamina model name
+    StaminaKeyNamespaceName: stamina-exchange-key        # GS2-Key ネームスペース名 / Namespace name
+    StaminaExchangeKeyName: stamina-exchange-key         # GS2-Key 購入処理のスタンプシートの署名計算に使用する暗号鍵 / Cryptographic key used to calculate signatures on stamp sheets for purchase processing
+    StaminaExchangeNamespaceName: stamina-exchange       # GS2-Exchange ネームスペース名 / Namespace name
+    StaminaExchangeRateName: money-stamina               # GS2-Exchange 交換レート名 / Exchange rate name
+
+    # --- GS2-Inventory (ゴールド / gold) ------------------------------------
+    GoldNamespaceName: gold-0001                         # GS2-Inventory ネームスペース名 / Namespace name
+    GoldInventoryModelName: gold                         # GS2-Inventory インベントリモデル名 / Inventory model name
+    GoldItemModelName: gold                              # GS2-Inventory アイテムモデル名 / Item model name
+    GoldStackingLimit: 99999999                          # GS2-Inventory スタック可能な最大数量 / Maximum stackable quantity
+    GoldKeyNamespaceName: gold-key                       # GS2-Key ネームスペース名 / Namespace name
+    GoldExchangeKeyName: gold-exchange-key               # GS2-Key 交換処理のスタンプシートの署名計算に使用する暗号鍵 / Cryptographic key used to calculate signatures on stamp sheets for the exchange process
+    GoldExchangeNamespaceName: gold-exchange             # GS2-Exchange ネームスペース名 / Namespace name
+    GoldExchangeRateName: gold                           # GS2-Exchange 交換レート名 / Exchange rate name
+
+    # --- GS2-Inventory (インベントリ / inventory) ---------------------------
+    InventoryNamespaceName: inventory-0001               # GS2-Inventory ネームスペース名 / Namespace name
+    InventoryModelName: inventory                        # GS2-Inventory インベントリモデル名 / Inventory model name
+    InventoryKeyNamespaceName: inventory-key             # GS2-Key ネームスペース名 / Namespace name
+    InventoryExchangeKeyName: inventory-exchange-key     # GS2-Key 交換処理のスタンプシートの署名計算に使用する暗号鍵 / Cryptographic key used to calculate signatures on stamp sheets for the exchange process
+    InventoryExchangeNamespaceName: inventory-exchange   # GS2-Exchange ネームスペース名 / Namespace name
+    InventoryExchangeRateNameFire: fire_element          # GS2-Exchange 交換レート名 fire_element アイテム / Exchange rate name fire_element item
+    InventoryExchangeRateNameWater: water_element        # GS2-Exchange 交換レート名 water_element アイテム / Exchange rate name water_element item
+
+    # --- GS2-Experience ----------------------------------------------------
+    ExperienceNamespaceName: experience-0001             # GS2-Experience ネームスペース名 / Namespace name
+    PlayerExperienceModelName: player                    # GS2-Experience プレイヤーの経験値モデル名 / Player experience model name
+    UnitExperienceModelName: unit                        # GS2-Experience ユニットの経験値モデル名 / Unit experience model name
+    ExperienceKeyNamespaceName: experience-key           # GS2-Key ネームスペース名 / Namespace name
+    ExperienceExchangeKeyName: experience-exchange-key   # GS2-Key 交換処理のスタンプシートの署名計算に使用する暗号鍵 / Cryptographic key used to calculate signatures on stamp sheets for the exchange process
+    ExperienceExchangeNamespaceName: experience-exchange # GS2-Exchange ネームスペース名 / Namespace name
+    ExperienceExchangeRateNamePlayer: experience-player  # GS2-Exchange 交換レート名 プレイヤー / Exchange rate name for the player
+    ExperienceExchangeRateNameUnit: experience-unit      # GS2-Exchange 交換レート名 ユニット / Exchange rate name for a unit
+
+    # --- GS2-Dictionary ----------------------------------------------------
+    DictionaryNamespaceName: dictionary-0001             # GS2-Dictionary ネームスペース名 / Namespace name
+    DictionaryKeyNamespaceName: dictionary-key           # GS2-Key ネームスペース名 / Namespace name
+    DictionaryExchangeKeyName: dictionary-exchange-key   # GS2-Key 交換処理のスタンプシートの署名計算に使用する暗号鍵 / Cryptographic key used to calculate signatures on stamp sheets for the exchange process
+    DictionaryExchangeNamespaceName: dictionary-exchange # GS2-Exchange ネームスペース名 / Namespace name
+    DictionaryRegisterRateName: register-entry           # GS2-Exchange 図鑑エントリーを登録する交換レート名 / Exchange rate name that registers a dictionary entry
+    DictionaryResetRateName: reset-entry                 # GS2-Exchange 図鑑エントリーを削除する交換レート名 / Exchange rate name that deletes a dictionary entry
+
+    # --- 他テンプレートのリソース / Resources of other templates ------------
+    MoneyNamespaceName: money2-0001                      # GS2-Money2 ネームスペース名 (core) / Namespace name (core)
+    DistributorNamespaceName: default                    # GS2-Distributor ネームスペース名 トランザクションの自動実行に使用 / Namespace name used for automatic transaction execution
+
+Resources:
+
+  # ==========================================================================
+  # GS2-Stamina : スタミナ / スタミナストア
+  # GS2-Stamina : stamina and stamina store
+  # ==========================================================================
+
+  StaminaNamespace:
+    Type: GS2::Stamina::Namespace
+    Properties:
+      Name: ${StaminaNamespaceName}
+
+  StaminaSettings:
+    Type: GS2::Stamina::CurrentStaminaMaster
+    Properties:
+      NamespaceName: ${StaminaNamespaceName}
+      Settings:
+        version: 2019-02-14
+        staminaModels:
+          - name: ${StaminaName}
+            recoverIntervalMinutes: 1
+            recoverValue: 5
+            initialCapacity: 50
+            isOverflow: true
+            maxCapacity: 999
+    DependsOn:
+      - StaminaNamespace
+
+  StaminaKeyNamespace:
+    Type: GS2::Key::Namespace
+    Properties:
+      Name: ${StaminaKeyNamespaceName}
+
+  StaminaExchangeKey:
+    Type: GS2::Key::Key
+    Properties:
+      NamespaceName: ${StaminaKeyNamespaceName}
+      Name: ${StaminaExchangeKeyName}
+    DependsOn:
+      - StaminaKeyNamespace
+
+  StaminaExchangeNamespace:
+    Type: GS2::Exchange::Namespace
+    Properties:
+      Name: ${StaminaExchangeNamespaceName}
+      # トランザクションの自動実行設定 / Automatic transaction execution settings
+      TransactionSetting:
+        EnableAutoRun: true
+        DistributorNamespaceId: !Join
+          - ':'
+          - - 'grn'
+            - 'gs2'
+            - !GetAttr Gs2::Region
+            - !GetAttr Gs2::OwnerId
+            - 'distributor'
+            - ${DistributorNamespaceName}
+        KeyId: !GetAttr StaminaExchangeKey.Item.KeyId
+    DependsOn:
+      - StaminaExchangeKey
+
+  # 課金通貨を消費してスタミナを回復する交換レート
+  # An exchange rate that consumes the billing currency to recover stamina
+  StaminaExchangeSettings:
+    Type: GS2::Exchange::CurrentRateMaster
+    Properties:
+      NamespaceName: ${StaminaExchangeNamespaceName}
+      Settings:
+        version: 2019-08-19
+        rateModels:
+          - name: ${StaminaExchangeRateName}
+            metadata: SHOWCASE_0001
+            consumeActions:
+              - action: Gs2Money2:WithdrawByUserId
+                request:
+                  namespaceName: ${MoneyNamespaceName}
+                  userId: "#{userId}"
+                  slot: "#{slot}"
+                  withdrawCount: 5
+                  paidOnly: false
+            acquireActions:
+              - action: Gs2Stamina:RecoverStaminaByUserId
+                request:
+                  namespaceName: ${StaminaNamespaceName}
+                  staminaName: ${StaminaName}
+                  userId: "#{userId}"
+                  recoverValue: 10
+    DependsOn:
+      - StaminaExchangeNamespace
+      - StaminaSettings
+
+  # ==========================================================================
+  # GS2-Inventory : ゴールド
+  # GS2-Inventory : gold
+  # ==========================================================================
+
+  GoldNamespace:
+    Type: GS2::Inventory::Namespace
+    Properties:
+      Name: ${GoldNamespaceName}
+
+  GoldSettings:
+    Type: GS2::Inventory::CurrentItemModelMaster
+    Properties:
+      NamespaceName: ${GoldNamespaceName}
+      Settings:
+        version: 2019-02-05
+        inventoryModels:
+          - name: ${GoldInventoryModelName}
+            initialCapacity: 1
+            maxCapacity: 1
+            itemModels:
+              - name: ${GoldItemModelName}
+                stackingLimit: ${GoldStackingLimit}
+                allowMultipleStacks: false
+                sortValue: 0
+    DependsOn:
+      - GoldNamespace
+
+  GoldKeyNamespace:
+    Type: GS2::Key::Namespace
+    Properties:
+      Name: ${GoldKeyNamespaceName}
+
+  GoldExchangeKey:
+    Type: GS2::Key::Key
+    Properties:
+      NamespaceName: ${GoldKeyNamespaceName}
+      Name: ${GoldExchangeKeyName}
+    DependsOn:
+      - GoldKeyNamespace
+
+  GoldExchangeNamespace:
+    Type: GS2::Exchange::Namespace
+    Properties:
+      Name: ${GoldExchangeNamespaceName}
+      # トランザクションの自動実行設定 / Automatic transaction execution settings
+      TransactionSetting:
+        EnableAutoRun: true
+        DistributorNamespaceId: !Join
+          - ':'
+          - - 'grn'
+            - 'gs2'
+            - !GetAttr Gs2::Region
+            - !GetAttr Gs2::OwnerId
+            - 'distributor'
+            - ${DistributorNamespaceName}
+        KeyId: !GetAttr GoldExchangeKey.Item.KeyId
+    DependsOn:
+      - GoldExchangeKey
+
+  # 対価なしでゴールドを 1 入手する交換レート（動作確認用）
+  # An exchange rate that grants 1 gold at no cost (for verification purposes)
+  GoldExchangeSettings:
+    Type: GS2::Exchange::CurrentRateMaster
+    Properties:
+      NamespaceName: ${GoldExchangeNamespaceName}
+      Settings:
+        version: 2019-08-19
+        rateModels:
+          - name: ${GoldExchangeRateName}
+            consumeActions: []
+            acquireActions:
+              - action: Gs2Inventory:AcquireItemSetByUserId
+                request:
+                  namespaceName: ${GoldNamespaceName}
+                  inventoryName: ${GoldInventoryModelName}
+                  itemName: ${GoldItemModelName}
+                  userId: "#{userId}"
+                  acquireCount: 1
+    DependsOn:
+      - GoldExchangeNamespace
+      - GoldSettings
+
+  # ==========================================================================
+  # GS2-Inventory : インベントリ
+  # GS2-Inventory : inventory
+  # ==========================================================================
+
+  InventoryNamespace:
+    Type: GS2::Inventory::Namespace
+    Properties:
+      Name: ${InventoryNamespaceName}
+
+  InventorySettings:
+    Type: GS2::Inventory::CurrentItemModelMaster
+    Properties:
+      NamespaceName: ${InventoryNamespaceName}
+      Settings:
+        version: 2019-02-05
+        inventoryModels:
+          - name: ${InventoryModelName}
+            initialCapacity: 100
+            maxCapacity: 100
+            itemModels:
+              - name: 'fire_element'
+                stackingLimit: 99
+                allowMultipleStacks: true
+                sortValue: 0
+              - name: 'water_element'
+                stackingLimit: 99
+                allowMultipleStacks: true
+                sortValue: 1
+    DependsOn:
+      - InventoryNamespace
+
+  InventoryKeyNamespace:
+    Type: GS2::Key::Namespace
+    Properties:
+      Name: ${InventoryKeyNamespaceName}
+
+  InventoryExchangeKey:
+    Type: GS2::Key::Key
+    Properties:
+      NamespaceName: ${InventoryKeyNamespaceName}
+      Name: ${InventoryExchangeKeyName}
+    DependsOn:
+      - InventoryKeyNamespace
+
+  InventoryExchangeNamespace:
+    Type: GS2::Exchange::Namespace
+    Properties:
+      Name: ${InventoryExchangeNamespaceName}
+      # トランザクションの自動実行設定 / Automatic transaction execution settings
+      TransactionSetting:
+        EnableAutoRun: true
+        DistributorNamespaceId: !Join
+          - ':'
+          - - 'grn'
+            - 'gs2'
+            - !GetAttr Gs2::Region
+            - !GetAttr Gs2::OwnerId
+            - 'distributor'
+            - ${DistributorNamespaceName}
+        KeyId: !GetAttr InventoryExchangeKey.Item.KeyId
+    DependsOn:
+      - InventoryExchangeKey
+
+  # 対価なしでアイテムを 1 個入手する交換レート（動作確認用）
+  # Exchange rates that grant 1 item at no cost (for verification purposes)
+  InventoryExchangeSettings:
+    Type: GS2::Exchange::CurrentRateMaster
+    Properties:
+      NamespaceName: ${InventoryExchangeNamespaceName}
+      Settings:
+        version: 2019-08-19
+        rateModels:
+          - name: ${InventoryExchangeRateNameFire}
+            consumeActions: []
+            acquireActions:
+              - action: Gs2Inventory:AcquireItemSetByUserId
+                request:
+                  namespaceName: ${InventoryNamespaceName}
+                  inventoryName: ${InventoryModelName}
+                  itemName: fire_element
+                  userId: "#{userId}"
+                  acquireCount: 1
+          - name: ${InventoryExchangeRateNameWater}
+            consumeActions: []
+            acquireActions:
+              - action: Gs2Inventory:AcquireItemSetByUserId
+                request:
+                  namespaceName: ${InventoryNamespaceName}
+                  inventoryName: ${InventoryModelName}
+                  itemName: water_element
+                  userId: "#{userId}"
+                  acquireCount: 1
+    DependsOn:
+      - InventoryExchangeNamespace
+      - InventorySettings
+
+  # ==========================================================================
+  # GS2-Experience : 経験値
+  # GS2-Experience : experience
+  # ==========================================================================
+
+  ExperienceNamespace:
+    Type: GS2::Experience::Namespace
+    Properties:
+      Name: ${ExperienceNamespaceName}
+
+  ExperienceSettings:
+    Type: GS2::Experience::CurrentExperienceMaster
+    Properties:
+      NamespaceName: ${ExperienceNamespaceName}
+      Settings:
+        version: 2019-01-11
+        experienceModels:
+          - name: ${PlayerExperienceModelName}
+            defaultRankCap: 15
+            maxRankCap: 15
+            rankThreshold:
+              values:
+                - 10
+                - 30
+                - 60
+                - 100
+                - 150
+                - 210
+                - 280
+                - 360
+                - 450
+                - 550
+                - 660
+                - 780
+                - 910
+                - 1050
+                - 1200
+          - name: ${UnitExperienceModelName}
+            defaultRankCap: 6
+            maxRankCap: 6
+            rankThreshold:
+              values:
+                - 100
+                - 300
+                - 1000
+                - 3000
+                - 10000
+    DependsOn:
+      - ExperienceNamespace
+
+  ExperienceKeyNamespace:
+    Type: GS2::Key::Namespace
+    Properties:
+      Name: ${ExperienceKeyNamespaceName}
+
+  ExperienceExchangeKey:
+    Type: GS2::Key::Key
+    Properties:
+      NamespaceName: ${ExperienceKeyNamespaceName}
+      Name: ${ExperienceExchangeKeyName}
+    DependsOn:
+      - ExperienceKeyNamespace
+
+  ExperienceExchangeNamespace:
+    Type: GS2::Exchange::Namespace
+    Properties:
+      Name: ${ExperienceExchangeNamespaceName}
+      # トランザクションの自動実行設定 / Automatic transaction execution settings
+      TransactionSetting:
+        EnableAutoRun: true
+        DistributorNamespaceId: !Join
+          - ':'
+          - - 'grn'
+            - 'gs2'
+            - !GetAttr Gs2::Region
+            - !GetAttr Gs2::OwnerId
+            - 'distributor'
+            - ${DistributorNamespaceName}
+        KeyId: !GetAttr ExperienceExchangeKey.Item.KeyId
+    DependsOn:
+      - ExperienceExchangeKey
+
+  # 経験値の付与はサーバー専用 API のため、
+  # サンプルでは GS2-Exchange の交換レートとして実行する（動作確認用）
+  # Adding experience is a server-side only API,
+  # so this sample executes it as a GS2-Exchange rate (for verification purposes).
+  ExperienceExchangeSettings:
+    Type: GS2::Exchange::CurrentRateMaster
+    Properties:
+      NamespaceName: ${ExperienceExchangeNamespaceName}
+      Settings:
+        version: 2019-08-19
+        rateModels:
+          - name: ${ExperienceExchangeRateNamePlayer}
+            consumeActions: []
+            acquireActions:
+              - action: Gs2Experience:AddExperienceByUserId
+                request:
+                  namespaceName: ${ExperienceNamespaceName}
+                  experienceName: ${PlayerExperienceModelName}
+                  userId: "#{userId}"
+                  propertyId: "#{propertyId}"
+                  experienceValue: 1
+          - name: ${ExperienceExchangeRateNameUnit}
+            consumeActions: []
+            acquireActions:
+              - action: Gs2Experience:AddExperienceByUserId
+                request:
+                  namespaceName: ${ExperienceNamespaceName}
+                  experienceName: ${UnitExperienceModelName}
+                  userId: "#{userId}"
+                  propertyId: "#{propertyId}"
+                  experienceValue: 1
+    DependsOn:
+      - ExperienceExchangeNamespace
+      - ExperienceSettings
+
+  # ==========================================================================
+  # GS2-Dictionary : 図鑑
+  # GS2-Dictionary : dictionary
+  # ==========================================================================
+
+  DictionaryNamespace:
+    Type: GS2::Dictionary::Namespace
+    Properties:
+      Name: ${DictionaryNamespaceName}
+
+  # 図鑑のエントリーモデル / Entry models of the dictionary
+  DictionarySettings:
+    Type: GS2::Dictionary::CurrentEntryMaster
+    Properties:
+      NamespaceName: ${DictionaryNamespaceName}
+      Settings:
+        version: 2020-04-30
+        entryModels:
+          - name: monster-0001
+            metadata: MONSTER-0001
+          - name: monster-0002
+            metadata: MONSTER-0002
+          - name: monster-0003
+            metadata: MONSTER-0003
+          - name: monster-0004
+            metadata: MONSTER-0004
+          - name: monster-0005
+            metadata: MONSTER-0005
+    DependsOn:
+      - DictionaryNamespace
+
+  DictionaryKeyNamespace:
+    Type: GS2::Key::Namespace
+    Properties:
+      Name: ${DictionaryKeyNamespaceName}
+
+  DictionaryExchangeKey:
+    Type: GS2::Key::Key
+    Properties:
+      NamespaceName: ${DictionaryKeyNamespaceName}
+      Name: ${DictionaryExchangeKeyName}
+    DependsOn:
+      - DictionaryKeyNamespace
+
+  DictionaryExchangeNamespace:
+    Type: GS2::Exchange::Namespace
+    Properties:
+      Name: ${DictionaryExchangeNamespaceName}
+      # トランザクションの自動実行設定 / Automatic transaction execution settings
+      TransactionSetting:
+        EnableAutoRun: true
+        # トランザクションを一括実行し、結果をその場で返す / Execute the transaction atomically and return the result immediately
+        EnableAtomicCommit: true
+        DistributorNamespaceId: !Join
+          - ':'
+          - - 'grn'
+            - 'gs2'
+            - !GetAttr Gs2::Region
+            - !GetAttr Gs2::OwnerId
+            - 'distributor'
+            - ${DistributorNamespaceName}
+        KeyId: !GetAttr DictionaryExchangeKey.Item.KeyId
+    DependsOn:
+      - DictionaryExchangeKey
+
+  # 図鑑エントリーの登録・削除はサーバー専用 API のため、
+  # サンプルでは GS2-Exchange の交換レートとして実行する（動作確認用）
+  # Registering/deleting dictionary entries are server-side only APIs,
+  # so this sample executes them as GS2-Exchange rates (for verification purposes).
+  DictionaryExchangeSettings:
+    Type: GS2::Exchange::CurrentRateMaster
+    Properties:
+      NamespaceName: ${DictionaryExchangeNamespaceName}
+      Settings:
+        version: 2019-08-19
+        rateModels:
+          # 図鑑エントリーを1件登録する。登録するエントリー名は Config で渡す
+          # Registers one dictionary entry. The entry name is passed via Config.
+          - name: ${DictionaryRegisterRateName}
+            consumeActions: []
+            acquireActions:
+              - action: Gs2Dictionary:AddEntriesByUserId
+                request:
+                  namespaceName: ${DictionaryNamespaceName}
+                  userId: "#{userId}"
+                  entryModelNames:
+                    - "#{entryModelName}"
+          # 図鑑エントリーを1件削除する。削除するエントリー名は Config で渡す
+          # Deletes one dictionary entry. The entry name is passed via Config.
+          - name: ${DictionaryResetRateName}
+            consumeActions:
+              - action: Gs2Dictionary:DeleteEntriesByUserId
+                request:
+                  namespaceName: ${DictionaryNamespaceName}
+                  userId: "#{userId}"
+                  entryModelNames:
+                    - "#{entryModelName}"
+            acquireActions: []
+    DependsOn:
+      - DictionaryExchangeNamespace
+      - DictionarySettings
+
+Outputs:
+  StaminaNamespaceName: !GetAttr StaminaNamespace.Item.Name
+  StaminaName: ${StaminaName}
+  StaminaExchangeNamespaceName: !GetAttr StaminaExchangeNamespace.Item.Name
+  StaminaExchangeRateName: ${StaminaExchangeRateName}
+  GoldNamespaceName: !GetAttr GoldNamespace.Item.Name
+  GoldInventoryModelName: ${GoldInventoryModelName}
+  GoldItemModelName: ${GoldItemModelName}
+  GoldExchangeNamespaceName: !GetAttr GoldExchangeNamespace.Item.Name
+  GoldExchangeRateName: ${GoldExchangeRateName}
+  InventoryNamespaceName: !GetAttr InventoryNamespace.Item.Name
+  InventoryModelName: ${InventoryModelName}
+  InventoryExchangeNamespaceName: !GetAttr InventoryExchangeNamespace.Item.Name
+  InventoryExchangeRateNameFire: ${InventoryExchangeRateNameFire}
+  InventoryExchangeRateNameWater: ${InventoryExchangeRateNameWater}
+  ExperienceNamespaceName: !GetAttr ExperienceNamespace.Item.Name
+  PlayerExperienceModelName: ${PlayerExperienceModelName}
+  UnitExperienceModelName: ${UnitExperienceModelName}
+  ExperienceExchangeNamespaceName: !GetAttr ExperienceExchangeNamespace.Item.Name
+  ExperienceExchangeRateNamePlayer: ${ExperienceExchangeRateNamePlayer}
+  ExperienceExchangeRateNameUnit: ${ExperienceExchangeRateNameUnit}
+  DictionaryNamespaceName: !GetAttr DictionaryNamespace.Item.Name
+  DictionaryExchangeNamespaceName: !GetAttr DictionaryExchangeNamespace.Item.Name
+  DictionaryRegisterRateName: ${DictionaryRegisterRateName}
+  DictionaryResetRateName: ${DictionaryResetRateName}

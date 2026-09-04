@@ -1,12 +1,12 @@
 ﻿# Account Takeover Explanation
 
-Anonymous accounts created by [GS2-Account](https://app.gs2.io/docs/en/index.html#gs2-account) with email addresses and  
+Anonymous accounts created by [GS2-Account](https://docs.gs2.io/api_reference/account/) with email addresses and  
 Associate a Game Center/Google Play Game Service account  
 The following is a sample of account takeover.
 
 ## GS2-Deploy template
 
-- [initialize_account_template.yaml - login/account linkage and takeover](../Templates/initialize_account_template.yaml)
+- [initialize_core_template.yaml - login/account linkage and takeover](../Templates/initialize_core_template.yaml)
 
 ## Account takeover settings Setting
 

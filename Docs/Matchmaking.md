@@ -1,10 +1,10 @@
 ﻿# マッチメイキング　解説
 
-[GS2-Matchmaking](https://app.gs2.io/docs/index.html#gs2-matchmaking) を使用して対戦・協力プレイをするプレイヤーを見つけるサンプルです。
+[GS2-Matchmaking](https://docs.gs2.io/ja/api_reference/matchmaking/) を使用して対戦・協力プレイをするプレイヤーを見つけるサンプルです。
 
 ## GS2-Deploy テンプレート
 
-- [initialize_matchmaking_template.yaml](../Templates/initialize_matchmaking_template.yaml)
+- [initialize_match_template.yaml](../Templates/initialize_match_template.yaml)
 
 ## マッチメイキング設定 MatchmakingSetting
 
@@ -258,7 +258,7 @@ Capacity に参加人数を指定しています。
 
 ### 参加者の増減/マッチメイキング完了の通知
 
-[GS2-Gateway](https://app.gs2.io/docs/index.html#gs2-gateway) を使用してサーバからの通知を受け取ります。
+[GS2-Gateway](https://docs.gs2.io/ja/api_reference/gateway/) を使用してサーバからの通知を受け取ります。
 サーバーからは以下のようなメッセージが送られます。
 
 | メッセージ | 説明 |

@@ -1,10 +1,10 @@
 # News Explanation
 
-This sample shows how to display notices in WebView (in-app browser) using [GS2-News](https://app.gs2.io/docs/en/index.html#gs2-news).
+This sample shows how to display notices in WebView (in-app browser) using [GS2-News](https://docs.gs2.io/api_reference/news/).
 
 ## GS2-Deploy template
 
-- [initialize_news_template.yaml - mess function](../Templates/initialize_news_template.yaml)
+- [initialize_option_template.yaml - news function](../Templates/initialize_option_template.yaml)
 
 ## NewsSetting NewsSetting
 

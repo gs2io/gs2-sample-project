@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Gs2.Core.Exception;
-using Gs2.Sample.Money;
+using Gs2.Sample.Money2;
 using Gs2.Unity.Core;
 using Gs2.Unity.Gs2Quest.Model;
 using Gs2.Unity.Util;
@@ -258,7 +258,7 @@ namespace Gs2.Sample.Quest
                         new EzConfig
                         {
                             Key = "slot",
-                            Value = MoneyModel.Slot.ToString()
+                            Value = Money2Model.Slot.ToString()
                         }
                     }
                 );
@@ -495,6 +495,11 @@ namespace Gs2.Sample.Quest
                     {
                         Key = "slot",
                         Value = slot.ToString(),
+                    },
+                    new EzConfig
+                    {
+                        Key = "propertyId",
+                        Value = gameSession.UserId
                     }
                 }
             );
@@ -506,6 +511,18 @@ namespace Gs2.Sample.Quest
                 yield break;
             }
 
+            var transaction = future.Result;
+            // トランザクションの自動実行の完了を待機（連鎖するトランザクションも含めて全て待つ）
+            // Wait for automatic transaction execution to complete (including all chained transactions)
+            var waitFuture = transaction.WaitFuture(true);
+            yield return waitFuture;
+            if (waitFuture.Error != null)
+            {
+                onError.Invoke(waitFuture.Error, null);
+                callback.Invoke(null);
+                yield break;
+            }
+            
             onEnd.Invoke(progress, rewards, isComplete);
             callback.Invoke(progress);
         }
@@ -537,9 +554,17 @@ namespace Gs2.Sample.Quest
                         {
                             Key = "slot",
                             Value = slot.ToString(),
+                        },
+                        new EzConfig
+                        {
+                            Key = "propertyId",
+                            Value = gameSession.UserId
                         }
                     }
                     );
+                // トランザクションの自動実行の完了を待機（連鎖するトランザクションも含めて全て待つ）
+                // Wait for automatic transaction execution to complete (including all chained transactions)
+                await domain2.WaitAsync(true);
                 progress = await domain.ModelAsync();
                 onEnd.Invoke(progress, rewards, isComplete);
             }
@@ -547,6 +572,14 @@ namespace Gs2.Sample.Quest
             {
                 onError.Invoke(e, null);
                 return e;
+            }
+            catch (System.Exception e)
+            {
+                // トランザクション結果の取得失敗（TimeoutException など）も失敗として扱う
+                // Treat a failure to obtain the transaction result (TimeoutException, etc.) as a failure
+                var error = new UnknownException(e.Message);
+                onError.Invoke(error, null);
+                return error;
             }
 
             return null;

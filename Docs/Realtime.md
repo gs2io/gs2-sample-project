@@ -1,10 +1,10 @@
 ﻿# リアルタイム対戦 解説
 
-[GS2-Realtime](https://app.gs2.io/docs/index.html#gs2-realtime) を使用してプレイヤー間で通信対戦するサンプルです。
+[GS2-Realtime](https://docs.gs2.io/ja/api_reference/realtime/) を使用してプレイヤー間で通信対戦するサンプルです。
 
 ## GS2-Deploy テンプレート
 
-- [initialize_realtime_template.yaml - マッチメイキング/リアルタイム対戦](../Templates/initialize_realtime_template.yaml)
+- [initialize_match_template.yaml - マッチメイキング/リアルタイム対戦](../Templates/initialize_match_template.yaml)
 
 ## リアルタイム設定　RealtimeSetting
 
