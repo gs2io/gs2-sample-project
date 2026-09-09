@@ -211,7 +211,7 @@ namespace Gs2.Sample.Money2
         /// </summary>
         public void ClickToBuy(Product product)
         {
-            UIManager.Instance.AddLog("MoneyStorePresenter::ClickToBuy");
+            UIManager.Instance.AddLog("Money2StorePresenter::ClickToBuy");
             
             _moneyModel.selectedProduct = product;
             SetState(State.BuyProcessing);

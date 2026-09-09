@@ -25,7 +25,8 @@ GS2-Money2 의 네임스페이스에는 스토어 플랫폼 설정(`PlatformSett
 
 서비스 창에서 In-App Purchasing 을 활성화하고,  
 IAP 패키지를 임포트합니다.  
-(본 샘플은 페이크 영수증으로도 동작하므로, IAP 가 비활성화된 상태에서도 구매 흐름을 확인할 수 있습니다.)
+(본 샘플은 페이크 영수증으로도 동작하므로, IAP 가 비활성화된 상태에서도 구매 흐름을 확인할 수 있습니다.)  
+(동작 확인은 Unity IAP 5.4.3 에서 진행했습니다. IAP 5.x 에서는 구매 확정 처리가 필요하므로 후술하는 「구매 처리」를 참조하세요.)
 
 ## 유료 재화/유료 재화 상점 설정 Money2Setting
 
@@ -223,17 +224,21 @@ UniTask 활성화 시
 // 기본은 페이크 영수증(구매 기능이 비활성화된 경우에 사용)
 string store = "fake";
 string payload = "fake";
+#if GS2_ENABLE_PURCHASING
+// 스토어 구매를 확정하기 위해 구매 결과를 보관해 둔다
+PurchaseParameters purchaseParameters = null;
+#endif
 {
 #if GS2_ENABLE_PURCHASING
     try
     {
-        PurchaseParameters result = await new IAPUtil().BuyAsync(
+        purchaseParameters = await new IAPUtil().BuyAsync(
             selectedProduct.ContentsId
         );
 
         // 실제 스토어의 영수증 내용을 보관
         store = StoreName;
-        payload = result.receipt;
+        payload = purchaseParameters.receipt;
     }
     catch (Gs2Exception e)
     {
@@ -248,6 +253,10 @@ string payload = "fake";
 // 기본은 페이크 영수증(구매 기능이 비활성화된 경우에 사용)
 string store = "fake";
 string payload = "fake";
+#if GS2_ENABLE_PURCHASING
+// 스토어 구매를 확정하기 위해 구매 결과를 보관해 둔다
+PurchaseParameters purchaseParameters = null;
+#endif
 {
 #if GS2_ENABLE_PURCHASING
     AsyncResult<PurchaseParameters> result = null;
@@ -267,14 +276,20 @@ string payload = "fake";
     }
 
     // 실제 스토어의 영수증 내용을 보관
+    purchaseParameters = result.Result;
     store = StoreName;
-    payload = result.Result.receipt;
+    payload = purchaseParameters.receipt;
 #endif
 }
 ```
 
 구매한 영수증을 사용하여 [GS2-Showcase](https://docs.gs2.io/ko/api_reference/showcase/) 의 상품을 구매하는 처리를 실행합니다.  
 구매로 발행된 트랜잭션(스탬프 시트)은 `WaitAsync(true)` / `WaitFuture(true)` 로 완료를 대기합니다.
+
+Unity IAP 5.x 에서는 구매가 「보류(pending) → 확정(confirm)」의 2 단계로 되어 있습니다.  
+영수증 검증(`Gs2Money2:VerifyReceiptByUserId`)을 포함한 트랜잭션의 완료를 기다린 후,  
+`ConfirmPendingPurchase` 로 스토어 쪽 구매를 확정합니다.  
+검증 전에 확정해 버리면 검증에 실패한 경우에도 스토어 쪽 구매가 완료되어 버리므로, 이 순서가 중요합니다.  
 
 UniTask 활성화 시
 ```c#
@@ -324,6 +339,14 @@ catch (Gs2Exception e)
     onError.Invoke(e);
     return e;
 }
+
+#if GS2_ENABLE_PURCHASING
+if (purchaseParameters != null)
+{
+    // 영수증 검증이 완료되었으므로 스토어 쪽 구매를 확정한다
+    purchaseParameters.controller.ConfirmPendingPurchase(purchaseParameters.product);
+}
+#endif
 
 // 상품 구매에 성공
 onBuy.Invoke(selectedProduct);
@@ -381,6 +404,14 @@ if (future.Error != null)
 
 // 트랜잭션의 자동 실행 완료를 대기(연쇄되는 트랜잭션도 포함하여 모두 대기)
 yield return future.Result.WaitFuture(true);
+
+#if GS2_ENABLE_PURCHASING
+if (purchaseParameters != null)
+{
+    // 영수증 검증이 완료되었으므로 스토어 쪽 구매를 확정한다
+    purchaseParameters.controller.ConfirmPendingPurchase(purchaseParameters.product);
+}
+#endif
 
 // 상품 구매에 성공
 

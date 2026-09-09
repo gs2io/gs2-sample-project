@@ -365,6 +365,11 @@ namespace Gs2.Sample.Money2
             // Default is a fake receipt (used when the purchasing feature is disabled. acceptFakeReceipt: Accept)
             string store = "fake";
             string payload = "fake";
+#if GS2_ENABLE_PURCHASING
+            // ストアの購入を確定するために、購入結果を保持しておく
+            // Keep the purchase result so that the store purchase can be confirmed afterwards
+            PurchaseParameters purchaseParameters = null;
+#endif
             {
 #if GS2_ENABLE_PURCHASING
                 AsyncResult<PurchaseParameters> result = null;
@@ -386,8 +391,9 @@ namespace Gs2.Sample.Money2
 
                 // 課金通貨商品購入 レシート情報を Money2 のレシート項目に設定
                 // Set the purchased receipt information as Money2 receipt fields
+                purchaseParameters = result.Result;
                 store = StoreName;
-                payload = result.Result.receipt;
+                payload = purchaseParameters.receipt;
 #endif
             }
             {
@@ -458,6 +464,15 @@ namespace Gs2.Sample.Money2
                     yield break;
                 }
 
+#if GS2_ENABLE_PURCHASING
+                if (purchaseParameters != null)
+                {
+                    // レシート検証が完了したので、ストア側の購入を確定する
+                    // Confirm the purchase on the store side now that the receipt verification has completed
+                    purchaseParameters.controller.ConfirmPendingPurchase(purchaseParameters.product);
+                }
+#endif
+
                 // 商品購入に成功
                 // Successful product purchase
 
@@ -480,18 +495,23 @@ namespace Gs2.Sample.Money2
             // Default is a fake receipt (used when the purchasing feature is disabled. acceptFakeReceipt: Accept)
             string store = "fake";
             string payload = "fake";
+#if GS2_ENABLE_PURCHASING
+            // ストアの購入を確定するために、購入結果を保持しておく
+            // Keep the purchase result so that the store purchase can be confirmed afterwards
+            PurchaseParameters purchaseParameters = null;
+#endif
             {
 #if GS2_ENABLE_PURCHASING
                 try
                 {
-                    PurchaseParameters result = await new IAPUtil().BuyAsync(
+                    purchaseParameters = await new IAPUtil().BuyAsync(
                         selectedProduct.ContentsId
                     );
 
                     // 課金通貨商品購入 レシート情報を Money2 のレシート項目に設定
                     // Set the purchased receipt information as Money2 receipt fields
                     store = StoreName;
-                    payload = result.receipt;
+                    payload = purchaseParameters.receipt;
                 }
                 catch (Gs2Exception e)
                 {
@@ -557,6 +577,15 @@ namespace Gs2.Sample.Money2
                     onError.Invoke(error, null);
                     return error;
                 }
+
+#if GS2_ENABLE_PURCHASING
+                if (purchaseParameters != null)
+                {
+                    // レシート検証が完了したので、ストア側の購入を確定する
+                    // Confirm the purchase on the store side now that the receipt verification has completed
+                    purchaseParameters.controller.ConfirmPendingPurchase(purchaseParameters.product);
+                }
+#endif
 
                 // 商品購入に成功
                 // Successful product purchase

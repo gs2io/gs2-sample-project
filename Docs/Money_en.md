@@ -23,7 +23,8 @@ To purchase on a real device (AppStore / GooglePlay), Unity IAP must be enabled.
 [Unity IAP Setup](https://docs.unity3d.com/Manual/UnityIAPSettingUp.html)  
 Enable In-App Purchasing in the Services window, and  
 Import the IAP package.  
-(Since this sample also works with fake receipts, you can verify the purchase flow even with IAP disabled.)
+(Since this sample also works with fake receipts, you can verify the purchase flow even with IAP disabled.)  
+(This sample is verified with Unity IAP 5.4.3. IAP 5.x requires the purchase to be confirmed explicitly, see "Purchase process" below.)
 
 ## Billing Currency/Billing Currency Store Settings
 
@@ -221,17 +222,21 @@ When UniTask is enabled
 // Default is a fake receipt (used when the purchasing feature is disabled)
 string store = "fake";
 string payload = "fake";
+#if GS2_ENABLE_PURCHASING
+// Keep the purchase result so that the store purchase can be confirmed afterwards
+PurchaseParameters purchaseParameters = null;
+#endif
 {
 #if GS2_ENABLE_PURCHASING
     try
     {
-        PurchaseParameters result = await new IAPUtil().BuyAsync(
+        purchaseParameters = await new IAPUtil().BuyAsync(
             selectedProduct.ContentsId
         );
 
         // Retain the contents of the real store receipt
         store = StoreName;
-        payload = result.receipt;
+        payload = purchaseParameters.receipt;
     }
     catch (Gs2Exception e)
     {
@@ -246,6 +251,10 @@ When coroutine is used
 // Default is a fake receipt (used when the purchasing feature is disabled)
 string store = "fake";
 string payload = "fake";
+#if GS2_ENABLE_PURCHASING
+// Keep the purchase result so that the store purchase can be confirmed afterwards
+PurchaseParameters purchaseParameters = null;
+#endif
 {
 #if GS2_ENABLE_PURCHASING
     AsyncResult<PurchaseParameters> result = null;
@@ -265,14 +274,20 @@ string payload = "fake";
     }
 
     // Retain the contents of the real store receipt
+    purchaseParameters = result.Result;
     store = StoreName;
-    payload = result.Result.receipt;
+    payload = purchaseParameters.receipt;
 #endif
 }
 ```
 
 Executes a process to purchase an item from [GS2-Showcase](https://docs.gs2.io/api_reference/showcase/) using the purchase receipt.  
 The transaction (stamp sheet) issued by the purchase is awaited for completion with `WaitAsync(true)` / `WaitFuture(true)`.
+
+In Unity IAP 5.x, a purchase has two steps: pending, and then confirmed.  
+After waiting for the transaction that contains the receipt verification (`Gs2Money2:VerifyReceiptByUserId`) to complete,  
+the purchase is confirmed on the store side with `ConfirmPendingPurchase`.  
+This order matters: confirming before the verification would complete the store purchase even when the verification fails.  
 
 When UniTask is enabled
 ```c#
@@ -322,6 +337,14 @@ catch (Gs2Exception e)
     onError.Invoke(e);
     return e;
 }
+
+#if GS2_ENABLE_PURCHASING
+if (purchaseParameters != null)
+{
+    // Confirm the purchase on the store side now that the receipt verification has completed
+    purchaseParameters.controller.ConfirmPendingPurchase(purchaseParameters.product);
+}
+#endif
 
 // Successful product purchase
 onBuy.Invoke(selectedProduct);
@@ -379,6 +402,14 @@ if (future.Error != null)
 
 // Wait for automatic transaction execution to complete (including all chained transactions)
 yield return future.Result.WaitFuture(true);
+
+#if GS2_ENABLE_PURCHASING
+if (purchaseParameters != null)
+{
+    // Confirm the purchase on the store side now that the receipt verification has completed
+    purchaseParameters.controller.ConfirmPendingPurchase(purchaseParameters.product);
+}
+#endif
 
 // Successful product purchase
 

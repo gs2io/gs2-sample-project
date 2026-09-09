@@ -7,15 +7,16 @@ Game Server Services (https://gs2.io) の Unity 向けのサンプルプロジ�
 
 ## 動作環境
 
-Unity 6000.5.10f1
+Unity 6000.6.0f1
 
-GS2 C# SDK 2026.8.3  
-GS2 SDK for Unity 2026.7.2  
+GS2 C# SDK 2026.9.2  
+GS2 SDK for Unity 2026.9.1  
+Unity IAP (com.unity.purchasing) 5.4.3  
 
 ## 注意事項
 
 - サンプルに含まれるmanifest.json、packages-lock.jsonファイルには、  
-GS2のSDKのほか、Unity 6000.5上での動作に必要なパッケージの記述が含まれます。  
+GS2のSDKのほか、Unity 6000.6上での動作に必要なパッケージの記述が含まれます。  
 上記以外のUnityバージョンでプロジェクトを開くと、  
 エラーが発生しパッケージのバージョン変更が必要になる場合があります。  
 その場合は、パッケージマネージャーで検証済みバージョンをインストールすることで動作可能になります。  
@@ -153,6 +154,8 @@ GS2-JobQueue ネームスペース `default` | ジョブの自動実行に使用
 サービスウィンドウでのIn-App Purchasingの有効化、  
 IAP パッケージのインポートを行います。  
 （本サンプルはフェイクレシートでも動作するため、IAP無効のままでも購入フローを確認できます。）  
+Unity IAP 5.x では、レシート検証の完了後に購入を確定する処理が必要になります。  
+詳細は [課金通貨／課金通貨ストア](Docs/Money.md) を参照してください。  
 
 ### Settings の設定
 

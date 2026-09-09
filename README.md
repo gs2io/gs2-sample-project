@@ -7,15 +7,16 @@ This is a sample implementation using various GS2 functions for a rough flow in 
 
 ## Operating Environment
 
-Unity 6000.5.10f1
+Unity 6000.6.0f1
 
-GS2 C# SDK 2026.8.3  
-GS2 SDK for Unity 2026.7.2  
+GS2 C# SDK 2026.9.2  
+GS2 SDK for Unity 2026.9.1  
+Unity IAP (com.unity.purchasing) 5.4.3  
 
 ## Notes
 
 - The manifest.json and packages-lock.json files included in the sample contain the  
-In addition to the SDK for GS2, it includes a description of the packages required to run on Unity 2022.3.  
+In addition to the SDK for GS2, it includes a description of the packages required to run on Unity 6000.6.  
 If you open the project with a Unity version other than the above, you will get  
 An error may occur and the package version may need to be changed.  
 In that case, you can install the verified version in the package manager to make it work.  
@@ -156,6 +157,8 @@ To purchase on a real device (AppStore / GooglePlay), Unity IAP must be enabled.
 Enable In-App Purchasing in the Services window, and  
 Import the IAP package.  
 (Since this sample also works with fake receipts, you can verify the purchase flow even with IAP disabled.)  
+Unity IAP 5.x requires a purchase to be confirmed explicitly after the receipt verification.  
+See [Billing Currency / Billing Currency Store](Docs/Money_en.md) for details.  
 
 ### Settings
 

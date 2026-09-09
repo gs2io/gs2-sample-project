@@ -25,7 +25,8 @@ GS2-Money2 のネームスペースには、ストアプラットフォーム設
 
 サービスウィンドウでのIn-App Purchasingの有効化、  
 IAP パッケージのインポートを行います。  
-（本サンプルはフェイクレシートでも動作するため、IAP無効のままでも購入フローを確認できます。）
+（本サンプルはフェイクレシートでも動作するため、IAP無効のままでも購入フローを確認できます。）  
+（動作確認は Unity IAP 5.4.3 で行っています。IAP 5.x では購入の確定処理が必要になるため、後述の「購入処理」を参照してください。）
 
 ## 課金通貨/課金通貨ストア設定 Money2Setting
 
@@ -223,17 +224,21 @@ GS2-Money2 のレシートは `{ "Store", "TransactionID", "Payload" }` 形式�
 // 既定はフェイクレシート（購入機能が無効な場合に使用）
 string store = "fake";
 string payload = "fake";
+#if GS2_ENABLE_PURCHASING
+// ストアの購入を確定するために、購入結果を保持しておく
+PurchaseParameters purchaseParameters = null;
+#endif
 {
 #if GS2_ENABLE_PURCHASING
     try
     {
-        PurchaseParameters result = await new IAPUtil().BuyAsync(
+        purchaseParameters = await new IAPUtil().BuyAsync(
             selectedProduct.ContentsId
         );
 
         // 実ストアのレシートの内容を保持
         store = StoreName;
-        payload = result.receipt;
+        payload = purchaseParameters.receipt;
     }
     catch (Gs2Exception e)
     {
@@ -248,6 +253,10 @@ string payload = "fake";
 // 既定はフェイクレシート（購入機能が無効な場合に使用）
 string store = "fake";
 string payload = "fake";
+#if GS2_ENABLE_PURCHASING
+// ストアの購入を確定するために、購入結果を保持しておく
+PurchaseParameters purchaseParameters = null;
+#endif
 {
 #if GS2_ENABLE_PURCHASING
     AsyncResult<PurchaseParameters> result = null;
@@ -267,14 +276,20 @@ string payload = "fake";
     }
 
     // 実ストアのレシートの内容を保持
+    purchaseParameters = result.Result;
     store = StoreName;
-    payload = result.Result.receipt;
+    payload = purchaseParameters.receipt;
 #endif
 }
 ```
 
 購入したレシートを使って、[GS2-Showcase](https://docs.gs2.io/ja/api_reference/showcase/) の商品を購入する処理を実行します。  
 購入により発行されたトランザクション（スタンプシート）は、`WaitAsync(true)` / `WaitFuture(true)` で完了を待機します。
+
+Unity IAP 5.x では、購入は「保留（pending）→ 確定（confirm）」の 2 段階になっています。  
+レシート検証（`Gs2Money2:VerifyReceiptByUserId`）を含むトランザクションの完了を待ってから、  
+`ConfirmPendingPurchase` でストア側の購入を確定します。  
+検証前に確定してしまうと、検証に失敗した場合でもストア側の購入が完了してしまうため、この順序が重要です。  
 
 ・UniTask有効時
 ```c#
@@ -325,6 +340,14 @@ catch (Gs2Exception e)
     onError.Invoke(e);
     return e;
 }
+
+#if GS2_ENABLE_PURCHASING
+if (purchaseParameters != null)
+{
+    // レシート検証が完了したので、ストア側の購入を確定する
+    purchaseParameters.controller.ConfirmPendingPurchase(purchaseParameters.product);
+}
+#endif
 
 // 商品購入に成功
 // Successful product purchase
@@ -384,6 +407,14 @@ if (future.Error != null)
 
 // トランザクションの自動実行の完了を待機（連鎖するトランザクションも含めて全て待つ）
 yield return future.Result.WaitFuture(true);
+
+#if GS2_ENABLE_PURCHASING
+if (purchaseParameters != null)
+{
+    // レシート検証が完了したので、ストア側の購入を確定する
+    purchaseParameters.controller.ConfirmPendingPurchase(purchaseParameters.product);
+}
+#endif
 
 // 商品購入に成功
 // Successful product purchase
